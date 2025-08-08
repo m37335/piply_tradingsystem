@@ -1,0 +1,27 @@
+# Web Framework
+Flask==2.3.3
+# FastAPI==0.104.1  # FastAPIを使用する場合
+# uvicorn==0.24.0   # FastAPI用
+
+# 開発ツール
+pytest==7.4.3
+pytest-cov==4.1.0
+black==23.11.0
+flake8==6.1.0
+isort==5.12.0
+
+# 便利なライブラリ
+requests==2.31.0
+python-dotenv==1.0.0
+
+# GitHub 関連
+PyGithub==1.59.1
+cryptography==41.0.7
+
+# データベース（必要に応じてコメントアウト解除）
+# psycopg2-binary==2.9.9  # PostgreSQL
+# SQLAlchemy==2.0.23
+
+# その他（必要に応じて追加）
+# pandas==2.1.3
+# numpy==1.25.2
