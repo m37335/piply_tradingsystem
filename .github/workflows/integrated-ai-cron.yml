@@ -41,6 +41,13 @@ jobs:
         echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> $GITHUB_ENV
         echo "YAHOO_FINANCE_API_KEY=${{ secrets.YAHOO_FINANCE_API_KEY }}" >> $GITHUB_ENV
         
+    - name: 🔍 Debug Environment Variables
+      run: |
+        echo "🔍 環境変数確認:"
+        echo "OpenAI Key exists: $(if [ -n "$OPENAI_API_KEY" ]; then echo 'YES'; else echo 'NO'; fi)"
+        echo "Discord URL exists: $(if [ -n "$DISCORD_WEBHOOK_URL" ]; then echo 'YES'; else echo 'NO'; fi)"
+        echo "Discord URL format: $(echo $DISCORD_WEBHOOK_URL | sed 's/webhooks\/[0-9]*\/[^\/]*/webhooks\/***\/***/')"
+        
     - name: 📁 Create Logs Directory
       run: mkdir -p logs
       
