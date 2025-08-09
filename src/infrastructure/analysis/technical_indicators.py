@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 import pytz
-import talib
+import ta
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -73,7 +73,7 @@ class TechnicalIndicatorsAnalyzer:
                 return {"error": "データ不足"}
 
             close = data["Close"].values
-            rsi = talib.RSI(close, timeperiod=self.rsi_period)
+            rsi = ta.momentum.RSIIndicator(close, window=self.rsi_period).rsi()
 
             current_rsi = rsi[-1] if not np.isnan(rsi[-1]) else None
             previous_rsi = rsi[-2] if len(rsi) > 1 and not np.isnan(rsi[-2]) else None
@@ -132,12 +132,15 @@ class TechnicalIndicatorsAnalyzer:
                 return {"error": "データ不足"}
 
             close = data["Close"].values
-            macd_line, signal_line, histogram = talib.MACD(
+            macd_indicator = ta.trend.MACD(
                 close,
-                fastperiod=self.macd_fast,
-                slowperiod=self.macd_slow,
-                signalperiod=self.macd_signal,
+                window_fast=self.macd_fast,
+                window_slow=self.macd_slow,
+                window_sign=self.macd_signal,
             )
+            macd_line = macd_indicator.macd()
+            signal_line = macd_indicator.macd_signal()
+            histogram = macd_indicator.macd_diff()
 
             current_macd = macd_line[-1] if not np.isnan(macd_line[-1]) else None
             current_signal = signal_line[-1] if not np.isnan(signal_line[-1]) else None
@@ -207,13 +210,14 @@ class TechnicalIndicatorsAnalyzer:
                 return {"error": "データ不足"}
 
             close = data["Close"].values
-            upper, middle, lower = talib.BBANDS(
+            bb_indicator = ta.volatility.BollingerBands(
                 close,
-                timeperiod=self.bb_period,
-                nbdevup=self.bb_std,
-                nbdevdn=self.bb_std,
-                matype=0,
+                window=self.bb_period,
+                window_dev=self.bb_std,
             )
+            upper = bb_indicator.bollinger_hband()
+            middle = bb_indicator.bollinger_mavg()
+            lower = bb_indicator.bollinger_lband()
 
             current_close = close[-1]
             current_upper = upper[-1] if not np.isnan(upper[-1]) else None

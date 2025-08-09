@@ -30,18 +30,10 @@ jobs:
         python-version: ${{ env.PYTHON_VERSION }}
         cache: 'pip'
         
-    - name: 📦 Install System Dependencies (TA-Lib)
+    - name: 📦 Install System Dependencies
       run: |
-        # TA-Libをソースからビルド・インストール（Ubuntu 24.04対応）
+        # 基本的な依存関係のみインストール（TA-Libは ta ライブラリで代替）
         sudo apt-get update
-        sudo apt-get install -y build-essential wget
-        wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
-        tar -xzf ta-lib-0.4.0-src.tar.gz
-        cd ta-lib/
-        ./configure --prefix=/usr
-        make
-        sudo make install
-        cd ..
         
     - name: 📦 Install Python Dependencies
       run: |
@@ -95,18 +87,10 @@ jobs:
         python-version: ${{ env.PYTHON_VERSION }}
         cache: 'pip'
         
-    - name: 📦 Install System Dependencies (TA-Lib)
+    - name: 📦 Install System Dependencies
       run: |
-        # TA-Libをソースからビルド・インストール（Ubuntu 24.04対応）
+        # 基本的な依存関係のみインストール（TA-Libは ta ライブラリで代替）
         sudo apt-get update
-        sudo apt-get install -y build-essential wget
-        wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
-        tar -xzf ta-lib-0.4.0-src.tar.gz
-        cd ta-lib/
-        ./configure --prefix=/usr
-        make
-        sudo make install
-        cd ..
         
     - name: 📦 Install Python Dependencies
       run: |
@@ -153,18 +137,10 @@ jobs:
         python-version: ${{ env.PYTHON_VERSION }}
         cache: 'pip'
         
-    - name: 📦 Install System Dependencies (TA-Lib)
+    - name: 📦 Install System Dependencies
       run: |
-        # TA-Libをソースからビルド・インストール（Ubuntu 24.04対応）
+        # 基本的な依存関係のみインストール（TA-Libは ta ライブラリで代替）
         sudo apt-get update
-        sudo apt-get install -y build-essential wget
-        wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
-        tar -xzf ta-lib-0.4.0-src.tar.gz
-        cd ta-lib/
-        ./configure --prefix=/usr
-        make
-        sudo make install
-        cd ..
         
     - name: 📦 Install Python Dependencies
       run: |
