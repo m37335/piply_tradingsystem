@@ -18,7 +18,7 @@ jobs:
   integrated-analysis:
     name: 🎯 統合AI相関分析
     runs-on: ubuntu-latest
-    environment: production
+    # environment: production  # 一時的にコメントアウト（Repository Secrets使用）
     
     steps:
     - name: 📥 Checkout Repository
@@ -68,7 +68,7 @@ jobs:
   technical-analysis:
     name: 📈 個別テクニカル分析
     runs-on: ubuntu-latest
-    environment: production
+    # environment: production  # 一時的にコメントアウト（Repository Secrets使用）
     
     steps:
     - name: 📥 Checkout Repository
@@ -112,7 +112,7 @@ jobs:
     name: 🔍 System Health Check
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'  # 手動実行時のみ
-    environment: production
+    # environment: production  # 一時的にコメントアウト（Repository Secrets使用）
     
     steps:
     - name: 📥 Checkout Repository
