@@ -187,3 +187,8 @@ def get_presentation_logger() -> logging.Logger:
 def get_plugin_logger() -> logging.Logger:
     """プラグインシステム用ロガー"""
     return get_logger("plugins")
+
+
+def get_infrastructure_logger() -> logging.Logger:
+    """インフラストラクチャ層用ロガー"""
+    return get_logger("infrastructure")
