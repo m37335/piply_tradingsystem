@@ -72,6 +72,9 @@ class YahooFinanceClient(BaseAPIClient):
         self.retry_delay = 2.0  # 秒
         self.rate_limit_delay = 5.0  # レート制限時の待機時間
 
+        # 通貨マッピング初期化
+        self._init_currency_mapping()
+        
         logger.info("Initialized Yahoo Finance client")
 
     async def _retry_with_backoff(self, func, *args, **kwargs):
@@ -115,7 +118,8 @@ class YahooFinanceClient(BaseAPIClient):
         logger.error(f"All retry attempts failed: {str(last_exception)}")
         raise last_exception
 
-        # 為替ペアのマッピング (Yahoo Finance形式)
+    def _init_currency_mapping(self):
+        """為替ペアのマッピング初期化"""
         self.fx_mapping = {
             "USD/JPY": "USDJPY=X",
             "EUR/USD": "EURUSD=X",
