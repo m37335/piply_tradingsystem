@@ -14,6 +14,7 @@ Yahoo Finance APIクライアント - 無料データソース
 
 import asyncio
 import os
+import time
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -66,7 +67,53 @@ class YahooFinanceClient(BaseAPIClient):
         self.console = Console()
         self.jst = pytz.timezone("Asia/Tokyo")
 
+        # リトライ設定
+        self.max_retries = 3
+        self.retry_delay = 2.0  # 秒
+        self.rate_limit_delay = 5.0  # レート制限時の待機時間
+
         logger.info("Initialized Yahoo Finance client")
+
+    async def _retry_with_backoff(self, func, *args, **kwargs):
+        """リトライ機構付きでAPIコールを実行"""
+        last_exception = None
+
+        for attempt in range(self.max_retries + 1):
+            try:
+                return (
+                    await func(*args, **kwargs)
+                    if asyncio.iscoroutinefunction(func)
+                    else func(*args, **kwargs)
+                )
+            except Exception as e:
+                last_exception = e
+                error_msg = str(e).lower()
+
+                # レート制限エラーの場合
+                if "429" in error_msg or "too many requests" in error_msg:
+                    if attempt < self.max_retries:
+                        wait_time = self.rate_limit_delay * (
+                            2**attempt
+                        )  # 指数バックオフ
+                        logger.warning(
+                            f"Rate limit hit, waiting {wait_time}s before retry {attempt + 1}/{self.max_retries}"
+                        )
+                        await asyncio.sleep(wait_time)
+                        continue
+
+                # その他のエラーの場合
+                elif attempt < self.max_retries:
+                    wait_time = self.retry_delay * (attempt + 1)
+                    logger.warning(f"API error, retrying in {wait_time}s: {str(e)}")
+                    await asyncio.sleep(wait_time)
+                    continue
+
+                # 最後の試行でも失敗
+                break
+
+        # 全ての試行が失敗
+        logger.error(f"All retry attempts failed: {str(last_exception)}")
+        raise last_exception
 
         # 為替ペアのマッピング (Yahoo Finance形式)
         self.fx_mapping = {
@@ -129,8 +176,12 @@ class YahooFinanceClient(BaseAPIClient):
             symbol = self.get_yahoo_symbol(currency_pair)
             self.console.print(f"📊 {currency_pair} ({symbol}) レート取得中...")
 
-            ticker = yf.Ticker(symbol)
-            info = ticker.info
+            # リトライ機構付きでyfinanceを呼び出し
+            def _get_ticker_info():
+                ticker = yf.Ticker(symbol)
+                return ticker.info
+
+            info = await self._retry_with_backoff(_get_ticker_info)
 
             if not info or "regularMarketPrice" not in info:
                 self.console.print(f"❌ {currency_pair}: データなし")
@@ -169,8 +220,12 @@ class YahooFinanceClient(BaseAPIClient):
             self.console.print(f"📈 {currency_pair} 履歴データ取得中...")
             self.console.print(f"   期間: {period}, 間隔: {interval}")
 
-            ticker = yf.Ticker(symbol)
-            hist = ticker.history(period=period, interval=interval)
+            # リトライ機構付きで履歴データを取得
+            def _get_ticker_history():
+                ticker = yf.Ticker(symbol)
+                return ticker.history(period=period, interval=interval)
+
+            hist = await self._retry_with_backoff(_get_ticker_history)
 
             if hist.empty:
                 self.console.print(f"❌ {currency_pair}: 履歴データなし")
@@ -199,19 +254,28 @@ class YahooFinanceClient(BaseAPIClient):
         successful = 0
         failed = 0
 
-        for pair in currency_pairs:
+        for i, pair in enumerate(currency_pairs):
             try:
                 rate_data = await self.get_current_rate(pair)
                 if rate_data:
                     results[pair] = rate_data
                     successful += 1
+                    self.console.print(f"✅ {pair}: レート取得成功")
                 else:
                     failed += 1
-                # レート制限対応
-                await asyncio.sleep(0.5)
+                    self.console.print(f"❌ {pair}: データなし")
+
+                # レート制限対応 - 複数リクエスト間の間隔を長めに
+                if i < len(currency_pairs) - 1:  # 最後以外
+                    await asyncio.sleep(2.0)  # 2秒間隔
 
             except Exception as e:
-                self.console.print(f"❌ {pair}: {str(e)}")
+                error_msg = str(e)
+                if "429" in error_msg or "Too Many Requests" in error_msg:
+                    self.console.print(f"⚠️ {pair}: レート制限エラー - 少し待機します")
+                    await asyncio.sleep(10.0)  # レート制限時は10秒待機
+                else:
+                    self.console.print(f"❌ {pair}: {error_msg}")
                 failed += 1
 
         # 結果サマリー
