@@ -1,0 +1,58 @@
+# Exchange Analytics - 本格運用版Crontab設定
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+HOME=/app
+
+# 🧪 基本テスト（毎分実行）
+* * * * * echo "$(date): Cron is working!" >> /app/logs/cron_test.log
+
+# 🔧 環境変数読み込みテスト（2分間隔）
+*/2 * * * * cd /app && export $(cat .env | grep -v '^#' | xargs) && timeout 30 python test_env_loading.py >> /app/logs/env_test_cron.log 2>&1
+
+# 📊 データスケジューラーテスト（3分間隔）
+*/3 * * * * cd /app && export $(cat .env | grep -v '^#' | xargs) && timeout 60 python data_scheduler.py --test >> /app/logs/scheduler_cron.log 2>&1
+
+# 🌐 APIヘルスチェック（5分間隔）
+*/5 * * * * timeout 5 curl -s http://localhost:8000/health >> /app/logs/api_health_cron.log 2>&1 || echo "$(date): API check failed" >> /app/logs/api_health_cron.log
+
+# 🤖 AI分析テスト（10分間隔、.env対応）
+*/10 * * * * cd /app && export $(cat .env | grep -v '^#' | xargs) && timeout 60 python -c "
+import asyncio
+import os
+from datetime import datetime
+import pytz
+
+async def test_ai_analysis():
+    try:
+        # 環境変数確認
+        openai_key = os.getenv('OPENAI_API_KEY', '')
+        webhook_url = os.getenv('DISCORD_WEBHOOK_URL', '')
+
+        print(f'{datetime.now(pytz.timezone(\"Asia/Tokyo\")).strftime(\"%Y-%m-%d %H:%M:%S JST\")}: AI分析テスト')
+        print(f'OpenAI Key: {openai_key[:10]}...' if openai_key else 'OpenAI Key: 未設定')
+        print(f'Discord Webhook: 設定済み' if webhook_url else 'Discord Webhook: 未設定')
+
+        if webhook_url:
+            import httpx
+            message = {
+                'content': '🤖 **AI分析システムテスト**',
+                'embeds': [{
+                    'title': '✅ Cron AI Test',
+                    'description': 'crontabからのAI分析テスト実行',
+                    'color': 0x00FF00,
+                    'fields': [
+                        {'name': '⏰ 時刻', 'value': datetime.now(pytz.timezone(\"Asia/Tokyo\")).strftime('%H:%M:%S JST'), 'inline': True},
+                        {'name': '🔧 実行元', 'value': 'cron AI test', 'inline': True}
+                    ]
+                }]
+            }
+
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                await client.post(webhook_url, json=message)
+            print('Discord通知送信完了')
+
+    except Exception as e:
+        print(f'エラー: {str(e)}')
+
+asyncio.run(test_ai_analysis())
+" >> /app/logs/ai_test_cron.log 2>&1

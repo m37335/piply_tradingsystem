@@ -1,0 +1,58 @@
+# Exchange Analytics Data Scheduler - Crontab設定例
+# このファイルを参考にcrontabを設定してください
+#
+# 設定方法:
+# 1. crontab -e
+# 2. 以下の行をコピー・ペースト
+# 3. パスを環境に合わせて調整
+
+# 15分間隔でデータ取得（平日のみ、市場時間）
+*/15 9-17 * * 1-5 cd /app && python data_scheduler.py --test >> /app/logs/cron.log 2>&1
+
+# 1時間間隔でAI分析・Discord配信（平日のみ）
+0 */1 9-17 * * 1-5 cd /app && python real_ai_discord.py USD/JPY >> /app/logs/ai_cron.log 2>&1
+
+# 毎日0時に日次レポート
+0 0 * * * cd /app && python data_scheduler.py --test && echo "Daily report sent" >> /app/logs/daily.log 2>&1
+
+# システムヘルスチェック（30分間隔）
+*/30 * * * * cd /app && timeout 10 python realtime_monitor.py --interval 1 --no-alerts >> /app/logs/health_cron.log 2>&1
+
+# 週次システム統計（毎週月曜日 9:00）
+0 9 * * 1 cd /app && python -c "
+import subprocess
+import json
+from datetime import datetime
+try:
+    # 統計収集
+    result = subprocess.run(['python', 'test_alphavantage.py', '--test', 'all'],
+                          capture_output=True, text=True, cwd='/app')
+    # Discord週次レポート送信
+    print(f'Weekly stats: {datetime.now()}')
+    print(f'Alpha Vantage test: {result.returncode == 0}')
+except Exception as e:
+    print(f'Weekly stats error: {e}')
+" >> /app/logs/weekly.log 2>&1
+
+# エラーログ監視（5分間隔）
+*/5 * * * * [ -f /app/logs/data_scheduler.log ] && tail -10 /app/logs/data_scheduler.log | grep -i error && echo "Errors detected at $(date)" | mail -s "Exchange Analytics Error" admin@example.com
+
+# ログローテーション（毎日2:00）
+0 2 * * * cd /app/logs && find . -name "*.log" -size +10M -exec gzip {} \; && find . -name "*.gz" -mtime +7 -delete
+
+# 環境変数設定例（crontabの先頭に追加）
+# SHELL=/bin/bash
+# PATH=/usr/local/bin:/usr/bin:/bin
+# ALPHA_VANTAGE_API_KEY=your_api_key
+# OPENAI_API_KEY=your_openai_key
+# DISCORD_WEBHOOK_URL=your_webhook_url
+
+# デバッグ用（全環境変数出力）
+# */5 * * * * env > /app/logs/env_debug.log 2>&1
+
+# 注意事項:
+# - crontabでは相対パスではなく絶対パスを使用
+# - 環境変数は明示的に設定が必要
+# - ログファイルのパーミッション確認
+# - タイムゾーンの考慮（システムタイムゾーンに依存）
+# - API制限を考慮した間隔設定

@@ -60,9 +60,7 @@ class RealtimeMonitor:
         self.console.print("🚀 Exchange Analytics リアルタイム監視開始")
         self.console.print(f"📊 API: {self.api_base}")
         self.console.print(f"⏰ 監視間隔: {interval}秒")
-        self.console.print(
-            f"🚨 Discord通知: {'✅ 有効' if discord_alerts else '❌ 無効'}"
-        )
+        self.console.print(f"🚨 Discord通知: {'✅ 有効' if discord_alerts else '❌ 無効'}")
         self.console.print("⏹️ 停止: Ctrl+C")
         self.console.print()
 
@@ -185,7 +183,9 @@ class RealtimeMonitor:
         # アラート統計
         content += f"\n🚨 Alert Stats:\n"
         content += f"  Alerts Sent: {self.stats['alerts_sent']}\n"
-        content += f"  Discord: {'✅ Connected' if self.webhook_url else '❌ Not configured'}\n"
+        content += (
+            f"  Discord: {'✅ Connected' if self.webhook_url else '❌ Not configured'}\n"
+        )
 
         return Panel.fit(
             content,

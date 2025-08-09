@@ -1,0 +1,16 @@
+# Exchange Analytics - テスト用Crontab設定
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+HOME=/app
+
+# 🧪 基本テスト（毎分実行）
+* * * * * echo "$(date): Cron is working!" >> /app/logs/cron_test.log
+
+# 📊 データスケジューラーテスト（3分間隔）
+*/3 * * * * cd /app && timeout 60 python data_scheduler.py --test >> /app/logs/scheduler_cron.log 2>&1
+
+# 🌐 APIヘルスチェック（2分間隔）
+*/2 * * * * timeout 5 curl -s http://localhost:8000/health >> /app/logs/api_health_cron.log 2>&1 || echo "$(date): API check failed" >> /app/logs/api_health_cron.log
+
+# 💱 為替データテスト（5分間隔）
+*/5 * * * * cd /app && timeout 30 python test_alphavantage.py --test connection >> /app/logs/fx_test_cron.log 2>&1

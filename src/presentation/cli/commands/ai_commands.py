@@ -31,15 +31,9 @@ app = typer.Typer(
 
 @app.command()
 def analyze(
-    currency_pair: str = typer.Argument(
-        "USD/JPY", help="通貨ペア (例: USD/JPY, EUR/USD)"
-    ),
-    period: str = typer.Option(
-        "1d", "--period", "-p", help="分析期間 (1h, 1d, 1w, 1m)"
-    ),
-    discord: bool = typer.Option(
-        True, "--discord/--no-discord", help="Discord通知送信"
-    ),
+    currency_pair: str = typer.Argument("USD/JPY", help="通貨ペア (例: USD/JPY, EUR/USD)"),
+    period: str = typer.Option("1d", "--period", "-p", help="分析期間 (1h, 1d, 1w, 1m)"),
+    discord: bool = typer.Option(True, "--discord/--no-discord", help="Discord通知送信"),
     real_data: bool = typer.Option(True, "--real/--demo", help="実データ使用"),
     force: bool = typer.Option(False, "--force", "-f", help="確認をスキップ"),
 ):
@@ -59,9 +53,7 @@ def analyze(
 
     if not force:
         data_type = "実データ" if real_data else "デモデータ"
-        confirm = typer.confirm(
-            f"{currency_pair} の AI分析を{data_type}で実行しますか？"
-        )
+        confirm = typer.confirm(f"{currency_pair} の AI分析を{data_type}で実行しますか？")
         if not confirm:
             console.print("❌ AI分析をキャンセルしました")
             return
@@ -80,9 +72,7 @@ def analyze(
 @app.command()
 def reports(
     limit: int = typer.Option(10, "--limit", "-n", help="表示件数"),
-    currency_pair: Optional[str] = typer.Option(
-        None, "--pair", "-p", help="通貨ペアフィルタ"
-    ),
+    currency_pair: Optional[str] = typer.Option(None, "--pair", "-p", help="通貨ペアフィルタ"),
 ):
     """
     AI分析レポート一覧表示

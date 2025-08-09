@@ -1,0 +1,55 @@
+# Exchange Analytics - 実用的なCrontab設定例
+# このファイルをコピーして crontab -e で設定
+
+# 環境変数設定
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+HOME=/app
+
+# Exchange Analytics 環境変数
+# （実際の値に置き換えてください）
+ALPHA_VANTAGE_API_KEY=demo
+OPENAI_API_KEY=your_openai_key_here
+DISCORD_WEBHOOK_URL=your_discord_webhook_here
+
+# 🧪 テスト用（2分間隔でデータ取得テスト）
+*/2 * * * * cd /app && echo "$(date): Cron test" >> /app/logs/cron_test.log 2>&1
+
+# 📊 データ取得（15分間隔、平日9-17時）
+*/15 9-17 * * 1-5 cd /app && timeout 300 python data_scheduler.py --test >> /app/logs/data_cron.log 2>&1
+
+# 🤖 AI分析（1時間間隔、平日のみ）
+0 */1 9-17 * * 1-5 cd /app && timeout 120 python real_ai_discord.py USD/JPY >> /app/logs/ai_cron.log 2>&1
+
+# 📈 日次レポート（毎日18:00）
+0 18 * * * cd /app && timeout 60 python -c "
+import asyncio
+import sys
+sys.path.append('/app')
+from data_scheduler import DataScheduler
+scheduler = DataScheduler()
+asyncio.run(scheduler._send_daily_report())
+" >> /app/logs/daily_cron.log 2>&1
+
+# 🔍 システム監視（30分間隔）
+*/30 * * * * cd /app && timeout 30 python realtime_monitor.py --interval 1 --no-alerts >> /app/logs/monitor_cron.log 2>&1
+
+# 🗑️ ログクリーンアップ（毎日2:00）
+0 2 * * * cd /app/logs && find . -name "*.log" -size +10M -exec gzip {} \; && find . -name "*.gz" -mtime +7 -delete
+
+# 💚 API稼働確認（10分間隔）
+*/10 * * * * timeout 5 curl -s http://localhost:8000/health > /dev/null || echo "$(date): API down" >> /app/logs/api_alert.log
+
+# 📊 週次統計（毎週月曜日9:00）
+0 9 * * 1 cd /app && python -c "
+import subprocess
+import json
+from datetime import datetime
+print(f'Weekly stats: {datetime.now()}')
+try:
+    result = subprocess.run(['python', 'test_alphavantage.py', '--test', 'connection'],
+                          capture_output=True, text=True, cwd='/app')
+    print(f'Alpha Vantage test: {result.returncode == 0}')
+except Exception as e:
+    print(f'Weekly stats error: {e}')
+" >> /app/logs/weekly.log 2>&1

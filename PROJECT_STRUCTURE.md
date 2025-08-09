@@ -219,11 +219,11 @@ app.py
    # app.py
    from utils.plugin_loader import PluginLoader
    from services.analysis_engine import AnalysisEngine
-   
+
    # プラグイン読み込み
    plugin_loader = PluginLoader()
    plugin_loader.load_all_plugins()
-   
+
    # 分析エンジン初期化
    analysis_engine = AnalysisEngine(plugin_loader)
    ```

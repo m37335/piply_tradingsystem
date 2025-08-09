@@ -397,16 +397,10 @@ def validate(
 
 @app.command()
 def export(
-    output: Optional[Path] = typer.Option(
-        None, "--output", "-o", help="出力ファイルパス"
-    ),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="出力ファイルパス"),
     environment: str = typer.Option("default", "--env", "-e", help="環境名"),
-    format: str = typer.Option(
-        "json", "--format", "-f", help="出力形式 (json, yaml, env)"
-    ),
-    include_secrets: bool = typer.Option(
-        False, "--include-secrets", help="機密情報も含める"
-    ),
+    format: str = typer.Option("json", "--format", "-f", help="出力形式 (json, yaml, env)"),
+    include_secrets: bool = typer.Option(False, "--include-secrets", help="機密情報も含める"),
 ):
     """
     設定をファイルにエクスポート

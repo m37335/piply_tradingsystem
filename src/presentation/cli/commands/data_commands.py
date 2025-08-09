@@ -164,9 +164,7 @@ def init(
 
 @app.command()
 def backup(
-    output: Optional[Path] = typer.Option(
-        None, "--output", "-o", help="出力ファイルパス"
-    ),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="出力ファイルパス"),
     compress: bool = typer.Option(True, "--compress/--no-compress", help="圧縮"),
 ):
     """
@@ -273,12 +271,8 @@ def clean(
 @app.command()
 def export(
     table: str = typer.Argument(..., help="エクスポートするテーブル名"),
-    output: Optional[Path] = typer.Option(
-        None, "--output", "-o", help="出力ファイルパス"
-    ),
-    format: str = typer.Option(
-        "csv", "--format", "-f", help="出力形式 (csv, json, xlsx)"
-    ),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="出力ファイルパス"),
+    format: str = typer.Option("csv", "--format", "-f", help="出力形式 (csv, json, xlsx)"),
     where: Optional[str] = typer.Option(None, "--where", "-w", help="WHERE条件"),
 ):
     """
@@ -319,9 +313,7 @@ def export(
 @app.command()
 def migrate(
     up: bool = typer.Option(True, "--up/--down", help="マイグレーション方向"),
-    version: Optional[str] = typer.Option(
-        None, "--version", "-v", help="特定バージョン"
-    ),
+    version: Optional[str] = typer.Option(None, "--version", "-v", help="特定バージョン"),
 ):
     """
     データベースマイグレーション実行
@@ -341,12 +333,131 @@ def migrate(
     ]
 
     with Progress(console=console) as progress:
-        migration_task = progress.add_task(
-            "マイグレーション実行中...", total=len(migrations)
-        )
+        migration_task = progress.add_task("マイグレーション実行中...", total=len(migrations))
 
         for migration in migrations:
             progress.update(migration_task, advance=1)
             console.print(f"✅ {migration}")
 
     console.print("🎉 マイグレーション完了！")
+
+
+@app.command()
+def schedule(
+    action: str = typer.Argument("start", help="アクション (start/stop/status/test)"),
+    interval: int = typer.Option(15, "--interval", "-i", help="データ取得間隔（分）"),
+    ai_interval: int = typer.Option(60, "--ai-interval", help="AI分析間隔（分）"),
+    pairs: str = typer.Option(
+        "USD/JPY,EUR/USD,GBP/USD", "--pairs", "-p", help="通貨ペア（カンマ区切り）"
+    ),
+):
+    """
+    定期データ取得スケジューラー管理
+
+    Examples:
+        exchange-analytics data schedule start
+        exchange-analytics data schedule status
+        exchange-analytics data schedule test
+        exchange-analytics data schedule stop
+    """
+    console.print(f"⏰ データスケジューラー: {action}")
+
+    if action == "start":
+        console.print("🚀 定期データ取得開始...")
+        console.print(f"📊 取得間隔: {interval}分")
+        console.print(f"🤖 AI分析間隔: {ai_interval}分")
+        console.print(f"💱 通貨ペア: {pairs}")
+
+        confirm = typer.confirm("定期データ取得スケジューラーを開始しますか？")
+        if not confirm:
+            console.print("❌ スケジューラー開始をキャンセルしました")
+            return
+
+        console.print("🔄 スケジューラー開始中...")
+        console.print(
+            "💡 バックグラウンド実行: nohup python data_scheduler.py > scheduler.log 2>&1 &"
+        )
+        console.print("📊 ログ確認: tail -f logs/data_scheduler.log")
+        console.print("⏹️ 停止方法: ./exchange-analytics data schedule stop")
+
+        import subprocess
+
+        try:
+            # バックグラウンドでスケジューラー開始
+            subprocess.Popen(
+                ["python", "data_scheduler.py"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                cwd="/app",
+            )
+            console.print("✅ データスケジューラーを開始しました")
+        except Exception as e:
+            console.print(f"❌ スケジューラー開始失敗: {str(e)}")
+
+    elif action == "status":
+        console.print("📊 スケジューラー状態確認...")
+
+        # プロセス確認
+        import subprocess
+
+        try:
+            result = subprocess.run(
+                ["pgrep", "-f", "data_scheduler.py"], capture_output=True, text=True
+            )
+
+            if result.returncode == 0 and result.stdout.strip():
+                pids = result.stdout.strip().split("\n")
+                console.print(f"✅ スケジューラー実行中 (PID: {', '.join(pids)})")
+
+                # ログ表示
+                log_file = "/app/logs/data_scheduler.log"
+                if os.path.exists(log_file):
+                    console.print("\n📋 最新ログ (最新10行):")
+                    subprocess.run(["tail", "-10", log_file])
+
+            else:
+                console.print("❌ スケジューラーは実行されていません")
+
+        except Exception as e:
+            console.print(f"❌ 状態確認エラー: {str(e)}")
+
+    elif action == "stop":
+        console.print("⏹️ スケジューラー停止中...")
+
+        import subprocess
+
+        try:
+            # プロセス終了
+            result = subprocess.run(
+                ["pkill", "-f", "data_scheduler.py"], capture_output=True
+            )
+
+            if result.returncode == 0:
+                console.print("✅ データスケジューラーを停止しました")
+            else:
+                console.print("ℹ️ 停止するスケジューラーが見つかりませんでした")
+
+        except Exception as e:
+            console.print(f"❌ 停止エラー: {str(e)}")
+
+    elif action == "test":
+        console.print("🧪 スケジューラーテスト実行...")
+
+        import subprocess
+
+        try:
+            result = subprocess.run(
+                ["python", "data_scheduler.py", "--test"], cwd="/app"
+            )
+
+            if result.returncode == 0:
+                console.print("✅ テスト完了")
+            else:
+                console.print("❌ テスト失敗")
+
+        except Exception as e:
+            console.print(f"❌ テストエラー: {str(e)}")
+
+    else:
+        console.print(f"❌ 無効なアクション: {action}")
+        console.print("利用可能: start, stop, status, test")

@@ -5,7 +5,7 @@ UTCから日本時間（JST）への変更
 
 対象ファイル:
 - realtime_monitor.py
-- test_alphavantage.py  
+- test_alphavantage.py
 - test_openai.py
 - ai_discord_integration.py
 - その他の時刻表示箇所
