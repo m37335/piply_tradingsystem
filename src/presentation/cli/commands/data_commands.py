@@ -164,7 +164,9 @@ def init(
 
 @app.command()
 def backup(
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="出力ファイルパス"),
+    output: Optional[Path] = typer.Option(
+        None, "--output", "-o", help="出力ファイルパス"
+    ),
     compress: bool = typer.Option(True, "--compress/--no-compress", help="圧縮"),
 ):
     """
@@ -271,8 +273,12 @@ def clean(
 @app.command()
 def export(
     table: str = typer.Argument(..., help="エクスポートするテーブル名"),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="出力ファイルパス"),
-    format: str = typer.Option("csv", "--format", "-f", help="出力形式 (csv, json, xlsx)"),
+    output: Optional[Path] = typer.Option(
+        None, "--output", "-o", help="出力ファイルパス"
+    ),
+    format: str = typer.Option(
+        "csv", "--format", "-f", help="出力形式 (csv, json, xlsx)"
+    ),
     where: Optional[str] = typer.Option(None, "--where", "-w", help="WHERE条件"),
 ):
     """
@@ -313,7 +319,9 @@ def export(
 @app.command()
 def migrate(
     up: bool = typer.Option(True, "--up/--down", help="マイグレーション方向"),
-    version: Optional[str] = typer.Option(None, "--version", "-v", help="特定バージョン"),
+    version: Optional[str] = typer.Option(
+        None, "--version", "-v", help="特定バージョン"
+    ),
 ):
     """
     データベースマイグレーション実行
@@ -333,7 +341,9 @@ def migrate(
     ]
 
     with Progress(console=console) as progress:
-        migration_task = progress.add_task("マイグレーション実行中...", total=len(migrations))
+        migration_task = progress.add_task(
+            "マイグレーション実行中...", total=len(migrations)
+        )
 
         for migration in migrations:
             progress.update(migration_task, advance=1)

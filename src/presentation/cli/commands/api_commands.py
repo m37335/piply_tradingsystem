@@ -43,7 +43,9 @@ def start(
     reload: bool = typer.Option(False, "--reload", "-r", help="ホットリロード有効"),
     workers: int = typer.Option(1, "--workers", "-w", help="ワーカー数"),
     log_level: str = typer.Option("info", "--log-level", "-l", help="ログレベル"),
-    background: bool = typer.Option(False, "--background", "-d", help="バックグラウンド実行"),
+    background: bool = typer.Option(
+        False, "--background", "-d", help="バックグラウンド実行"
+    ),
 ):
     """
     API サーバーを起動
@@ -85,7 +87,9 @@ def start(
                 cwd=Path.cwd(),
             )
 
-            console.print(f"✅ API サーバーをバックグラウンドで起動 (PID: {process.pid})")
+            console.print(
+                f"✅ API サーバーをバックグラウンドで起動 (PID: {process.pid})"
+            )
             console.print(f"🌐 URL: http://{host}:{port}")
             console.print(f"📚 Docs: http://{host}:{port}/docs")
 
@@ -207,7 +211,9 @@ def status(
 
                 else:
                     progress.stop()
-                    console.print(f"❌ API サーバーエラー (HTTP {response.status_code})")
+                    console.print(
+                        f"❌ API サーバーエラー (HTTP {response.status_code})"
+                    )
 
         except httpx.ConnectError:
             progress.stop()
@@ -383,7 +389,9 @@ def _live_metrics(host: str, port: int):
                     system = metrics_data.get("system", {})
                     process = metrics_data.get("process", {})
 
-                    table = Table(title=f"📊 Live Metrics - {time.strftime('%H:%M:%S')}")
+                    table = Table(
+                        title=f"📊 Live Metrics - {time.strftime('%H:%M:%S')}"
+                    )
                     table.add_column("Metric", style="cyan")
                     table.add_column("Value", style="bold green")
 

@@ -19,7 +19,13 @@ from rich.panel import Panel
 from rich.table import Table
 
 from ...utils.logging_config import get_presentation_logger, setup_logging_directories
-from .commands import api_commands, config_commands, data_commands, monitor_commands
+from .commands import (
+    ai_commands,
+    api_commands,
+    config_commands,
+    data_commands,
+    monitor_commands,
+)
 
 logger = get_presentation_logger()
 console = Console()
@@ -57,13 +63,23 @@ app.add_typer(
     help="📊 監視・ヘルスチェック",
 )
 
+app.add_typer(
+    ai_commands.app,
+    name="ai",
+    help="🤖 AI分析・通知",
+)
+
 
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-    version: Optional[bool] = typer.Option(None, "--version", "-v", help="バージョン情報を表示"),
+    version: Optional[bool] = typer.Option(
+        None, "--version", "-v", help="バージョン情報を表示"
+    ),
     verbose: bool = typer.Option(False, "--verbose", "-V", help="詳細ログを表示"),
-    config_file: Optional[Path] = typer.Option(None, "--config", "-c", help="設定ファイルパス"),
+    config_file: Optional[Path] = typer.Option(
+        None, "--config", "-c", help="設定ファイルパス"
+    ),
 ):
     """
     Exchange Analytics System CLI
@@ -117,13 +133,15 @@ def show_welcome():
 
 [yellow]利用可能なコマンド:[/yellow]
 • [green]api[/green]     - API サーバー管理
-• [green]data[/green]    - データ管理・取得
+• [green]data[/green]    - データ管理・取得  
 • [green]config[/green]  - 設定管理
 • [green]monitor[/green] - 監視・ヘルスチェック
+• [green]ai[/green]      - AI分析・通知
 
 [blue]例:[/blue]
   [cyan]exchange-analytics api start[/cyan]     # API サーバー起動
   [cyan]exchange-analytics data fetch[/cyan]    # データ取得
+  [cyan]exchange-analytics ai analyze[/cyan]    # AI分析・Discord通知
   [cyan]exchange-analytics monitor status[/cyan] # システム状態確認
 
 詳細: [cyan]exchange-analytics --help[/cyan]""",

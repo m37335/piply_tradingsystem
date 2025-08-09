@@ -238,7 +238,9 @@ def _single_metrics_check(host: str, port: int):
 
 def _live_metrics_monitor(host: str, port: int, interval: int):
     """リアルタイムメトリクス監視"""
-    console.print(f"📊 リアルタイムメトリクス監視開始 (間隔: {interval}秒, Ctrl+C で停止)")
+    console.print(
+        f"📊 リアルタイムメトリクス監視開始 (間隔: {interval}秒, Ctrl+C で停止)"
+    )
 
     def generate_metrics_display():
         try:
@@ -290,9 +292,7 @@ def _display_metrics(metrics_data: dict):
     cpu_status = (
         "🟢 Normal"
         if cpu_percent < 80
-        else "🟡 High"
-        if cpu_percent < 90
-        else "🔴 Critical"
+        else "🟡 High" if cpu_percent < 90 else "🔴 Critical"
     )
     system_table.add_row("CPU Usage", f"{cpu_percent:.1f}%", cpu_status)
 
@@ -302,9 +302,7 @@ def _display_metrics(metrics_data: dict):
     memory_status = (
         "🟢 Normal"
         if memory_percent < 80
-        else "🟡 High"
-        if memory_percent < 90
-        else "🔴 Critical"
+        else "🟡 High" if memory_percent < 90 else "🔴 Critical"
     )
     memory_gb = memory.get("used", 0) / (1024**3)
     total_gb = memory.get("total", 0) / (1024**3)
@@ -320,9 +318,7 @@ def _display_metrics(metrics_data: dict):
     disk_status = (
         "🟢 Normal"
         if disk_percent < 80
-        else "🟡 High"
-        if disk_percent < 90
-        else "🔴 Critical"
+        else "🟡 High" if disk_percent < 90 else "🔴 Critical"
     )
     disk_gb = disk.get("used", 0) / (1024**3)
     disk_total_gb = disk.get("total", 0) / (1024**3)
@@ -392,7 +388,9 @@ def _create_metrics_panel(metrics_data: dict) -> Panel:
 def logs(
     lines: int = typer.Option(50, "--lines", "-n", help="表示行数"),
     follow: bool = typer.Option(False, "--follow", "-f", help="リアルタイム監視"),
-    level: Optional[str] = typer.Option(None, "--level", "-l", help="ログレベルフィルタ"),
+    level: Optional[str] = typer.Option(
+        None, "--level", "-l", help="ログレベルフィルタ"
+    ),
     component: Optional[str] = typer.Option(
         None, "--component", "-c", help="コンポーネントフィルタ"
     ),
