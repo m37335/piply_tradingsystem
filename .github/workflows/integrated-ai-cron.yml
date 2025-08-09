@@ -40,6 +40,7 @@ jobs:
         echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> $GITHUB_ENV
         echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> $GITHUB_ENV
         echo "YAHOO_FINANCE_API_KEY=${{ secrets.YAHOO_FINANCE_API_KEY }}" >> $GITHUB_ENV
+        echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV
         
     - name: 🔍 Debug Environment Variables
       run: |
@@ -47,6 +48,7 @@ jobs:
         echo "OpenAI Key exists: $(if [ -n "$OPENAI_API_KEY" ]; then echo 'YES'; else echo 'NO'; fi)"
         echo "Discord URL exists: $(if [ -n "$DISCORD_WEBHOOK_URL" ]; then echo 'YES'; else echo 'NO'; fi)"
         echo "Discord URL format: $(echo $DISCORD_WEBHOOK_URL | sed 's/webhooks\/[0-9]*\/[^\/]*/webhooks\/***\/***/')"
+        echo "PYTHONPATH: $PYTHONPATH"
         
     - name: 📁 Create Logs Directory
       run: mkdir -p logs
@@ -90,6 +92,7 @@ jobs:
         echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> $GITHUB_ENV
         echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> $GITHUB_ENV
         echo "YAHOO_FINANCE_API_KEY=${{ secrets.YAHOO_FINANCE_API_KEY }}" >> $GITHUB_ENV
+        echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV
         
     - name: 📁 Create Logs Directory
       run: mkdir -p logs
@@ -134,6 +137,7 @@ jobs:
         echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> $GITHUB_ENV
         echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> $GITHUB_ENV
         echo "YAHOO_FINANCE_API_KEY=${{ secrets.YAHOO_FINANCE_API_KEY }}" >> $GITHUB_ENV
+        echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV
         
     - name: 🧪 Test Yahoo Finance Connection
       run: |
