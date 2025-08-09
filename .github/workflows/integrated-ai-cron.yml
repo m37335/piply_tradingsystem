@@ -59,7 +59,7 @@ jobs:
         
     - name: 📊 Upload Logs
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: integrated-analysis-logs-${{ github.run_id }}
         path: logs/
@@ -102,7 +102,7 @@ jobs:
         
     - name: 📊 Upload Logs
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: technical-analysis-logs-${{ github.run_id }}
         path: logs/
