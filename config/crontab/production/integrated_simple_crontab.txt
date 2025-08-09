@@ -1,0 +1,17 @@
+# Exchange Analytics - Integrated Analysis Simple Crontab
+# 統合通貨相関分析システム（簡易版）
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+HOME=/app
+
+# 🔗 統合通貨相関分析・Discord配信（平日3時間間隔）
+0 */3 9-17 * * 1-5 cd /app && export $(cat .env | grep -v '^#' | xargs) && timeout 180 python scripts/cron/integrated_ai_discord.py >> /app/logs/integrated_analysis.log 2>&1
+
+# 🎯 重要市場タイミング（東京・ロンドン・NY開始時）
+0 0,8,14 * * 1-5 cd /app && export $(cat .env | grep -v '^#' | xargs) && timeout 180 python scripts/cron/integrated_ai_discord.py >> /app/logs/market_timing_analysis.log 2>&1
+
+# 🔍 システムヘルス（1時間間隔）
+0 * * * * cd /app && export $(cat .env | grep -v '^#' | xargs) && timeout 10 python scripts/monitoring/realtime_monitor.py --interval 1 --no-alerts >> /app/logs/health_simple.log 2>&1
+
+# 🗑️ ログ管理（毎日2:00 JST）
+0 17 * * * cd /app/logs && find . -name "*.log" -size +10M -exec gzip {} \; && find . -name "*.gz" -mtime +7 -delete >> /app/logs/cleanup.log 2>&1

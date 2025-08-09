@@ -1,0 +1,45 @@
+# Exchange Analytics Production Crontab - Integrated Currency Correlation Analysis
+# 統合通貨相関分析システム対応版
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+HOME=/app
+
+# 🔗 統合通貨相関分析・Discord配信（平日市場時間、2時間間隔）
+0 */2 9-17 * * 1-5 cd /app && export $(cat .env | grep -v '^#' | xargs) && timeout 180 python scripts/cron/integrated_ai_discord.py >> /app/logs/integrated_ai_cron.log 2>&1
+
+# 🤖 従来AI分析・Discord配信（1時間間隔、平日市場時間）
+30 */1 9-17 * * 1-5 cd /app && export $(cat .env | grep -v '^#' | xargs) && timeout 120 python scripts/cron/real_ai_discord_v2.py USD/JPY >> /app/logs/ai_cron.log 2>&1
+
+# 📊 基本データ取得（15分間隔、平日市場時間 9:00-17:00）
+*/15 9-17 * * 1-5 cd /app && export $(cat .env | grep -v '^#' | xargs) && timeout 300 python scripts/cron/data_scheduler.py --test >> /app/logs/data_cron.log 2>&1
+
+# 🎯 主要市場タイミング統合分析（特別配信）
+# 東京市場開始時 9:00 JST = 00:00 UTC
+0 0 * * 1-5 cd /app && export $(cat .env | grep -v '^#' | xargs) && timeout 180 python scripts/cron/integrated_ai_discord.py >> /app/logs/tokyo_open_analysis.log 2>&1
+
+# ロンドン市場開始時 17:00 JST = 08:00 UTC
+0 8 * * 1-5 cd /app && export $(cat .env | grep -v '^#' | xargs) && timeout 180 python scripts/cron/integrated_ai_discord.py >> /app/logs/london_open_analysis.log 2>&1
+
+# NY市場開始時 23:00 JST = 14:00 UTC
+0 14 * * 1-5 cd /app && export $(cat .env | grep -v '^#' | xargs) && timeout 180 python scripts/cron/integrated_ai_discord.py >> /app/logs/ny_open_analysis.log 2>&1
+
+# 📈 日次レポート（毎日18:00 JST = 09:00 UTC）
+0 9 * * * cd /app && export $(cat .env | grep -v '^#' | xargs) && timeout 60 python scripts/cron/daily_report.py >> /app/logs/daily_cron.log 2>&1
+
+# 🔍 システムヘルスチェック（30分間隔）
+*/30 * * * * cd /app && export $(cat .env | grep -v '^#' | xargs) && timeout 10 python scripts/monitoring/realtime_monitor.py --interval 1 --no-alerts >> /app/logs/health_cron.log 2>&1
+
+# 🌐 APIサーバー稼働確認（10分間隔）
+*/10 * * * * timeout 5 curl -s http://localhost:8000/health >> /app/logs/api_health_cron.log 2>&1 || echo "$(date): API down" >> /app/logs/api_health_cron.log
+
+# 📊 週次統計・レポート（毎週月曜日 9:00 JST = 00:00 UTC）
+0 0 * * 1 cd /app && export $(cat .env | grep -v '^#' | xargs) && timeout 120 python scripts/cron/weekly_report.py >> /app/logs/weekly_cron.log 2>&1
+
+# 🗑️ ログローテーション（毎日2:00 JST = 17:00 UTC）
+0 17 * * * cd /app/logs && find . -name "*.log" -size +10M -exec gzip {} \; && find . -name "*.gz" -mtime +7 -delete >> /app/logs/cleanup.log 2>&1
+
+# 🔍 エラーログ監視（5分間隔）
+*/5 * * * * [ -f /app/logs/integrated_ai_cron.log ] && tail -10 /app/logs/integrated_ai_cron.log | grep -i "error\|failed" && echo "$(date): Integrated AI Errors detected" >> /app/logs/error_alert.log
+
+# 🧪 環境変数テスト（10分間隔、デバッグ用）
+*/10 * * * * cd /app && export $(cat .env | grep -v '^#' | xargs) && timeout 30 python tests/integration/test_env_loading.py >> /app/logs/env_test_cron.log 2>&1
