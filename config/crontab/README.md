@@ -22,11 +22,13 @@ config/crontab/
 
 ## 🚀 **production/** - 本番設定
 
-| ファイル                         | 用途                | 説明                               |
-| -------------------------------- | ------------------- | ---------------------------------- |
-| `production_crontab_final.txt`   | **🎯 最新本番設定** | **現在の推奨設定（最新・最適化）** |
-| `crontab_with_yahoo_finance.txt` | Yahoo Finance 統合  | データソース二重化対応版           |
-| `production_crontab.txt`         | 基本本番設定        | シンプルな初期設定（参考用）       |
+| ファイル                          | 用途                  | 説明                                   |
+| --------------------------------- | --------------------- | -------------------------------------- |
+| `integrated_analysis_crontab.txt` | **🔗 統合相関分析版** | **通貨相関分析システム対応・最新推奨** |
+| `integrated_simple_crontab.txt`   | 🔗 統合分析簡易版     | 統合相関分析の軽量バージョン           |
+| `production_crontab_final.txt`    | 🎯 従来版最新設定     | 従来システムの推奨設定（参考用）       |
+| `crontab_with_yahoo_finance.txt`  | Yahoo Finance 統合    | データソース二重化対応版               |
+| `production_crontab.txt`          | 基本本番設定          | シンプルな初期設定（参考用）           |
 
 ### 📁 backup/ - 廃止ファイル
 

@@ -57,9 +57,7 @@ class IntegratedAIDiscordReporter:
             }
 
             indicators_data = {}
-            yahoo_client = (
-                self.correlation_analyzer.yahoo_client
-            )  # 既存のyahoo_clientを使用
+            yahoo_client = self.correlation_analyzer.yahoo_client  # 既存のyahoo_clientを使用
 
             for tf, (period, interval) in timeframes.items():
                 hist_data = await yahoo_client.get_historical_data(
@@ -435,9 +433,7 @@ async def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Integrated AI Discord Reporter")
-    parser.add_argument(
-        "--test", action="store_true", help="テストモード（Discordに送信しない）"
-    )
+    parser.add_argument("--test", action="store_true", help="テストモード（Discordに送信しない）")
 
     args = parser.parse_args()
 

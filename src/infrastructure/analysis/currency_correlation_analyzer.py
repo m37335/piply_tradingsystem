@@ -118,13 +118,13 @@ class CurrencyCorrelationAnalyzer:
 
             # サマリー作成
             if usd_analysis["direction"] == "strong":
-                usd_analysis["summary"] = (
-                    f"USD強い(スコア:{usd_analysis['strength_score']}) → USD/JPY上昇期待"
-                )
+                usd_analysis[
+                    "summary"
+                ] = f"USD強い(スコア:{usd_analysis['strength_score']}) → USD/JPY上昇期待"
             elif usd_analysis["direction"] == "weak":
-                usd_analysis["summary"] = (
-                    f"USD弱い(スコア:{usd_analysis['strength_score']}) → USD/JPY下落懸念"
-                )
+                usd_analysis[
+                    "summary"
+                ] = f"USD弱い(スコア:{usd_analysis['strength_score']}) → USD/JPY下落懸念"
             else:
                 usd_analysis["summary"] = "USD中立 → USD/JPY方向性不明"
 
@@ -192,13 +192,13 @@ class CurrencyCorrelationAnalyzer:
 
             # サマリー作成
             if jpy_analysis["direction"] == "strong":
-                jpy_analysis["summary"] = (
-                    f"JPY強い(スコア:{jpy_analysis['strength_score']}) → USD/JPY下落圧力"
-                )
+                jpy_analysis[
+                    "summary"
+                ] = f"JPY強い(スコア:{jpy_analysis['strength_score']}) → USD/JPY下落圧力"
             elif jpy_analysis["direction"] == "weak":
-                jpy_analysis["summary"] = (
-                    f"JPY弱い(スコア:{jpy_analysis['strength_score']}) → USD/JPY上昇支援"
-                )
+                jpy_analysis[
+                    "summary"
+                ] = f"JPY弱い(スコア:{jpy_analysis['strength_score']}) → USD/JPY上昇支援"
             else:
                 jpy_analysis["summary"] = "JPY中立 → USD/JPY方向性への影響軽微"
 
@@ -340,12 +340,8 @@ class CurrencyCorrelationAnalyzer:
         usd_analysis = analysis["usd_analysis"]
         usd_table.add_row("方向性", usd_analysis["direction"])
         usd_table.add_row("信頼度", f"{usd_analysis['confidence']}%")
-        usd_table.add_row(
-            "サポート要因", ", ".join(usd_analysis["supporting_pairs"]) or "なし"
-        )
-        usd_table.add_row(
-            "リスク要因", ", ".join(usd_analysis["conflicting_pairs"]) or "なし"
-        )
+        usd_table.add_row("サポート要因", ", ".join(usd_analysis["supporting_pairs"]) or "なし")
+        usd_table.add_row("リスク要因", ", ".join(usd_analysis["conflicting_pairs"]) or "なし")
 
         # JPY分析結果テーブル
         jpy_table = Table(title="💴 JPY強弱分析", show_header=True)
@@ -355,12 +351,8 @@ class CurrencyCorrelationAnalyzer:
         jpy_analysis = analysis["jpy_analysis"]
         jpy_table.add_row("方向性", jpy_analysis["direction"])
         jpy_table.add_row("信頼度", f"{jpy_analysis['confidence']}%")
-        jpy_table.add_row(
-            "サポート要因", ", ".join(jpy_analysis["supporting_pairs"]) or "なし"
-        )
-        jpy_table.add_row(
-            "リスク要因", ", ".join(jpy_analysis["conflicting_pairs"]) or "なし"
-        )
+        jpy_table.add_row("サポート要因", ", ".join(jpy_analysis["supporting_pairs"]) or "なし")
+        jpy_table.add_row("リスク要因", ", ".join(jpy_analysis["conflicting_pairs"]) or "なし")
 
         # 統合予測テーブル
         forecast_table = Table(title="🎯 USD/JPY統合予測", show_header=True)
@@ -370,9 +362,7 @@ class CurrencyCorrelationAnalyzer:
         forecast_table.add_row("現在レート", f"{current_rate:.4f}")
         forecast_table.add_row("現在変動", f"{current_change:+.2f}%")
         forecast_table.add_row("予測方向", usdjpy_forecast["forecast_direction"])
-        forecast_table.add_row(
-            "予測信頼度", f"{usdjpy_forecast['forecast_confidence']}%"
-        )
+        forecast_table.add_row("予測信頼度", f"{usdjpy_forecast['forecast_confidence']}%")
         forecast_table.add_row("戦略バイアス", usdjpy_forecast["strategy_bias"])
         forecast_table.add_row("トレンド整合", usdjpy_forecast["trend_alignment"])
 

@@ -163,9 +163,7 @@ class TechnicalIndicatorsAnalyzer:
             zero_line_position = (
                 "above"
                 if current_macd > 0
-                else "below"
-                if current_macd < 0
-                else "neutral"
+                else "below" if current_macd < 0 else "neutral"
             )
 
             result = {
@@ -278,11 +276,26 @@ class TechnicalIndicatorsAnalyzer:
                 "timeframes": {},
             }
 
-            # D1: RSI + MACD (大局判断)
+            # D1: RSI + MACD (大局判断) - MACDに必要なデータが不足の場合は長期データを取得
             if "D1" in data_dict:
                 d1_analysis = {}
                 d1_rsi = self.calculate_rsi(data_dict["D1"], "D1")
-                d1_macd = self.calculate_macd(data_dict["D1"], "D1")
+
+                # MACD計算に必要なデータ量チェック
+                required_periods = max(self.macd_slow, self.macd_signal) + 10
+                if len(data_dict["D1"]) < required_periods:
+                    logger.warning(
+                        f"D1 MACD: データ不足 {len(data_dict['D1'])} < {required_periods}. 長期データ取得を推奨"
+                    )
+                    d1_macd = {
+                        "indicator": "MACD",
+                        "timeframe": "D1",
+                        "error": f"データ不足 ({len(data_dict['D1'])}件 < {required_periods}件必要)",
+                        "recommendation": "3ヶ月以上の履歴データで再分析してください",
+                    }
+                else:
+                    d1_macd = self.calculate_macd(data_dict["D1"], "D1")
+
                 d1_analysis["RSI"] = d1_rsi
                 d1_analysis["MACD"] = d1_macd
                 d1_analysis["purpose"] = "大局判断"
