@@ -24,9 +24,9 @@ ENV PYTHONUNBUFFERED=1
 # pip を最新版にアップグレード
 RUN pip install --upgrade pip
 
-# requirements.txtがある場合は依存関係をインストール
-COPY requirements.txt* ./
-RUN if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+# Python 依存関係
+COPY requirements/production.txt .
+RUN pip install --no-cache-dir -r production.txt
 
 # アプリケーションコードをコピー
 COPY . .
@@ -34,5 +34,9 @@ COPY . .
 # ポート8000を公開（FlaskやFastAPI用）
 EXPOSE 8000
 
+# 非rootユーザーで実行
+RUN useradd -m appuser && chown -R appuser:appuser /app
+USER appuser
+
 # デフォルトコマンド（開発時はdocker-composeでオーバーライド）
-CMD ["python", "app.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "src.presentation.api.app:create_app()"]
