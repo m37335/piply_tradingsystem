@@ -18,7 +18,6 @@ jobs:
   integrated-analysis:
     name: 🎯 統合AI相関分析
     runs-on: ubuntu-latest
-    if: github.event.schedule == '0 8,10,12,14,16,18,20,22,0,2 * * 1-5'
     environment: production
     
     steps:
@@ -69,7 +68,6 @@ jobs:
   technical-analysis:
     name: 📈 個別テクニカル分析
     runs-on: ubuntu-latest
-    if: github.event.schedule == '0 8,12,16,20,0 * * 1-5'
     environment: production
     
     steps:
@@ -114,6 +112,7 @@ jobs:
     name: 🔍 System Health Check
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'  # 手動実行時のみ
+    environment: production
     
     steps:
     - name: 📥 Checkout Repository
