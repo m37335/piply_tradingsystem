@@ -1,156 +1,112 @@
-# 🚀 Exchange Analytics System v4.1
+# �� Exchange Analytics USD/JPY パターン検出システム
 
-**最先端 AI 統合通貨相関分析プラットフォーム - API 最適化・3 層キャッシュ・実運用システム**
+**24 時間自動稼働・6 つの為替パターン検出・Discord 自動通知システム**
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
-[![OpenAI GPT-4](https://img.shields.io/badge/OpenAI-GPT--4-orange.svg)](https://openai.com/)
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-green.svg)](https://www.sqlalchemy.org/)
+[![Discord](https://img.shields.io/badge/Discord-Webhook-orange.svg)](https://discord.com/)
 [![Yahoo Finance](https://img.shields.io/badge/Yahoo%20Finance-Free%20Data-red.svg)](https://finance.yahoo.com/)
 [![TA-Lib](https://img.shields.io/badge/TA--Lib-Technical%20Analysis-purple.svg)](https://ta-lib.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 📋 概要
 
-Exchange Analytics System v4.0 は、**通貨相関分析**と**テクニカル指標**を統合した**最高品質の AI 分析システム**です。USD/JPY をメインに他通貨ペアの動きを分析し、**GPT-4 による統合戦略**を自動生成、Discord に実践的トレードシナリオを配信します。
+Exchange Analytics USD/JPY パターン検出システムは、**24 時間自動稼働**で USD/JPY の**6 つの為替パターン**を検出し、**Discord 自動通知**を行う本格的な為替分析システムです。
 
-## 🌟 v4.1 革新機能
+**稼働開始**: 2025 年 8 月 10 日 日本時間 8:00 から  
+**稼働モード**: 24 時間自動稼働（平日）  
+**データ取得**: USD/JPY 5 分間隔  
+**パターン検出**: 6 つの為替パターンを自動検出  
+**通知**: Discord 自動配信
 
-### 🔗 **統合通貨相関分析システム**
+## 🌟 システム機能
 
-**メインシステム**: `integrated_ai_discord.py`
+### 🔍 **6 つのパターン検出機能**
 
-- **USD/JPY**: メイン売買対象
-- **EUR/USD, GBP/USD**: USD 強弱分析データ
-- **EUR/JPY, GBP/JPY**: JPY 強弱分析データ
-- **相関統合予測**: 他通貨の動きから USD/JPY 方向性を予測
+1. **トレンド転換パターン**: 上昇/下降トレンドの転換点検出
+2. **プルバックパターン**: トレンド中の一時的な戻り検出
+3. **ダイバージェンスパターン**: 価格と指標の乖離検出
+4. **ブレイクアウトパターン**: 重要な価格レベルの突破検出
+5. **RSI バトルパターン**: RSI 指標の戦い検出
+6. **複合シグナルパターン**: 複数指標の組み合わせ検出
 
-### ⚡ **API 最適化・3 層キャッシュシステム**
+### 📊 **テクニカル指標分析**
 
-- **API 呼び出し削減**: 171 回/日 → 30 回/日（82.5%削減）
-- **3 層キャッシュ**: メモリ・ファイル・データベース
-- **エラー率削減**: 15% → 1.5%（90%削減）
-- **レスポンス時間**: 3-5 秒 → 1-2 秒（50%短縮）
+- **RSI**: 相対力指数（14 期間）
+- **MACD**: 移動平均収束拡散（12,26,9）
+- **ボリンジャーバンド**: 価格変動の統計的範囲（20 期間,2σ）
 
-### 📊 **実トレード用テクニカル指標統合**
+### 🔔 **自動通知システム**
 
-- **RSI (14 期間)**: D1・H4・H1 での過熱度分析
-- **MACD (12,26,9)**: D1 でのトレンド転換シグナル
-- **ボリンジャーバンド (20,2)**: 複数時間軸でのボラティリティ分析
-- **マルチタイムフレーム**: D1→H4→H1 階層統合分析
-- **詳細出力**: MACD・ボリンジャーバンドの数値表示
+- **Discord 通知**: パターン検出時の自動配信
+- **システム監視**: システム状態の定期報告
+- **エラー通知**: 異常発生時の即座通知
 
-### 🤖 **GPT-4 AI 分析エンジン**
-
-**初学者対応プロンプト**:
-
-- 専門用語解説（※マーク付き）
-- 具体的価格指示（4 桁精度）
-- pips 数明記（利確・損切り）
-- 実践的トレード指示
-
-**分析構造**:
-
-```
-【相関分析】→【大局観】→【戦術】→【統合シナリオ】→【リスク管理】→【実行指示】
-```
-
-### 🕘 **拡張市場時間（8 時〜翌日 2 時）**
-
-**グローバル市場完全対応**:
-
-- 🇯🇵 東京市場: 8-15 時 ✅
-- 🇬🇧 ロンドン市場: 16-1 時 ✅
-- 🇺🇸 ニューヨーク市場: 22-6 時 ✅
-- **22 時間連続稼働**: 機会損失ゼロ
-
-## 🎯 実践的分析例
-
-### 統合相関分析レポート例
-
-```
-【相関分析】EUR/USD下落がUSD強化を示し、EUR/JPY・GBP/JPY上昇がJPY弱化を示唆
-【大局観】D1 RSI52.4で中立、MACD上向きでトレンド継続、H4 RSI57.1で買い余地あり
-【戦術】H1でボリンジャーバンド上側歩き、上昇トレンド継続中
-【統合シナリオ】
- ・エントリー価格: 147.7500（USD/JPY LONG）
- ・利確目標: 148.2000（50pips※利益）
- ・損切り価格: 147.4500（30pips※損失）
-【リスク管理】USD・JPY相関性変化の警戒、ダイバージェンス※監視必要
-【実行指示】上記価格での成行き注文推奨、R/R比1.67で効率的リスク管理
-
-※専門用語解説：
-・pips: 通貨ペアの最小価格単位（USD/JPYなら0.01円=1pip）
-・ダイバージェンス: 価格とテクニカル指標の動きが逆行する現象
-```
-
-## 🚀 本番運用スケジュール
+## 🚀 本番稼働スケジュール
 
 ### メインシステム稼働状況
 
-**統合 AI 相関分析** (`integrated_ai_discord.py`):
+**USD/JPY データ取得・分析** (`usdjpy_data_cron.py`):
 
-- **実行間隔**: 2 時間
-- **実行時刻**: 8,10,12,14,16,18,20,22,0,2 時（毎日 10 回）
-- **市場時間**: 8 時〜翌日 2 時（22 時間稼働）
+- **実行間隔**: 5 分間隔
+- **稼働時間**: 平日 24 時間（月曜〜金曜）
+- **処理内容**: データ取得 → 指標計算 → パターン検出 → Discord 通知
 
-**個別テクニカル分析** (`real_ai_discord_v2.py`):
+**日次レポート** (`daily_report.py`):
 
-- **実行間隔**: 4 時間（補助）
-- **実行時刻**: 8,12,16,20,0 時（毎日 5 回）
+- **実行時刻**: 毎日 6:00 JST
+- **内容**: 日次統計・パターン検出結果
 
-**基本データ監視**:
+**週次レポート** (`weekly_report.py`):
 
-- **実行間隔**: 1 時間
-- **稼働時間**: 22 時間フルカバー
+- **実行時刻**: 毎週土曜日 6:00 JST
+- **内容**: 週次統計・システム稼働状況
 
 ## 🏗️ プロジェクト構造
 
 ```
 /app/
 ├── src/
-│   ├── domain/
-│   │   ├── entities/                       # ドメインエンティティ
-│   │   │   ├── analysis_cache.py          # 分析キャッシュ
-│   │   │   ├── notification_history.py    # 通知履歴
-│   │   │   └── api_call_history.py        # API履歴
-│   │   └── repositories/                   # リポジトリインターフェース
-│   ├── infrastructure/
-│   │   ├── analysis/
-│   │   │   ├── technical_indicators.py     # テクニカル指標分析
-│   │   │   └── currency_correlation_analyzer.py  # 通貨相関分析
-│   │   ├── cache/                          # 3層キャッシュシステム
-│   │   │   ├── cache_manager.py           # キャッシュ管理
-│   │   │   ├── analysis_cache.py          # 分析キャッシュ
-│   │   │   └── file_cache.py              # ファイルキャッシュ
-│   │   ├── optimization/                   # 最適化システム
-│   │   │   ├── data_optimizer.py          # データ最適化
-│   │   │   ├── api_rate_limiter.py        # API制限管理
-│   │   │   └── batch_processor.py         # バッチ処理
-│   │   ├── database/
-│   │   │   ├── models/                     # データベースモデル
-│   │   │   └── repositories/               # リポジトリ実装
-│   │   └── external_apis/
-│   │       └── yahoo_finance_client.py     # Yahoo Finance API
-│   └── presentation/
-│       ├── api/                            # FastAPI REST API
-│       └── cli/                            # CLI interface
+│   ├── domain/                           # ドメイン層
+│   │   ├── entities/                     # エンティティ
+│   │   └── repositories/                 # リポジトリインターフェース
+│   ├── application/                      # アプリケーション層
+│   │   └── services/                     # アプリケーションサービス
+│   ├── infrastructure/                   # インフラストラクチャ層
+│   │   ├── database/                     # データベース
+│   │   │   ├── models/                   # データベースモデル
+│   │   │   ├── repositories/             # リポジトリ実装
+│   │   │   └── services/                 # データベースサービス
+│   │   ├── analysis/                     # 分析機能
+│   │   │   └── pattern_detection/        # パターン検出
+│   │   ├── notification/                 # 通知機能
+│   │   ├── monitoring/                   # 監視機能
+│   │   ├── performance/                  # パフォーマンス監視
+│   │   ├── error_handling/               # エラーハンドリング
+│   │   └── schedulers/                   # スケジューラー
+│   └── presentation/                     # プレゼンテーション層
+│       └── api/                          # API
 ├── scripts/
-│   ├── cron/
-│   │   ├── integrated_ai_discord.py        # 🎯 メイン統合システム
-│   │   ├── real_ai_discord_v2.py          # 個別テクニカル分析
-│   │   ├── daily_report.py                # 日次レポート
-│   │   └── weekly_report.py               # 週次レポート
-│   └── monitoring/
-│       └── realtime_monitor.py             # システム監視
-├── note/                                   # 設計書・実装計画
-│   ├── api_optimization_design_2025.md     # API最適化設計書
-│   ├── api_optimization_implementation_plan_2025.yaml # 実装計画
-│   └── api_optimization_implementation_report_2025.md # 実装報告書
-├── tests/
-│   ├── api/                               # API テスト
-│   ├── unit/                              # 単体テスト
-│   └── integration/                       # 統合テスト
-└── logs/                                  # ログファイル
+│   ├── cron/                             # cron実行スクリプト
+│   │   ├── usdjpy_data_cron.py          # 🎯 メイン稼働スクリプト
+│   │   ├── daily_report.py              # 日次レポート
+│   │   └── weekly_report.py             # 週次レポート
+│   ├── monitoring/                       # 監視スクリプト
+│   ├── deployment/                       # デプロイメント
+│   └── test/                             # テストスクリプト
+├── tests/                                # テストファイル
+│   ├── unit/                             # ユニットテスト
+│   ├── integration/                      # 統合テスト
+│   ├── database/                         # データベーステスト
+│   └── api/                              # APIテスト
+├── docs/                                 # ドキュメント
+│   ├── setup/                            # セットアップ関連
+│   ├── testing/                          # テスト関連
+│   ├── architecture/                     # アーキテクチャ設計
+│   └── deployment/                       # デプロイメント関連
+├── data/                                 # データファイル
+├── logs/                                 # ログファイル
+└── note/                                 # 設計書・実装計画
 ```
 
 ## ⚡ クイックスタート
@@ -159,28 +115,31 @@ Exchange Analytics System v4.0 は、**通貨相関分析**と**テクニカル�
 
 ```bash
 # 依存関係インストール
-pip install -r requirements/base.txt
+pip install -r requirements.txt
 
 # 環境変数設定
 cp .env.example .env
-# OPENAI_API_KEY, DISCORD_WEBHOOK_URL を設定
+# DISCORD_WEBHOOK_URL, DISCORD_MONITORING_WEBHOOK_URL を設定
 ```
 
-### 2. 統合システムテスト
+### 2. システムテスト
 
 ```bash
-# 通貨相関分析 + テクニカル指標 + GPT-4分析
-python scripts/cron/integrated_ai_discord.py --test
+# メインスクリプト動作確認
+cd /app && python scripts/cron/usdjpy_data_cron.py --once
 
-# 個別テクニカル分析テスト
-python scripts/cron/real_ai_discord_v2.py USD/JPY --test
+# パターン検出・Discord通知テスト
+cd /app && python scripts/test/test_pattern_detection_with_discord.py
+
+# システム監視テスト
+cd /app && python scripts/monitoring/realtime_monitor.py --interval 1
 ```
 
-### 3. 本番運用開始
+### 3. 本番稼働開始
 
 ```bash
 # crontab設定適用（自動実行開始）
-crontab config/crontab/production/main_production_crontab.txt
+crontab current_crontab.txt
 
 # 稼働状況確認
 crontab -l
@@ -188,20 +147,17 @@ crontab -l
 
 ## 🔧 システム管理
 
-### CLI コマンド
+### 稼働状況確認
 
 ```bash
-# システム状況確認
-./exchange-analytics monitor status
+# メインスクリプト動作確認
+cd /app && python scripts/cron/usdjpy_data_cron.py --once
 
-# データ取得テスト
-./exchange-analytics data fetch --pairs USD/JPY,EUR/USD
+# ログ確認
+tail -f /app/logs/data_cron.log
 
-# AI分析実行
-./exchange-analytics ai analyze USD/JPY --timeframe D1
-
-# API サーバー起動
-./exchange-analytics api start --host 0.0.0.0 --port 8000
+# システム監視
+cd /app && python scripts/monitoring/realtime_monitor.py --interval 1
 ```
 
 ### 監視・メンテナンス
@@ -210,7 +166,7 @@ crontab -l
 
 ```bash
 # メインシステムログ
-tail -f logs/integrated_ai_cron.log
+tail -f logs/data_cron.log
 
 # エラーログ監視
 tail -f logs/error_alert.log
@@ -222,61 +178,33 @@ tail -f logs/health_cron.log
 **トラブルシューティング**:
 
 ```bash
-# Yahoo Finance接続テスト
-python tests/api/test_yahoo_finance.py --test connection
+# データベース接続テスト
+python tests/database/test_models.py
 
-# テクニカル指標テスト
-python tests/unit/test_technical_indicators.py
+# パターン検出テスト
+python scripts/test/test_pattern_detection_with_discord.py
 
-# Discord配信テスト
-python scripts/cron/integrated_ai_discord.py --test
+# Discord通知テスト
+python scripts/test/test_discord_simple.py
 ```
 
-## 📊 API エンドポイント
+## 📊 システム機能詳細
 
-### REST API (FastAPI)
+### パターン検出エンジン
 
-```bash
-# ヘルスチェック
-GET /health
+**検出アルゴリズム**:
 
-# 通貨レート取得
-GET /api/v1/rates?pairs=USD/JPY,EUR/USD
+1. **データ取得**: USD/JPY 5 分足データ
+2. **指標計算**: RSI、MACD、ボリンジャーバンド
+3. **パターン分析**: 6 つのパターンを並行検出
+4. **結果保存**: データベースに検出結果を保存
+5. **通知配信**: Discord に自動配信
 
-# AI分析レポート
-POST /api/v1/ai/analyze
-{
-    "pair": "USD/JPY",
-    "timeframe": "D1",
-    "indicators": ["RSI", "MACD", "BB"]
-}
+**検出精度**:
 
-# 統合相関分析
-GET /api/v1/correlation/integrated?target=USD/JPY
-```
-
-### Swagger UI
-
-- 開発環境: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-
-## 🌟 主要機能詳細
-
-### 統合通貨相関分析
-
-**分析対象通貨ペア**:
-
-- メイン: USD/JPY
-- USD 分析用: EUR/USD, GBP/USD
-- JPY 分析用: EUR/JPY, GBP/JPY
-
-**分析フロー**:
-
-1. 全通貨ペアのリアルタイムレート取得
-2. USD 強弱・JPY 強弱の個別分析
-3. 相関性に基づく USD/JPY 予測
-4. テクニカル指標との統合判断
-5. GPT-4 による戦略シナリオ生成
+- **リアルタイム検出**: 5 分間隔での継続監視
+- **誤検出防止**: 複数条件による厳密な判定
+- **履歴管理**: 検出履歴の完全保存
 
 ### テクニカル指標分析
 
@@ -288,72 +216,77 @@ GET /api/v1/correlation/integrated?target=USD/JPY
 
 **マルチタイムフレーム**:
 
-- **D1**: 大局トレンド（MACD 中心）
-- **H4**: 戦術判断（RSI + BB）
-- **H1**: エントリーゾーン（RSI + BB）
+- **5 分**: リアルタイム監視
+- **1 時間**: 短期トレンド
+- **4 時間**: 中期トレンド
+- **日足**: 長期トレンド
 
-### GPT-4 AI 分析エンジン
+### Discord 通知システム
 
-**プロンプト特徴**:
+**通知内容**:
 
-- **プロトレーダー + 投資教育者**ロール
-- **初学者対応**: 専門用語解説付き
-- **具体的価格指示**: 4 桁精度・pips 数明記
-- **統合判断**: 相関性 + テクニカル + 市況分析
+- **パターン検出**: 検出されたパターンの詳細情報
+- **システム監視**: システム稼働状況の定期報告
+- **エラー通知**: 異常発生時の即座通知
+- **パフォーマンス**: システム性能レポート
+
+**通知チャンネル**:
+
+- **一般**: パターン検出通知
+- **システム監視・ログ管理**: システム監視通知
 
 ## 📈 パフォーマンス & 制限
 
-### システム性能（最適化後）
+### システム性能
 
-- **API レスポンス**: 平均 < 1 秒（50%短縮）
-- **分析生成時間**: 統合分析 < 15 秒（50%短縮）
-- **Discord 配信**: < 3 秒（40%短縮）
-- **同時分析**: 最大 5 通貨ペア
-- **キャッシュヒット率**: 85%
+- **データ取得**: 5 分間隔での安定取得
+- **パターン検出**: リアルタイム検出（< 1 秒）
+- **Discord 配信**: < 3 秒での自動配信
+- **システム監視**: 30 分間隔でのヘルスチェック
+- **エラー監視**: 10 分間隔でのエラー監視
 
-### API 制限対応
+### 制限・制約
 
-- **Yahoo Finance**: 無制限（メインデータソース）
-- **OpenAI GPT-4**: 10,000 tokens/min（十分な余裕）
-- **レート制限**: 自動リトライ・指数バックオフ実装
-- **3 層キャッシュ**: メモリ・ファイル・データベース
+- **データソース**: Yahoo Finance（無料）
+- **通貨ペア**: USD/JPY 専用
+- **稼働時間**: 平日 24 時間（土日祝日は停止）
+- **データベース**: SQLite（テスト環境）
 
 ## 🛡️ セキュリティ & 運用
 
 ### セキュリティ対策
 
-- **API キー**: 環境変数管理・暗号化
-- **入力検証**: Pydantic バリデーション
-- **レート制限**: API 濫用防止
-- **エラーハンドリング**: 例外処理・フォールバック
+- **環境変数**: API キー・Webhook URL の安全な管理
+- **ログ管理**: 自動ログローテーション
+- **エラーハンドリング**: 包括的な例外処理
+- **リソース監視**: メモリ・CPU 使用率の監視
 
 ### 運用監視
 
 - **ヘルスチェック**: 30 分間隔
-- **エラー監視**: 5 分間隔・自動アラート
+- **エラー監視**: 10 分間隔・自動アラート
 - **ログローテーション**: 自動・容量制限
-- **API 接続テスト**: 定期実行
+- **パフォーマンス監視**: 定期的な性能レポート
 
-## 🔮 ロードマップ
+## 🔮 今後の拡張予定
 
-### v4.1 完了 ✅
+### 短期計画
 
-- **API 最適化**: 82.5%の API 呼び出し削減
-- **3 層キャッシュ**: メモリ・ファイル・データベース
-- **エラー率削減**: 90%のエラー率削減
-- **テクニカル指標**: MACD・ボリンジャーバンド詳細出力
+- **追加パターン検出**: より多くの為替パターン
+- **複数通貨ペア**: EUR/USD、GBP/USD 等への拡張
+- **機械学習**: 履歴データ学習による予測精度向上
 
-### v4.2 計画
-
-- **機械学習予測**: 履歴データ学習・予測精度向上
-- **アラート機能**: しきい値突破時の即時通知
-- **ポートフォリオ分析**: 複数通貨ペア統合管理
-
-### v4.3 計画
+### 中期計画
 
 - **Web UI**: ダッシュボード・リアルタイム表示
 - **モバイル対応**: スマートフォン最適化
 - **クラウド展開**: AWS/Azure 本格展開
+
+### 長期計画
+
+- **AI 分析**: GPT-4 統合による高度な分析
+- **ポートフォリオ管理**: 複数通貨ペア統合管理
+- **自動売買**: パターン検出による自動売買機能
 
 ## 📞 サポート
 
@@ -361,26 +294,28 @@ GET /api/v1/correlation/integrated?target=USD/JPY
 
 **よくある問題**:
 
-1. **Discord 配信失敗**
+1. **Discord 通知失敗**
 
    ```bash
    # Webhook URL確認
    echo $DISCORD_WEBHOOK_URL
    # テスト実行
-   python scripts/cron/integrated_ai_discord.py --test
+   python scripts/test/test_discord_simple.py
    ```
 
-2. **API 接続エラー**
+2. **データベース接続エラー**
 
    ```bash
-   # Yahoo Finance接続確認
-   python tests/api/test_yahoo_finance.py --test connection
+   # SQLiteファイル確認
+   ls -la data/test_app.db
+   # データベース初期化
+   python scripts/test/setup_test_database.py
    ```
 
-3. **テクニカル指標 N/A**
+3. **パターン検出エラー**
    ```bash
-   # データ量確認・期間延長
-   python tests/unit/test_technical_indicators.py
+   # テストデータ生成
+   python scripts/test/test_pattern_detection_with_discord.py
    ```
 
 ### ログ分析
@@ -399,13 +334,13 @@ MIT License - 詳細は [LICENSE](LICENSE) ファイルを参照
 
 ## 🙏 謝辞
 
-- [OpenAI](https://openai.com/) - GPT-4 API
 - [Yahoo Finance](https://finance.yahoo.com/) - 無料金融データ
 - [TA-Lib](https://ta-lib.org/) - テクニカル分析ライブラリ
-- [FastAPI](https://fastapi.tiangolo.com/) - 高性能 Web フレームワーク
+- [SQLAlchemy](https://www.sqlalchemy.org/) - データベース ORM
+- [Discord](https://discord.com/) - 通知プラットフォーム
 
 ---
 
-**🚀 Exchange Analytics System v4.1 - 最高品質の AI 統合通貨相関分析プラットフォーム**
+**🚀 Exchange Analytics USD/JPY パターン検出システム**
 
-**実運用対応・22 時間稼働・API 最適化・3 層キャッシュ・グローバル市場完全対応**
+**24 時間自動稼働・6 つの為替パターン検出・Discord 自動通知・本格運用対応**

@@ -350,8 +350,8 @@ async def get_async_session() -> AsyncSession:
     try:
         import os
 
-        # SQLite専用の設定に強制変更
-        database_url = "sqlite+aiosqlite:///./app.db"
+        # 環境変数からデータベースURLを取得、デフォルトはSQLite
+        database_url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./app.db")
 
         # データベースマネージャーを初期化
         if not hasattr(get_async_session, "_db_manager"):

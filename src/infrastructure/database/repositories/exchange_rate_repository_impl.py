@@ -25,7 +25,7 @@ logger = get_infrastructure_logger()
 
 
 class ExchangeRateRepositoryImpl(
-    BaseRepositoryImpl[ExchangeRateEntity], ExchangeRateRepository
+    BaseRepositoryImpl, ExchangeRateRepository
 ):
     """
     為替レートリポジトリ実装クラス

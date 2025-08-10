@@ -144,6 +144,12 @@ Thumbs.db
 *.sqlite3
 exchange_app.db
 exchange_analytics.db
+test_app.db
+
+# Cache files
+cache/
+*.cache
+*.meta
 
 # Logs
 logs/
