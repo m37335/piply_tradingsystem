@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 実際のGPT分析結果をDiscordに配信
-Alpha Vantage実データ + OpenAI GPT分析 + Discord配信の統合
+Yahoo Finance実データ + OpenAI GPT分析 + Discord配信の統合
 """
 
 import asyncio
@@ -15,19 +15,24 @@ import httpx
 import pytz
 from rich.console import Console
 
+# プロジェクトパス追加
+sys.path.append("/app")
+from src.infrastructure.external_apis.yahoo_finance_client import YahooFinanceClient
+
 
 class RealAIDiscordReporter:
     """実AI分析Discord配信システム"""
 
     def __init__(self):
         self.console = Console()
-        self.alpha_vantage_key = os.getenv("ALPHA_VANTAGE_API_KEY")
         self.openai_key = os.getenv("OPENAI_API_KEY")
         self.discord_webhook = os.getenv("DISCORD_WEBHOOK_URL")
 
         # API URLs
-        self.alpha_vantage_url = "https://www.alphavantage.co/query"
         self.openai_url = "https://api.openai.com/v1/chat/completions"
+
+        # Yahoo Finance クライアント初期化
+        self.yahoo_client = YahooFinanceClient()
 
         self.jst = pytz.timezone("Asia/Tokyo")
 
@@ -40,7 +45,7 @@ class RealAIDiscordReporter:
         )
 
         try:
-            # Step 1: Alpha Vantage から実データ取得
+            # Step 1: Yahoo Finance から実データ取得
             market_data = await self._fetch_real_market_data(currency_pair)
             if not market_data:
                 self.console.print("❌ 市場データ取得失敗")
@@ -73,7 +78,7 @@ class RealAIDiscordReporter:
         self, currency_pair: str
     ) -> Optional[Dict[str, Any]]:
         """Alpha Vantage から実際の市場データを取得"""
-        self.console.print("📊 Alpha Vantage から実データ取得中...")
+        self.console.print("📊 Yahoo Finance から実データ取得中...")
 
         if (
             not self.alpha_vantage_key

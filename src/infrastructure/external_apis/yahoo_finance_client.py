@@ -74,7 +74,7 @@ class YahooFinanceClient(BaseAPIClient):
 
         # 通貨マッピング初期化
         self._init_currency_mapping()
-        
+
         logger.info("Initialized Yahoo Finance client")
 
     async def _retry_with_backoff(self, func, *args, **kwargs):
@@ -95,9 +95,7 @@ class YahooFinanceClient(BaseAPIClient):
                 # レート制限エラーの場合
                 if "429" in error_msg or "too many requests" in error_msg:
                     if attempt < self.max_retries:
-                        wait_time = self.rate_limit_delay * (
-                            2**attempt
-                        )  # 指数バックオフ
+                        wait_time = self.rate_limit_delay * (2**attempt)  # 指数バックオフ
                         logger.warning(
                             f"Rate limit hit, waiting {wait_time}s before retry {attempt + 1}/{self.max_retries}"
                         )

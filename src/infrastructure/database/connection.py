@@ -65,13 +65,24 @@ class DatabaseManager:
         try:
             # SQLiteの場合は特別な設定
             if database_url.startswith("sqlite"):
-                engine_kwargs = {
-                    "poolclass": StaticPool,
-                    "connect_args": {
-                        "check_same_thread": False,
-                    },
-                    **kwargs,
-                }
+                if "aiosqlite" in database_url:
+                    # aiosqliteの場合
+                    engine_kwargs = {
+                        "poolclass": StaticPool,
+                        "connect_args": {
+                            "check_same_thread": False,
+                        },
+                        **kwargs,
+                    }
+                else:
+                    # 通常のsqliteの場合
+                    engine_kwargs = {
+                        "poolclass": StaticPool,
+                        "connect_args": {
+                            "check_same_thread": False,
+                        },
+                        **kwargs,
+                    }
             else:
                 # PostgreSQL等の場合
                 engine_kwargs = {
@@ -171,9 +182,11 @@ class DatabaseManager:
             return False
 
         try:
+            from sqlalchemy import text
+
             async with self.get_session() as session:
                 # 簡単なクエリでテスト
-                await session.execute("SELECT 1")
+                await session.execute(text("SELECT 1"))
                 logger.debug("Database health check passed")
                 return True
         except Exception as e:
@@ -325,6 +338,50 @@ async def reset_database() -> None:
     await db_manager.drop_tables()
     await db_manager.create_tables()
     logger.info("Database reset completed")
+
+
+async def get_async_session() -> AsyncSession:
+    """
+    非同期セッションを取得
+
+    Returns:
+        AsyncSession: 非同期セッション
+    """
+    try:
+        import os
+
+        # SQLite専用の設定に強制変更
+        database_url = "sqlite+aiosqlite:///./app.db"
+
+        # データベースマネージャーを初期化
+        if not hasattr(get_async_session, "_db_manager"):
+            get_async_session._db_manager = DatabaseManager()
+            await get_async_session._db_manager.initialize(
+                database_url,
+                echo=False,  # デバッグ時はTrueに変更
+                pool_size=5,
+                max_overflow=10,
+            )
+
+        # セッションファクトリからセッションを取得
+        session_factory = await get_async_session._db_manager.get_session_factory()
+        return session_factory()
+
+    except Exception as e:
+        logger.error(f"Failed to get async session: {str(e)}")
+        # フォールバック: 基本的なセッション作成
+        try:
+            from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+            fallback_url = "sqlite+aiosqlite:///./app.db"
+            engine = create_async_engine(fallback_url, echo=False)
+            session_factory = async_sessionmaker(engine, expire_on_commit=False)
+            return session_factory()
+        except Exception as fallback_error:
+            logger.error(
+                f"Fallback session creation also failed: {str(fallback_error)}"
+            )
+            raise
 
 
 async def migrate_database() -> None:

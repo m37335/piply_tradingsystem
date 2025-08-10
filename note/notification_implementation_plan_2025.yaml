@@ -1,0 +1,432 @@
+# 🔧 Discord通知パターン実装計画（2025年8月版）
+# YAML形式による構造化された実装計画
+
+project:
+  name: "Discord Notification Patterns Implementation"
+  version: "2025.8"
+  description: "マルチタイムフレーム戦略に基づく通知パターン実装計画"
+  based_on: "discord_notification_patterns_2025.md"
+
+# 📊 実装アーキテクチャ
+architecture:
+  notification_pattern_engine:
+    description: "通知パターン判定エンジン"
+    components:
+      - "マルチタイムフレーム分析"
+      - "パターン判定ロジック"
+      - "優先度管理システム"
+      - "通知テンプレート生成"
+    base_class: "TechnicalIndicatorsAnalyzer"
+
+  notification_management_system:
+    description: "通知管理システム"
+    components:
+      - "パターン検出"
+      - "重複防止"
+      - "優先度制御"
+      - "Discord送信"
+    main_class: "NotificationManager"
+
+# 📁 フォルダ構成設計
+folder_structure:
+  current_structure:
+    description: "現在のプロジェクト構造"
+    paths:
+      - "src/infrastructure/analysis/technical_indicators.py"
+      - "src/infrastructure/analysis/currency_correlation_analyzer.py"
+      - "src/infrastructure/messaging/discord_client.py"
+      - "src/infrastructure/external_apis/yahoo_finance_client.py"
+      - "src/utils/logging_config.py"
+      - "scripts/cron/integrated_ai_discord.py"
+      - "scripts/cron/real_ai_discord_v2.py"
+
+  new_structure:
+    description: "新規追加予定の構造"
+    directories:
+      - path: "src/infrastructure/analysis/pattern_detectors/"
+        description: "パターン検出器ディレクトリ"
+        files:
+          - "__init__.py"
+          - "trend_reversal_detector.py"
+          - "pullback_detector.py"
+          - "divergence_detector.py"
+          - "breakout_detector.py"
+          - "rsi_battle_detector.py"
+          - "composite_signal_detector.py"
+
+      - path: "src/infrastructure/messaging/templates/"
+        description: "Discord通知テンプレートディレクトリ"
+        files:
+          - "__init__.py"
+          - "pattern_1_template.py"
+          - "pattern_2_template.py"
+          - "pattern_2_2_template.py"
+          - "pattern_3_template.py"
+          - "pattern_4_template.py"
+          - "pattern_5_template.py"
+          - "pattern_6_template.py"
+
+      - path: "src/domain/entities/"
+        description: "ドメインエンティティ"
+        files:
+          - "notification_pattern.py"
+
+      - path: "src/domain/value_objects/"
+        description: "値オブジェクト"
+        files:
+          - "pattern_priority.py"
+
+    core_files:
+      - path: "src/infrastructure/analysis/notification_pattern_analyzer.py"
+        description: "メインのパターン分析エンジン"
+      - path: "src/infrastructure/messaging/notification_manager.py"
+        description: "通知管理・優先度制御システム"
+      - path: "src/utils/pattern_utils.py"
+        description: "パターン分析用ユーティリティ"
+
+    cron_scripts:
+      - path: "scripts/cron/notification_cron.py"
+        description: "通知専用のcronスクリプト"
+
+    test_files:
+      unit_tests:
+        - path: "tests/unit/test_notification_patterns.py"
+          description: "パターン分析の単体テスト"
+        - path: "tests/unit/test_pattern_detectors.py"
+          description: "各検出器の単体テスト"
+      integration_tests:
+        - path: "tests/integration/test_notification_flow.py"
+          description: "通知フローの統合テスト"
+        - path: "tests/integration/test_discord_integration.py"
+          description: "Discord統合テスト"
+
+# 🎯 通知パターン定義
+notification_patterns:
+  pattern_1:
+    name: "強力なトレンド転換シグナル"
+    priority: 100
+    description: "全時間軸一致による強力な売りシグナル"
+    conditions:
+      D1:
+        - "RSI > 70"
+        - "MACD デッドクロス"
+      H4:
+        - "RSI > 70"
+        - "ボリンジャーバンド +2σ タッチ"
+      H1:
+        - "RSI > 70"
+        - "ボリンジャーバンド +2σ タッチ"
+      M5:
+        - "RSI > 70"
+        - "ヒゲ形成"
+    notification:
+      title: "🚨 強力な売りシグナル検出！"
+      color: "0xFF0000"
+      take_profit: "-50pips"
+      stop_loss: "+30pips"
+
+  pattern_2:
+    name: "押し目買いチャンス"
+    priority: 70
+    description: "上位足トレンド継続中の押し目買い"
+    conditions:
+      D1:
+        - "RSI 30-50"
+        - "MACD 上昇継続"
+      H4:
+        - "RSI 30-40"
+        - "ボリンジャーバンド -2σ タッチ"
+      H1:
+        - "RSI 30-35"
+        - "ボリンジャーバンド -2σ タッチ"
+      M5:
+        - "RSI 30以下"
+        - "反発サイン"
+    notification:
+      title: "📈 押し目買いチャンス！"
+      color: "0x00FF00"
+      take_profit: "+80pips"
+      stop_loss: "-40pips"
+
+  pattern_2_2:
+    name: "戻り売りチャンス"
+    priority: 70
+    description: "上位足下降トレンド継続中の戻り売り"
+    conditions:
+      D1:
+        - "RSI 50-70"
+        - "MACD 下降継続"
+      H4:
+        - "RSI 60-70"
+        - "ボリンジャーバンド +2σ タッチ"
+      H1:
+        - "RSI 65-70"
+        - "ボリンジャーバンド +2σ タッチ"
+      M5:
+        - "RSI 70以上"
+        - "反転サイン"
+    notification:
+      title: "📉 戻り売りチャンス！"
+      color: "0xFF6600"
+      take_profit: "-80pips"
+      stop_loss: "+40pips"
+
+  pattern_3:
+    name: "ダイバージェンス警戒"
+    priority: 70
+    description: "価格とRSIの逆行による警戒シグナル"
+    conditions:
+      D1:
+        - "価格新高値"
+        - "RSI 前回高値未達"
+      H4:
+        - "価格上昇"
+        - "RSI 下降"
+      H1:
+        - "価格上昇"
+        - "RSI 下降"
+      M5:
+        - "価格上昇"
+        - "RSI 下降"
+    notification:
+      title: "⚠️ ダイバージェンス警戒！"
+      color: "0xFFFF00"
+      strategy: "利確推奨"
+      risk: "急落可能性"
+
+  pattern_4:
+    name: "ブレイクアウト狙い"
+    priority: 70
+    description: "ボリンジャーバンド突破による急騰狙い"
+    conditions:
+      D1:
+        - "RSI 50-70"
+        - "MACD 上昇"
+      H4:
+        - "ボリンジャーバンド +2σ 突破"
+      H1:
+        - "ボリンジャーバンド +2σ 突破"
+      M5:
+        - "強い上昇モメンタム"
+    notification:
+      title: "🚀 ブレイクアウト狙い！"
+      color: "0x00FFFF"
+      take_profit: "+100pips"
+      stop_loss: "-50pips"
+
+  pattern_5:
+    name: "RSI50ライン攻防"
+    priority: 50
+    description: "トレンド継続/転換の分岐点"
+    conditions:
+      D1:
+        - "RSI 45-55"
+        - "MACD ゼロライン付近"
+      H4:
+        - "RSI 45-55"
+        - "ボリンジャーバンド ミドル付近"
+      H1:
+        - "RSI 45-55"
+        - "価格変動増加"
+      M5:
+        - "RSI 50ライン 攻防"
+    notification:
+      title: "🔄 RSI50ライン攻防！"
+      color: "0x808080"
+      strategy: "様子見推奨"
+      action: "方向性確定まで待機"
+
+  pattern_6:
+    name: "複合シグナル強化"
+    priority: 90
+    description: "複数指標の一致による高信頼度シグナル"
+    conditions:
+      D1:
+        - "RSI + MACD + 価格 3つ一致"
+      H4:
+        - "RSI + ボリンジャーバンド 2つ一致"
+      H1:
+        - "RSI + ボリンジャーバンド 2つ一致"
+      M5:
+        - "RSI + 価格形状 2つ一致"
+    notification:
+      title: "💪 複合シグナル強化！"
+      color: "0x800080"
+      take_profit: "+120pips"
+      stop_loss: "-60pips"
+      confidence: "最高（複合シグナル）"
+
+# 📅 実装スケジュール
+implementation_schedule:
+  week_1:
+    name: "基盤実装"
+    priority: "高"
+    tasks:
+      folder_structure:
+        - "src/infrastructure/analysis/pattern_detectors/ ディレクトリ作成"
+        - "src/infrastructure/messaging/templates/ ディレクトリ作成"
+        - "src/domain/entities/notification_pattern.py 作成"
+        - "src/domain/value_objects/pattern_priority.py 作成"
+        - "src/utils/pattern_utils.py 作成"
+      core_implementation:
+        - "NotificationPatternAnalyzer クラス作成"
+        - "マルチタイムフレームデータ取得機能"
+        - "基本的なパターン判定ロジック"
+
+  week_2:
+    name: "パターン実装"
+    priority: "高"
+    tasks:
+      pattern_detectors:
+        - "trend_reversal_detector.py (パターン1)"
+        - "pullback_detector.py (パターン2・2-2)"
+        - "divergence_detector.py (パターン3)"
+        - "breakout_detector.py (パターン4)"
+        - "rsi_battle_detector.py (パターン5)"
+        - "composite_signal_detector.py (パターン6)"
+      testing:
+        - "各パターンの単体テスト作成"
+
+  week_3:
+    name: "通知システム"
+    priority: "中"
+    tasks:
+      templates:
+        - "pattern_1_template.py (トレンド転換)"
+        - "pattern_2_template.py (押し目買い)"
+        - "pattern_2_2_template.py (戻り売り)"
+        - "pattern_3_template.py (ダイバージェンス)"
+        - "pattern_4_template.py (ブレイクアウト)"
+        - "pattern_5_template.py (RSI50攻防)"
+        - "pattern_6_template.py (複合シグナル)"
+      management:
+        - "NotificationManager 実装"
+        - "優先度管理システム"
+        - "notification_cron.py 作成"
+
+  week_4:
+    name: "テスト・最適化"
+    priority: "中"
+    tasks:
+      integration_tests:
+        - "test_notification_flow.py (通知フロー統合テスト)"
+        - "test_discord_integration.py (Discord統合テスト)"
+      optimization:
+        - "全パターンのテスト実行"
+        - "通知精度の測定・分析"
+        - "パフォーマンス最適化"
+      documentation:
+        - "folder_structure_2025.md 作成"
+
+# 🎯 実装優先順位
+implementation_priority:
+  phase_1:
+    name: "高優先度（即座実装）"
+    patterns:
+      - "パターン1: 強力なトレンド転換シグナル"
+      - "パターン6: 複合シグナル強化"
+    components:
+      - "基盤システム: NotificationPatternAnalyzer"
+
+  phase_2:
+    name: "中優先度（1-2週間後）"
+    patterns:
+      - "パターン2: 押し目買いチャンス"
+      - "パターン2-2: 戻り売りチャンス"
+      - "パターン4: ブレイクアウト狙い"
+      - "パターン3: ダイバージェンス警戒"
+
+  phase_3:
+    name: "低優先度（3-4週間後）"
+    patterns:
+      - "パターン5: RSI50ライン攻防"
+    components:
+      - "高度な機能: 機械学習による精度向上"
+
+# 🔧 技術的実装詳細
+technical_implementation:
+  multi_timeframe_data:
+    description: "マルチタイムフレームデータ取得"
+    timeframes:
+      D1:
+        interval: "1d"
+        period: "3mo"
+      H4:
+        interval: "4h"
+        period: "1mo"
+      H1:
+        interval: "1h"
+        period: "1wk"
+      M5:
+        interval: "5m"
+        period: "1d"
+
+  pattern_detection_logic:
+    description: "パターン判定ロジック"
+    example: |
+      def _check_trend_reversal_conditions(self, data):
+          conditions = {
+              'D1': {
+                  'rsi_overbought': data['D1']['indicators']['rsi']['current_value'] > 70,
+                  'macd_dead_cross': self._check_macd_dead_cross(data['D1']['indicators']['macd']),
+                  'price_high': data['D1']['price_data']['Close'].iloc[-1] > data['D1']['price_data']['Close'].iloc[-2]
+              }
+          }
+          return self._check_all_timeframe_conditions(conditions)
+
+  divergence_detection:
+    description: "ダイバージェンス検出"
+    method: "_detect_divergence"
+    parameters:
+      - "price_data"
+      - "rsi_data"
+      - "lookback_periods: 10"
+
+# 📊 期待効果
+expected_effects:
+  short_term:
+    - "通知精度: マルチタイムフレームによる信頼度向上"
+    - "エントリータイミング: 下位足による精度向上"
+    - "リスク管理: ダイバージェンス検出による警戒"
+
+  long_term:
+    - "トレード成績: 体系的な分析による勝率向上"
+    - "学習効果: パターン認識能力の向上"
+    - "システム安定性: 自動化による一貫性確保"
+
+# 🌟 フォルダ構成の利点
+folder_structure_benefits:
+  modularity:
+    description: "モジュール性"
+    benefits:
+      - "各パターン検出器: 独立したファイルで保守性向上"
+      - "テンプレート分離: 通知内容とロジックの分離"
+      - "テスト分離: 単体・統合テストの明確な分離"
+
+  extensibility:
+    description: "拡張性"
+    benefits:
+      - "新パターン追加: pattern_detectors/に新ファイル追加のみ"
+      - "新テンプレート追加: templates/に新ファイル追加のみ"
+      - "設定変更: 各ファイル独立して修正可能"
+
+  maintainability:
+    description: "保守性"
+    benefits:
+      - "責任分離: 各ファイルが単一責任を持つ"
+      - "依存関係明確: import文で依存関係が明確"
+      - "デバッグ容易: 問題箇所の特定が容易"
+
+  testability:
+    description: "テスト容易性"
+    benefits:
+      - "単体テスト: 各検出器を独立してテスト"
+      - "統合テスト: 全体フローをテスト"
+      - "モック化: 依存関係のモック化が容易"
+
+# 📝 注意事項
+notes:
+  - "本実装計画は、市場状況とユーザーフィードバックに応じて継続的に調整されます"
+  - "各フェーズの完了後、効果測定とフィードバック収集を実施"
+  - "パフォーマンス監視とログ分析による継続的改善"
+  - "セキュリティ考慮事項: API キー管理、レート制限対応"

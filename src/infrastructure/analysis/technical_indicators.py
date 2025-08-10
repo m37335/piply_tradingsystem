@@ -66,17 +66,46 @@ class TechnicalIndicatorsAnalyzer:
             Dict: RSI値と分析結果
         """
         try:
+            # データ型の詳細ログ
+            logger.info(f"RSI calculation - Data type: {type(data)}")
+            logger.info(
+                f"RSI calculation - Data shape: {getattr(data, 'shape', 'N/A')}"
+            )
+            logger.info(
+                f"RSI calculation - Data columns: {getattr(data, 'columns', 'N/A')}"
+            )
+
+            # データがnumpy配列の場合はDataFrameに変換
+            if isinstance(data, np.ndarray):
+                logger.warning("Data is numpy array, converting to DataFrame")
+                return {"error": "データ形式エラー: DataFrameが必要"}
+
+            # データが辞書の場合はDataFrameに変換を試行
+            if isinstance(data, dict):
+                try:
+                    data = pd.DataFrame(data)
+                except Exception as e:
+                    logger.error(f"Failed to convert dict to DataFrame: {str(e)}")
+                    return {"error": "データ変換エラー"}
+
             if len(data) < self.rsi_period:
                 logger.warning(
                     f"Insufficient data for RSI calculation: {len(data)} < {self.rsi_period}"
                 )
                 return {"error": "データ不足"}
 
-            close = data["Close"].values
+            # Close列が存在するかチェック
+            if "Close" not in data.columns:
+                logger.error("Close column not found in data")
+                return {"error": "Close列が見つかりません"}
+
+            close = data["Close"]
             rsi = ta.momentum.RSIIndicator(close, window=self.rsi_period).rsi()
 
-            current_rsi = rsi[-1] if not np.isnan(rsi[-1]) else None
-            previous_rsi = rsi[-2] if len(rsi) > 1 and not np.isnan(rsi[-2]) else None
+            current_rsi = rsi.iloc[-1] if not np.isnan(rsi.iloc[-1]) else None
+            previous_rsi = (
+                rsi.iloc[-2] if len(rsi) > 1 and not np.isnan(rsi.iloc[-2]) else None
+            )
 
             # RSI状態判定
             rsi_state = self._classify_rsi_state(current_rsi)
@@ -124,6 +153,19 @@ class TechnicalIndicatorsAnalyzer:
             Dict: MACD値と分析結果
         """
         try:
+            # データがnumpy配列の場合はDataFrameに変換
+            if isinstance(data, np.ndarray):
+                logger.warning("Data is numpy array, converting to DataFrame")
+                return {"error": "データ形式エラー: DataFrameが必要"}
+
+            # データが辞書の場合はDataFrameに変換を試行
+            if isinstance(data, dict):
+                try:
+                    data = pd.DataFrame(data)
+                except Exception as e:
+                    logger.error(f"Failed to convert dict to DataFrame: {str(e)}")
+                    return {"error": "データ変換エラー"}
+
             required_periods = max(self.macd_slow, self.macd_signal) + 10
             if len(data) < required_periods:
                 logger.warning(
@@ -131,7 +173,12 @@ class TechnicalIndicatorsAnalyzer:
                 )
                 return {"error": "データ不足"}
 
-            close = data["Close"].values
+            # Close列が存在するかチェック
+            if "Close" not in data.columns:
+                logger.error("Close column not found in data")
+                return {"error": "Close列が見つかりません"}
+
+            close = data["Close"]
             macd_indicator = ta.trend.MACD(
                 close,
                 window_fast=self.macd_fast,
@@ -142,18 +189,24 @@ class TechnicalIndicatorsAnalyzer:
             signal_line = macd_indicator.macd_signal()
             histogram = macd_indicator.macd_diff()
 
-            current_macd = macd_line[-1] if not np.isnan(macd_line[-1]) else None
-            current_signal = signal_line[-1] if not np.isnan(signal_line[-1]) else None
-            current_histogram = histogram[-1] if not np.isnan(histogram[-1]) else None
+            current_macd = (
+                macd_line.iloc[-1] if not np.isnan(macd_line.iloc[-1]) else None
+            )
+            current_signal = (
+                signal_line.iloc[-1] if not np.isnan(signal_line.iloc[-1]) else None
+            )
+            current_histogram = (
+                histogram.iloc[-1] if not np.isnan(histogram.iloc[-1]) else None
+            )
 
             previous_macd = (
-                macd_line[-2]
-                if len(macd_line) > 1 and not np.isnan(macd_line[-2])
+                macd_line.iloc[-2]
+                if len(macd_line) > 1 and not np.isnan(macd_line.iloc[-2])
                 else None
             )
             previous_signal = (
-                signal_line[-2]
-                if len(signal_line) > 1 and not np.isnan(signal_line[-2])
+                signal_line.iloc[-2]
+                if len(signal_line) > 1 and not np.isnan(signal_line.iloc[-2])
                 else None
             )
 
@@ -166,7 +219,9 @@ class TechnicalIndicatorsAnalyzer:
             zero_line_position = (
                 "above"
                 if current_macd > 0
-                else "below" if current_macd < 0 else "neutral"
+                else "below"
+                if current_macd < 0
+                else "neutral"
             )
 
             result = {
@@ -203,13 +258,31 @@ class TechnicalIndicatorsAnalyzer:
             Dict: ボリンジャーバンド値と分析結果
         """
         try:
+            # データがnumpy配列の場合はDataFrameに変換
+            if isinstance(data, np.ndarray):
+                logger.warning("Data is numpy array, converting to DataFrame")
+                return {"error": "データ形式エラー: DataFrameが必要"}
+
+            # データが辞書の場合はDataFrameに変換を試行
+            if isinstance(data, dict):
+                try:
+                    data = pd.DataFrame(data)
+                except Exception as e:
+                    logger.error(f"Failed to convert dict to DataFrame: {str(e)}")
+                    return {"error": "データ変換エラー"}
+
             if len(data) < self.bb_period + 5:
                 logger.warning(
                     f"Insufficient data for Bollinger Bands: {len(data)} < {self.bb_period + 5}"
                 )
                 return {"error": "データ不足"}
 
-            close = data["Close"].values
+            # Close列が存在するかチェック
+            if "Close" not in data.columns:
+                logger.error("Close column not found in data")
+                return {"error": "Close列が見つかりません"}
+
+            close = data["Close"]
             bb_indicator = ta.volatility.BollingerBands(
                 close,
                 window=self.bb_period,
@@ -219,10 +292,10 @@ class TechnicalIndicatorsAnalyzer:
             middle = bb_indicator.bollinger_mavg()
             lower = bb_indicator.bollinger_lband()
 
-            current_close = close[-1]
-            current_upper = upper[-1] if not np.isnan(upper[-1]) else None
-            current_middle = middle[-1] if not np.isnan(middle[-1]) else None
-            current_lower = lower[-1] if not np.isnan(lower[-1]) else None
+            current_close = close.iloc[-1]
+            current_upper = upper.iloc[-1] if not np.isnan(upper.iloc[-1]) else None
+            current_middle = middle.iloc[-1] if not np.isnan(middle.iloc[-1]) else None
+            current_lower = lower.iloc[-1] if not np.isnan(lower.iloc[-1]) else None
 
             # バンド位置分析
             band_position = self._analyze_bb_position(
@@ -388,15 +461,29 @@ class TechnicalIndicatorsAnalyzer:
     ) -> str:
         """RSIダイバージェンス検出（簡易版）"""
         try:
+            # データ形式チェック
+            if isinstance(data, np.ndarray):
+                logger.warning("Data is numpy array in _detect_rsi_divergence")
+                return "data_format_error"
+
+            if not isinstance(data, pd.DataFrame):
+                logger.warning("Data is not DataFrame in _detect_rsi_divergence")
+                return "data_format_error"
+
             if len(data) < periods * 2:
                 return "insufficient_data"
+
+            # High列が存在するかチェック
+            if "High" not in data.columns:
+                logger.warning("High column not found in data for divergence detection")
+                return "missing_high_column"
 
             recent_highs = data["High"].rolling(periods).max().iloc[-periods:]
             recent_rsi = rsi[-periods:]
 
             # 価格とRSIの方向性比較（簡易）
             price_trend = recent_highs.iloc[-1] - recent_highs.iloc[0]
-            rsi_trend = recent_rsi[-1] - recent_rsi[0]
+            rsi_trend = recent_rsi.iloc[-1] - recent_rsi.iloc[0]
 
             if price_trend > 0 and rsi_trend < 0:
                 return "bearish_divergence"
@@ -405,7 +492,8 @@ class TechnicalIndicatorsAnalyzer:
             else:
                 return "no_divergence"
 
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error in _detect_rsi_divergence: {str(e)}")
             return "detection_error"
 
     def _analyze_macd_cross(

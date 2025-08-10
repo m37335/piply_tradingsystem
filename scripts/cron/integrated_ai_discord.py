@@ -21,10 +21,24 @@ from src.infrastructure.analysis.currency_correlation_analyzer import (
     CurrencyCorrelationAnalyzer,
 )
 from src.infrastructure.analysis.technical_indicators import TechnicalIndicatorsAnalyzer
+from src.infrastructure.cache.analysis_cache import AnalysisCacheManager
+from src.infrastructure.cache.cache_manager import CacheManager
+from src.infrastructure.database.connection import get_async_session
+from src.infrastructure.database.repositories.analysis_cache_repository_impl import (
+    AnalysisCacheRepositoryImpl,
+)
+from src.infrastructure.database.repositories.notification_history_repository_impl import (
+    NotificationHistoryRepositoryImpl,
+)
+from src.infrastructure.messaging.discord_client import DiscordClient
+from src.infrastructure.messaging.notification_manager import NotificationManager
+from src.infrastructure.optimization.api_rate_limiter import ApiRateLimiter
+from src.infrastructure.optimization.batch_processor import BatchProcessor
+from src.infrastructure.optimization.data_optimizer import DataOptimizer
 
 
 class IntegratedAIDiscordReporter:
-    """統合AI分析Discord配信システム"""
+    """統合AI分析Discord配信システム（最適化版）"""
 
     def __init__(self):
         self.console = Console()
@@ -40,16 +54,107 @@ class IntegratedAIDiscordReporter:
         # テクニカル指標アナライザー初期化
         self.technical_analyzer = TechnicalIndicatorsAnalyzer()
 
+        # 最適化コンポーネント初期化
+        self.cache_manager = None
+        self.data_optimizer = None
+        self.analysis_cache = None
+        self.notification_manager = None
+        self.discord_client = None
+
+        # データベースセッション管理
+        self._async_session = None
+
         self.jst = pytz.timezone("Asia/Tokyo")
+
+    async def initialize_optimization_components(self):
+        """最適化コンポーネントを初期化"""
+        try:
+            # データベースセッション取得
+            self._async_session = await get_async_session()
+
+            # リポジトリ初期化
+            analysis_cache_repo = AnalysisCacheRepositoryImpl(self._async_session)
+            notification_history_repo = NotificationHistoryRepositoryImpl(
+                self._async_session
+            )
+
+            # キャッシュマネージャー初期化
+            self.cache_manager = CacheManager(
+                analysis_cache_repository=analysis_cache_repo
+            )
+
+            # API制限管理とバッチ処理初期化
+            api_rate_limiter = ApiRateLimiter()
+            batch_processor = BatchProcessor(api_rate_limiter=api_rate_limiter)
+
+            # データ最適化器初期化
+            self.data_optimizer = DataOptimizer(
+                cache_manager=self.cache_manager,
+                api_rate_limiter=api_rate_limiter,
+                batch_processor=batch_processor,
+                yahoo_finance_client=self.correlation_analyzer.yahoo_client,
+            )
+
+            # 分析キャッシュマネージャー初期化
+            self.analysis_cache = AnalysisCacheManager(analysis_cache_repo)
+
+            # Discordクライアント初期化
+            self.discord_client = DiscordClient(
+                webhook_url=self.discord_webhook,
+                notification_history_repository=notification_history_repo,
+                enable_notification_logging=True,
+            )
+
+            # 通知マネージャー初期化
+            self.notification_manager = NotificationManager(
+                discord_client=self.discord_client,
+                notification_history_repository=notification_history_repo,
+                duplicate_check_window_minutes=30,
+                max_notifications_per_hour=10,
+                enable_priority_filtering=True,
+                enable_duplicate_prevention=True,
+            )
+
+            self.console.print("✅ 最適化コンポーネント初期化完了")
+
+        except Exception as e:
+            self.console.print(f"❌ 最適化コンポーネント初期化エラー: {str(e)}")
+            raise
+
+    async def close_session(self):
+        """データベースセッションをクローズ"""
+        if self._async_session:
+            try:
+                await self._async_session.close()
+                self.console.print("✅ データベースセッションクローズ完了")
+            except Exception as e:
+                self.console.print(f"⚠️ セッションクローズエラー: {str(e)}")
+            finally:
+                self._async_session = None
 
     async def _fetch_technical_indicators(
         self, currency_pair: str
     ) -> Optional[Dict[str, Any]]:
-        """テクニカル指標データを取得"""
+        """テクニカル指標データを取得（最適化版）"""
         self.console.print(f"📈 {currency_pair} テクニカル指標分析中...")
 
         try:
-            # 複数期間の履歴データ取得
+            # キャッシュチェック（一時的に無効化してテクニカル指標計算を確認）
+            if self.analysis_cache:
+                # キャッシュを無効化して強制的に再計算
+                try:
+                    await self.analysis_cache.invalidate_analysis(
+                        "technical_indicators", currency_pair
+                    )
+                    self.console.print(f"🔄 {currency_pair} キャッシュ無効化、再計算実行")
+                except Exception as e:
+                    self.console.print(f"⚠️ キャッシュ無効化エラー: {str(e)}")
+                    self.console.print(f"🔄 {currency_pair} 強制再計算実行")
+                cached_data = None
+            else:
+                cached_data = None
+
+            # 複数期間の履歴データ取得（最適化版）
             timeframes = {
                 "D1": ("3mo", "1d"),  # 3ヶ月、日足
                 "H4": ("1mo", "1h"),  # 1ヶ月、1時間足
@@ -57,38 +162,137 @@ class IntegratedAIDiscordReporter:
             }
 
             indicators_data = {}
-            yahoo_client = self.correlation_analyzer.yahoo_client  # 既存のyahoo_clientを使用
 
-            for tf, (period, interval) in timeframes.items():
-                hist_data = await yahoo_client.get_historical_data(
-                    currency_pair, period, interval
-                )
-                if hist_data is not None and not hist_data.empty:
-                    # RSI計算
-                    rsi_result = self.technical_analyzer.calculate_rsi(hist_data, tf)
-
-                    # MACD計算（D1のみ）
-                    if tf == "D1" and len(hist_data) >= 40:
-                        macd_result = self.technical_analyzer.calculate_macd(
+            # データ最適化器を使用して効率的にデータ取得
+            if self.data_optimizer:
+                for tf, (period, interval) in timeframes.items():
+                    hist_data = await self.data_optimizer.get_historical_dataframe(
+                        currency_pair, period, interval
+                    )
+                    if hist_data is not None and not hist_data.empty:
+                        # RSI計算
+                        rsi_result = self.technical_analyzer.calculate_rsi(
                             hist_data, tf
                         )
-                        indicators_data[f"{tf}_MACD"] = macd_result
 
-                    # ボリンジャーバンド計算
-                    bb_result = self.technical_analyzer.calculate_bollinger_bands(
-                        hist_data, tf
-                    )
+                        # MACD計算（D1のみ）
+                        if tf == "D1" and len(hist_data) >= 40:
+                            macd_result = self.technical_analyzer.calculate_macd(
+                                hist_data, tf
+                            )
+                            indicators_data[f"{tf}_MACD"] = macd_result
 
-                    indicators_data[f"{tf}_RSI"] = rsi_result
-                    indicators_data[f"{tf}_BB"] = bb_result
+                        # ボリンジャーバンド計算
+                        bb_result = self.technical_analyzer.calculate_bollinger_bands(
+                            hist_data, tf
+                        )
 
-                    rsi_val = rsi_result.get("current_value", "N/A")
-                    if isinstance(rsi_val, (int, float)):
-                        self.console.print(f"✅ {tf}: RSI={rsi_val:.1f}")
+                        indicators_data[f"{tf}_RSI"] = rsi_result
+                        indicators_data[f"{tf}_BB"] = bb_result
+
+                        # RSI出力
+                        rsi_val = rsi_result.get("current_value", "N/A")
+                        if isinstance(rsi_val, (int, float)):
+                            self.console.print(f"✅ {tf}: RSI={rsi_val:.1f}")
+                        else:
+                            self.console.print(f"✅ {tf}: RSI={rsi_val}")
+
+                        # MACD出力（D1のみ）
+                        if tf == "D1" and f"{tf}_MACD" in indicators_data:
+                            macd_data = indicators_data[f"{tf}_MACD"]
+                            macd_line = macd_data.get("macd_line", "N/A")
+                            signal_line = macd_data.get("signal_line", "N/A")
+                            histogram = macd_data.get("histogram", "N/A")
+                            if isinstance(macd_line, (int, float)) and isinstance(
+                                signal_line, (int, float)
+                            ):
+                                self.console.print(
+                                    f"✅ {tf}: MACD={macd_line:.4f}, Signal={signal_line:.4f}, Hist={histogram:.4f}"
+                                )
+
+                        # ボリンジャーバンド出力
+                        bb_data = bb_result
+                        upper_band = bb_data.get("upper_band", "N/A")
+                        middle_band = bb_data.get("middle_band", "N/A")
+                        lower_band = bb_data.get("lower_band", "N/A")
+                        if isinstance(upper_band, (int, float)) and isinstance(
+                            middle_band, (int, float)
+                        ):
+                            self.console.print(
+                                f"✅ {tf}: BB Upper={upper_band:.4f}, Middle={middle_band:.4f}, Lower={lower_band:.4f}"
+                            )
                     else:
-                        self.console.print(f"✅ {tf}: RSI={rsi_val}")
-                else:
-                    self.console.print(f"❌ {tf}: 履歴データ取得失敗")
+                        self.console.print(f"❌ {tf}: 履歴データ取得失敗")
+            else:
+                # フォールバック: 従来の方法
+                yahoo_client = self.correlation_analyzer.yahoo_client
+                for tf, (period, interval) in timeframes.items():
+                    hist_data = await yahoo_client.get_historical_data(
+                        currency_pair, period, interval
+                    )
+                    if hist_data is not None and not hist_data.empty:
+                        # RSI計算
+                        rsi_result = self.technical_analyzer.calculate_rsi(
+                            hist_data, tf
+                        )
+
+                        # MACD計算（D1のみ）
+                        if tf == "D1" and len(hist_data) >= 40:
+                            macd_result = self.technical_analyzer.calculate_macd(
+                                hist_data, tf
+                            )
+                            indicators_data[f"{tf}_MACD"] = macd_result
+
+                        # ボリンジャーバンド計算
+                        bb_result = self.technical_analyzer.calculate_bollinger_bands(
+                            hist_data, tf
+                        )
+
+                        indicators_data[f"{tf}_RSI"] = rsi_result
+                        indicators_data[f"{tf}_BB"] = bb_result
+
+                        # RSI出力
+                        rsi_val = rsi_result.get("current_value", "N/A")
+                        if isinstance(rsi_val, (int, float)):
+                            self.console.print(f"✅ {tf}: RSI={rsi_val:.1f}")
+                        else:
+                            self.console.print(f"✅ {tf}: RSI={rsi_val}")
+
+                        # MACD出力（D1のみ）
+                        if tf == "D1" and f"{tf}_MACD" in indicators_data:
+                            macd_data = indicators_data[f"{tf}_MACD"]
+                            macd_line = macd_data.get("macd_line", "N/A")
+                            signal_line = macd_data.get("signal_line", "N/A")
+                            histogram = macd_data.get("histogram", "N/A")
+                            if isinstance(macd_line, (int, float)) and isinstance(
+                                signal_line, (int, float)
+                            ):
+                                self.console.print(
+                                    f"✅ {tf}: MACD={macd_line:.4f}, Signal={signal_line:.4f}, Hist={histogram:.4f}"
+                                )
+
+                        # ボリンジャーバンド出力
+                        bb_data = bb_result
+                        upper_band = bb_data.get("upper_band", "N/A")
+                        middle_band = bb_data.get("middle_band", "N/A")
+                        lower_band = bb_data.get("lower_band", "N/A")
+                        if isinstance(upper_band, (int, float)) and isinstance(
+                            middle_band, (int, float)
+                        ):
+                            self.console.print(
+                                f"✅ {tf}: BB Upper={upper_band:.4f}, Middle={middle_band:.4f}, Lower={lower_band:.4f}"
+                            )
+                    else:
+                        self.console.print(f"❌ {tf}: 履歴データ取得失敗")
+
+            # 結果をキャッシュに保存
+            if indicators_data and self.analysis_cache:
+                await self.analysis_cache.set_analysis(
+                    "technical_indicators",
+                    currency_pair,
+                    indicators_data,
+                    "multi_timeframe",
+                )
 
             return indicators_data if indicators_data else None
 
@@ -401,6 +605,9 @@ GBP/JPY: {gbpjpy_data.get('rate', 'N/A')} ({gbpjpy_data.get('market_change_perce
                 self.console.print("❌ 通貨相関分析失敗")
                 return False
 
+            # 相関分析結果を表示
+            self.correlation_analyzer.display_correlation_analysis(correlation_data)
+
             # Step 2: USD/JPYテクニカル指標取得
             technical_data = await self._fetch_technical_indicators("USD/JPY")
 
@@ -429,11 +636,14 @@ GBP/JPY: {gbpjpy_data.get('rate', 'N/A')} ({gbpjpy_data.get('market_change_perce
 
 
 async def main():
-    """メイン実行関数"""
+    """メイン実行関数（最適化版）"""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Integrated AI Discord Reporter")
+    parser = argparse.ArgumentParser(
+        description="Integrated AI Discord Reporter (Optimized)"
+    )
     parser.add_argument("--test", action="store_true", help="テストモード（Discordに送信しない）")
+    parser.add_argument("--no-optimization", action="store_true", help="最適化機能を無効にする")
 
     args = parser.parse_args()
 
@@ -449,6 +659,17 @@ async def main():
                         pass
 
     reporter = IntegratedAIDiscordReporter()
+
+    # 最適化コンポーネント初期化
+    if not args.no_optimization:
+        try:
+            await reporter.initialize_optimization_components()
+            reporter.console.print("🚀 最適化機能が有効です")
+        except Exception as e:
+            reporter.console.print(f"⚠️ 最適化機能初期化失敗: {str(e)}")
+            reporter.console.print("📝 従来モードで実行します")
+    else:
+        reporter.console.print("📝 最適化機能を無効にして実行します")
 
     if args.test:
         reporter.console.print("🧪 テストモード: Discord配信をスキップ")
@@ -469,6 +690,15 @@ async def main():
             if analysis:
                 reporter.console.print("📋 統合AI分析結果:")
                 reporter.console.print(f"[cyan]{analysis}[/cyan]")
+
+                # 統計情報表示
+                if reporter.notification_manager:
+                    stats = (
+                        await reporter.notification_manager.get_notification_statistics()
+                    )
+                    reporter.console.print("📊 通知統計情報:")
+                    reporter.console.print(f"[yellow]{stats}[/yellow]")
+
                 reporter.console.print("✅ テスト完了")
             else:
                 reporter.console.print("❌ AI分析生成失敗")
@@ -476,6 +706,9 @@ async def main():
             reporter.console.print("❌ 相関分析失敗")
     else:
         await reporter.generate_and_send_integrated_report()
+
+    # セッションクローズ
+    await reporter.close_session()
 
 
 if __name__ == "__main__":

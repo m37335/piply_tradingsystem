@@ -9,8 +9,11 @@ Discord Webhookを使用してメッセージを送信するクライアント
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
+from ...domain.repositories.notification_history_repository import (
+    NotificationHistoryRepository,
+)
 from ...utils.logging_config import get_infrastructure_logger
 from ..external_apis.base_client import APIError, BaseAPIClient
 
@@ -38,6 +41,8 @@ class DiscordClient(BaseAPIClient):
         webhook_url: str,
         username: Optional[str] = None,
         avatar_url: Optional[str] = None,
+        notification_history_repository: Optional[NotificationHistoryRepository] = None,
+        enable_notification_logging: bool = True,
         **kwargs,
     ):
         """
@@ -47,6 +52,8 @@ class DiscordClient(BaseAPIClient):
             webhook_url: Discord Webhook URL
             username: デフォルトのユーザー名
             avatar_url: デフォルトのアバターURL
+            notification_history_repository: 通知履歴リポジトリ
+            enable_notification_logging: 通知ログを有効にするか
             **kwargs: BaseAPIClientの引数
         """
         # URLからベースURLを抽出
@@ -68,8 +75,20 @@ class DiscordClient(BaseAPIClient):
         self.webhook_url = webhook_url
         self.default_username = username
         self.default_avatar_url = avatar_url
+        self.notification_history_repository = notification_history_repository
+        self.enable_notification_logging = enable_notification_logging
 
-        logger.info("Initialized Discord webhook client")
+        # 統計情報
+        self.total_messages_sent = 0
+        self.total_embeds_sent = 0
+        self.total_alerts_sent = 0
+        self.message_errors = 0
+        self.rate_limit_hits = 0
+
+        logger.info(
+            f"Initialized Discord webhook client: "
+            f"logging={enable_notification_logging}"
+        )
 
     def _get_auth_params(self) -> Dict[str, str]:
         """
@@ -90,6 +109,8 @@ class DiscordClient(BaseAPIClient):
         tts: bool = False,
         file: Optional[bytes] = None,
         filename: Optional[str] = None,
+        log_notification: bool = False,
+        notification_data: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Discordにメッセージを送信
@@ -98,6 +119,12 @@ class DiscordClient(BaseAPIClient):
             content: メッセージ内容（最大2000文字）
             embeds: 埋め込みのリスト（最大10個）
             username: 送信者名
+            avatar_url: 送信者アバターURL
+            tts: テキスト読み上げ
+            file: 添付ファイル
+            filename: ファイル名
+            log_notification: 通知ログを記録するか
+            notification_data: 通知データ
             avatar_url: アバターURL
             tts: Text-to-Speech有効フラグ
             file: 添付ファイルのバイナリデータ
@@ -132,10 +159,20 @@ class DiscordClient(BaseAPIClient):
             else:
                 response = await self.post(self.webhook_path, data=payload)
 
+            # 統計情報を更新
+            self.total_messages_sent += 1
+            if embeds:
+                self.total_embeds_sent += len(embeds)
+
+            # 通知ログを記録
+            if log_notification and self.enable_notification_logging:
+                await self._log_notification_send(response, notification_data)
+
             logger.info("Discord message sent successfully")
             return response
 
         except Exception as e:
+            self.message_errors += 1
             logger.error(f"Failed to send Discord message: {str(e)}")
             raise APIError(f"Discord message send failed: {str(e)}")
 
@@ -562,6 +599,69 @@ class DiscordClient(BaseAPIClient):
         except Exception as e:
             logger.error(f"Discord webhook connection test failed: {str(e)}")
             return False
+
+    async def _log_notification_send(
+        self, response: Dict[str, Any], notification_data: Optional[Dict[str, Any]]
+    ) -> None:
+        """
+        通知送信をログに記録
+
+        Args:
+            response: Discordレスポンス
+            notification_data: 通知データ
+
+        Returns:
+            None
+        """
+        try:
+            if (
+                self.notification_history_repository
+                and notification_data
+                and "id" in response
+            ):
+                # 通知履歴を記録
+                from ...domain.entities.notification_history import NotificationHistory
+
+                notification_history = NotificationHistory(
+                    pattern_type=notification_data.get("pattern_type", "unknown"),
+                    currency_pair=notification_data.get("currency_pair", "unknown"),
+                    notification_data=notification_data,
+                    sent_at=datetime.utcnow(),
+                    discord_message_id=str(response["id"]),
+                    status="sent",
+                )
+
+                await self.notification_history_repository.save(notification_history)
+
+        except Exception as e:
+            logger.error(f"Failed to log notification send: {str(e)}")
+
+    def get_discord_statistics(self) -> Dict[str, Any]:
+        """
+        Discord統計情報を取得
+
+        Returns:
+            Dict[str, Any]: Discord統計情報
+        """
+        return {
+            "total_messages_sent": self.total_messages_sent,
+            "total_embeds_sent": self.total_embeds_sent,
+            "total_alerts_sent": self.total_alerts_sent,
+            "message_errors": self.message_errors,
+            "rate_limit_hits": self.rate_limit_hits,
+            "success_rate": (
+                (
+                    self.total_messages_sent
+                    / (self.total_messages_sent + self.message_errors)
+                    * 100
+                )
+                if (self.total_messages_sent + self.message_errors) > 0
+                else 0
+            ),
+            "webhook_url": self.webhook_url,
+            "default_username": self.default_username,
+            "enable_notification_logging": self.enable_notification_logging,
+        }
 
     def get_webhook_info(self) -> Dict[str, Any]:
         """

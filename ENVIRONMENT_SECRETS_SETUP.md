@@ -2,7 +2,7 @@
 
 ## 📋 概要
 
-GitHub Environment Secretsを設定することで、本番環境での24時間稼働システムをより安全に運用できます。Repository Secretsよりも高度なセキュリティと制御が可能です。
+GitHub Environment Secrets を設定することで、本番環境での 24 時間稼働システムをより安全に運用できます。Repository Secrets よりも高度なセキュリティと制御が可能です。
 
 ## 🎯 Environment Secrets の利点
 
@@ -16,29 +16,32 @@ GitHub Environment Secretsを設定することで、本番環境での24時間�
 ### 🔧 運用管理
 
 - **環境分離**: production/staging/development
-- **API Key管理**: 環境ごとの異なるキー
+- **API Key 管理**: 環境ごとの異なるキー
 - **デプロイ制御**: 段階的リリース
 - **モニタリング**: 環境別パフォーマンス監視
 
 ### 📊 プロジェクト特有の利点
 
-- **本番Discord vs テストDiscord**: チャンネル分離
-- **本番OpenAI vs 開発OpenAI**: API使用量分離
-- **24時間稼働の安全性**: 誤動作防止
+- **本番 Discord vs テスト Discord**: チャンネル分離
+- **本番 OpenAI vs 開発 OpenAI**: API 使用量分離
+- **24 時間稼働の安全性**: 誤動作防止
 
 ## ⚙️ Environment 設定手順
 
 ### 1️⃣ Production Environment 作成
 
 1. **GitHub リポジトリにアクセス**
+
    ```
    https://github.com/m37335/exchangeApp
    ```
 
 2. **Settings → Environments をクリック**
+
    - 「New environment」ボタンをクリック
 
-3. **Environment名を入力**
+3. **Environment 名を入力**
+
    ```
    Environment name: production
    ```
@@ -48,6 +51,7 @@ GitHub Environment Secretsを設定することで、本番環境での24時間�
 ### 2️⃣ Environment 保護ルール設定
 
 **Protected branches (推奨)**:
+
 ```
 ☑️ Required reviewers: 0 (個人プロジェクトの場合)
 ☑️ Restrict pushes to protected branches only
@@ -55,6 +59,7 @@ GitHub Environment Secretsを設定することで、本番環境での24時間�
 ```
 
 **Deployment branches**:
+
 ```
 ☑️ Selected branches
     Branch name pattern: main
@@ -62,21 +67,24 @@ GitHub Environment Secretsを設定することで、本番環境での24時間�
 
 ### 3️⃣ Environment Secrets 設定
 
-**Environment secretsセクションで「Add secret」**:
+**Environment secrets セクションで「Add secret」**:
 
 #### 🤖 OPENAI_API_KEY
+
 ```
 Name: OPENAI_API_KEY
 Value: sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 #### 📢 DISCORD_WEBHOOK_URL
+
 ```
-Name: DISCORD_WEBHOOK_URL  
+Name: DISCORD_WEBHOOK_URL
 Value: https://discord.com/api/webhooks/xxxxxxxxx/xxxxxxxxx
 ```
 
 #### 📊 YAHOO_FINANCE_API_KEY (オプション)
+
 ```
 Name: YAHOO_FINANCE_API_KEY
 Value: your_yahoo_finance_api_key
@@ -85,9 +93,10 @@ Value: your_yahoo_finance_api_key
 ### 4️⃣ 設定確認
 
 **Environment secrets が表示される**:
+
 ```
 ✅ OPENAI_API_KEY (Last updated: just now)
-✅ DISCORD_WEBHOOK_URL (Last updated: just now)  
+✅ DISCORD_WEBHOOK_URL (Last updated: just now)
 ✅ YAHOO_FINANCE_API_KEY (Last updated: just now)
 ```
 
@@ -100,6 +109,7 @@ Value: your_yahoo_finance_api_key
 **アクセス**: リポジトリ全体のワークフローから利用可能
 
 **設定推奨項目**:
+
 ```
 OPENAI_API_KEY_DEV (開発用)
 DISCORD_WEBHOOK_URL_TEST (テスト用)
@@ -107,14 +117,15 @@ DISCORD_WEBHOOK_URL_TEST (テスト用)
 
 ### Environment Secrets (本番設定)
 
-**用途**: 本番24時間自動稼働
+**用途**: 本番 24 時間自動稼働
 **設定場所**: Settings → Environments → production
-**アクセス**: production環境指定のワークフローのみ
+**アクセス**: production 環境指定のワークフローのみ
 
 **設定推奨項目**:
+
 ```
 OPENAI_API_KEY (本番用)
-DISCORD_WEBHOOK_URL (本番Discord)  
+DISCORD_WEBHOOK_URL (本番Discord)
 YAHOO_FINANCE_API_KEY (本番API)
 ```
 
@@ -129,19 +140,20 @@ jobs:
   integrated-analysis:
     name: 🎯 統合AI相関分析
     runs-on: ubuntu-latest
-    environment: production  # ← Environment指定
+    environment: production # ← Environment指定
     # ...
-    
+
   technical-analysis:
     name: 📈 個別テクニカル分析
-    runs-on: ubuntu-latest  
-    environment: production  # ← Environment指定
+    runs-on: ubuntu-latest
+    environment: production # ← Environment指定
     # ...
 ```
 
-### Environment変数アクセス
+### Environment 変数アクセス
 
 **Secrets アクセス方法**（変更なし）:
+
 ```yaml
 - name: 🔑 Setup Environment Variables
   run: |
@@ -150,23 +162,23 @@ jobs:
     echo "YAHOO_FINANCE_API_KEY=${{ secrets.YAHOO_FINANCE_API_KEY }}" >> $GITHUB_ENV
 ```
 
-**GitHub Actionsが自動で production environment のsecretsを参照**
+**GitHub Actions が自動で production environment の secrets を参照**
 
 ## 📊 運用パターン
 
-### パターン1: Repository Secrets のみ（シンプル）
+### パターン 1: Repository Secrets のみ（シンプル）
 
 **メリット**: 設定が簡単、すぐに開始可能
 **デメリット**: セキュリティレベルが基本的
 **推奨**: 個人開発、学習目的
 
-### パターン2: Environment Secrets（推奨）
+### パターン 2: Environment Secrets（推奨）
 
 **メリット**: 高セキュリティ、本格運用対応
 **デメリット**: 設定がやや複雑
-**推奨**: 24時間本番稼働、チーム開発
+**推奨**: 24 時間本番稼働、チーム開発
 
-### パターン3: 両方併用（最強）
+### パターン 3: 両方併用（最強）
 
 **Repository Secrets**: 開発・テスト用
 **Environment Secrets**: 本番用
@@ -178,18 +190,21 @@ jobs:
 ### よくある問題
 
 #### **Environment not found**
+
 ```
 エラー: Environment 'production' not found
 解決: Settings → Environments で production環境作成確認
 ```
 
 #### **Environment secrets access denied**
+
 ```
 エラー: Cannot access environment secrets
 解決: Branch protection rules 確認、main ブランチから実行
 ```
 
 #### **Secrets not loaded**
+
 ```
 エラー: Environment variable not set
 解決: Environment secrets 設定確認、名前のスペルチェック
@@ -197,7 +212,8 @@ jobs:
 
 ### デバッグ方法
 
-**Environment確認**:
+**Environment 確認**:
+
 ```yaml
 - name: 🔍 Environment Info
   run: |
@@ -208,14 +224,16 @@ jobs:
 
 ## 📈 監視・運用
 
-### Environment別ログ確認
+### Environment 別ログ確認
 
 **GitHub Actions 実行履歴**:
+
 ```
 Actions → Workflow runs → Environment: production
 ```
 
-**Environment別統計**:
+**Environment 別統計**:
+
 ```
 Settings → Environments → production → Deployments
 ```
@@ -223,6 +241,7 @@ Settings → Environments → production → Deployments
 ### セキュリティ監査
 
 **定期確認項目**:
+
 - Environment secrets の更新日
 - 不要なアクセス権限の削除
 - Branch protection rules の確認
@@ -230,7 +249,7 @@ Settings → Environments → production → Deployments
 
 ## 💡 ベストプラクティス
 
-### Secrets命名規則
+### Secrets 命名規則
 
 ```
 # Repository Secrets (開発用)
@@ -238,7 +257,7 @@ OPENAI_API_KEY_DEV
 DISCORD_WEBHOOK_URL_TEST
 SLACK_WEBHOOK_URL_DEV
 
-# Environment Secrets (本番用)  
+# Environment Secrets (本番用)
 OPENAI_API_KEY
 DISCORD_WEBHOOK_URL
 SLACK_WEBHOOK_URL
@@ -255,7 +274,7 @@ SLACK_WEBHOOK_URL
     API_KEY: ${{ secrets.OPENAI_API_KEY_DEV }}
 
 # 本番環境 (Environment Secrets使用)
-- name: Production Deploy  
+- name: Production Deploy
   if: github.event_name == 'schedule'
   environment: production
   run: python deploy.py
@@ -281,7 +300,7 @@ SLACK_WEBHOOK_URL
 
 ```
 □ OPENAI_API_KEY (production)
-□ DISCORD_WEBHOOK_URL (production)  
+□ DISCORD_WEBHOOK_URL (production)
 □ YAHOO_FINANCE_API_KEY (production)
 □ テスト実行・動作確認
 ```
@@ -297,6 +316,6 @@ SLACK_WEBHOOK_URL
 
 ---
 
-**🌟 Environment Secrets設定で最高レベルのセキュリティを実現！**
+**🌟 Environment Secrets 設定で最高レベルのセキュリティを実現！**
 
-**本格的な24時間稼働システムの完成です！** 🔐🚀✨
+**本格的な 24 時間稼働システムの完成です！** 🔐🚀✨
