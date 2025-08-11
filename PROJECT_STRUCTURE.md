@@ -1,7 +1,7 @@
 # 🏗️ Exchange Analytics System プロジェクト構造
 
-**最新更新**: 2025 年 8 月 10 日  
-**バージョン**: v4.1  
+**最新更新**: 2025 年 8 月 10 日
+**バージョン**: v4.1
 **アーキテクチャ**: Clean Architecture + Domain-Driven Design
 
 ## 📁 プロジェクト構造概要
