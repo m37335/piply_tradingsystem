@@ -395,24 +395,29 @@ GBP/JPY: {gbpjpy_data.get('rate', 'N/A')} ({gbpjpy_data.get('market_change_perce
 相関要因: {', '.join(usdjpy_forecast.get('forecast_factors', []))}
 
 【戦略要求】
-上記の通貨相関分析とテクニカル指標を踏まえ、以下の形式で1600文字以内の統合売買シナリオを作成：
+上記の通貨相関分析とテクニカル指標を踏まえ、以下の形式で1024文字以内の売買シナリオを作成。
+その際、移動平均線からのサポートラインやレジスタンスラインを考慮してください。
+売買の際には押し目での売り買いを考慮してください。
+レポートの中では特に数値を示すと評価が高くなります。
+情報の優先順位はテクニカル指標・分析＞通貨の相関関係です。
+また、テクニカル指標の数値は具体的に示してください：
 
 【相関分析】他通貨の動きから見るUSD/JPY方向性
 【大局観】D1・H4マルチタイムフレーム分析（※テクニカル指標含む）
 【戦術】H1エントリーゾーン・タイミング分析
 【統合シナリオ】相関性とテクニカル指標を考慮した売買戦略・具体的価格指示
- ・エントリー価格: ○○.○○○○（具体的な4桁価格）
- ・利確目標: ○○.○○○○（〇〇pips※利益）
- ・損切り価格: ○○.○○○○（〇〇pips※損失）
+ ・エントリー価格: ○○.○○○〜○○.○○○（具体的な3桁価格）:改行
+ ・利確目標: ○○.○○○（〇〇〜〇〇pips※利益）:改行
+ ・損切り価格: ○○.○○○（〇〇pips※損失）:改行
+ サポートライン（○○.○○○）やレジスタンスライン（○○.○○○）を明確にした利確、または損切りの根拠や理由を明記してください。
 【リスク管理】通貨相関リスク・ダイバージェンス※警戒
-【実行指示】初学者向け実践的トレード指示。ただし「初学者」という言葉は使わない。
 
 ※専門用語解説：
 ・pips: 通貨ペアの最小価格単位（USD/JPYなら0.01円=1pip）
 ・ダイバージェンス: 価格とテクニカル指標の動きが逆行する現象
 ・その他専門用語があれば簡潔に説明
 
-「EUR/USDがこうだから」「クロス円がこうだから」「テクニカル指標がこうだから」「だからUSD/JPYはこう動く可能性が高い」という統合的で根拠のある分析を重視し、必ず具体的な価格（小数点以下4桁）とpips数を明記してください。
+「EUR/USDがこうだから」「クロス円がこうだから」「テクニカル指標がこうだから」「だからUSD/JPYはこう動く可能性が高い」という統合的で根拠のある分析を重視し、必ず具体的な価格（小数点以下3桁）とpips数を明記してください。
 """
 
         try:
@@ -424,11 +429,22 @@ GBP/JPY: {gbpjpy_data.get('rate', 'N/A')} ({gbpjpy_data.get('market_change_perce
             payload = {
                 "model": "gpt-4",
                 "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 1200,  # 統合分析対応
+                "max_tokens": 2000,  # 統合分析対応（トークン制限緩和）
                 "temperature": 0.7,
             }
 
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            # crontab環境でのネットワーク接続問題に対応
+            timeout_config = httpx.Timeout(
+                connect=10.0,  # 接続タイムアウト
+                read=60.0,  # 読み取りタイムアウト
+                write=10.0,  # 書き込みタイムアウト
+                pool=10.0,  # プールタイムアウト
+            )
+
+            async with httpx.AsyncClient(
+                timeout=timeout_config,
+                limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
+            ) as client:
                 response = await client.post(
                     self.openai_url, headers=headers, json=payload
                 )
@@ -443,9 +459,26 @@ GBP/JPY: {gbpjpy_data.get('rate', 'N/A')} ({gbpjpy_data.get('market_change_perce
                     self.console.print(f"エラー詳細: {response.text}")
                     return None
 
+        except httpx.ReadTimeout as e:
+            self.console.print(f"⚠️ OpenAI APIタイムアウト: {str(e)}")
+            self.console.print("📝 サンプル分析を生成します")
+            return self._generate_sample_integrated_scenario(correlation_data)
+        except httpx.ConnectTimeout as e:
+            self.console.print(f"⚠️ OpenAI API接続タイムアウト: {str(e)}")
+            self.console.print("📝 サンプル分析を生成します")
+            return self._generate_sample_integrated_scenario(correlation_data)
+        except httpx.RequestError as e:
+            self.console.print(f"⚠️ OpenAI APIリクエストエラー: {str(e)}")
+            self.console.print("📝 サンプル分析を生成します")
+            return self._generate_sample_integrated_scenario(correlation_data)
         except Exception as e:
+            import traceback
+
+            error_details = traceback.format_exc()
             self.console.print(f"❌ 統合AI分析生成エラー: {str(e)}")
-            return None
+            self.console.print(f"詳細: {error_details}")
+            self.console.print("📝 サンプル分析を生成します")
+            return self._generate_sample_integrated_scenario(correlation_data)
 
     def _generate_sample_integrated_scenario(
         self, correlation_data: Dict[str, Any]
@@ -561,7 +594,7 @@ GBP/JPY: {gbpjpy_data.get('rate', 'N/A')} ({gbpjpy_data.get('market_change_perce
                         },
                         {
                             "name": "🎯 統合売買シナリオ",
-                            "value": analysis[:1000],  # Discord制限対応
+                            "value": analysis[:1000],  # Discord制限（1000文字）
                             "inline": False,
                         },
                     ],
@@ -631,7 +664,47 @@ GBP/JPY: {gbpjpy_data.get('rate', 'N/A')} ({gbpjpy_data.get('market_change_perce
                 return False
 
         except Exception as e:
-            self.console.print(f"❌ 統合レポート生成・配信エラー: {str(e)}")
+            import traceback
+
+            error_details = traceback.format_exc()
+            error_msg = f"❌ 統合レポート生成・配信エラー: {str(e)}\n詳細: {error_details}"
+            self.console.print(error_msg)
+
+            # エラー通知をDiscordに送信
+            try:
+                if self.discord_webhook:
+                    embed_data = {
+                        "content": "🚨 **AI分析レポート配信エラー**",
+                        "embeds": [
+                            {
+                                "title": "❌ Integrated AI Report Error",
+                                "description": f"```\n{error_msg[:4000]}\n```",
+                                "color": 0xFF0000,
+                                "timestamp": datetime.now(self.jst).isoformat(),
+                            }
+                        ],
+                    }
+                    import httpx
+
+                    # crontab環境でのネットワーク接続問題に対応
+                    timeout_config = httpx.Timeout(
+                        connect=5.0,  # 接続タイムアウト
+                        read=30.0,  # 読み取りタイムアウト
+                        write=5.0,  # 書き込みタイムアウト
+                        pool=5.0,  # プールタイムアウト
+                    )
+
+                    async with httpx.AsyncClient(
+                        timeout=timeout_config,
+                        limits=httpx.Limits(
+                            max_keepalive_connections=3, max_connections=5
+                        ),
+                    ) as client:
+                        await client.post(self.discord_webhook, json=embed_data)
+                    self.console.print("✅ エラー通知をDiscordに送信しました")
+            except Exception as notify_error:
+                self.console.print(f"⚠️ エラー通知送信失敗: {notify_error}")
+
             return False
 
 
@@ -712,4 +785,55 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except Exception as e:
+        import traceback
+
+        error_msg = f"❌ AI分析レポート実行エラー: {str(e)}\n{traceback.format_exc()}"
+        print(error_msg)
+
+        # エラー通知をDiscordに送信
+        try:
+            import os
+
+            import httpx
+
+            discord_webhook = os.getenv("DISCORD_MONITORING_WEBHOOK_URL")
+            if discord_webhook:
+                embed_data = {
+                    "content": "🚨 **AI分析レポート実行エラー**",
+                    "embeds": [
+                        {
+                            "title": "❌ Integrated AI Discord Reporter Error",
+                            "description": f"```\n{error_msg[:4000]}\n```",
+                            "color": 0xFF0000,
+                            "timestamp": datetime.now().isoformat(),
+                        }
+                    ],
+                }
+                import asyncio
+
+                async def send_error():
+                    # crontab環境でのネットワーク接続問題に対応
+                    timeout_config = httpx.Timeout(
+                        connect=5.0,  # 接続タイムアウト
+                        read=30.0,  # 読み取りタイムアウト
+                        write=5.0,  # 書き込みタイムアウト
+                        pool=5.0,  # プールタイムアウト
+                    )
+
+                    async with httpx.AsyncClient(
+                        timeout=timeout_config,
+                        limits=httpx.Limits(
+                            max_keepalive_connections=3, max_connections=5
+                        ),
+                    ) as client:
+                        await client.post(discord_webhook, json=embed_data)
+
+                asyncio.run(send_error())
+                print("✅ エラー通知をDiscordに送信しました")
+        except Exception as notify_error:
+            print(f"⚠️ エラー通知送信失敗: {notify_error}")
+
+        exit(1)
