@@ -63,9 +63,7 @@ class DiscordNotificationService:
             if success:
                 self.logger.info(f"パターン通知を送信しました: {pattern.pattern_name}")
             else:
-                self.logger.error(
-                    f"パターン通知の送信に失敗しました: {pattern.pattern_name}"
-                )
+                self.logger.error(f"パターン通知の送信に失敗しました: {pattern.pattern_name}")
 
             return success
 
@@ -96,7 +94,9 @@ class DiscordNotificationService:
         confidence_emoji = (
             "🟢"
             if pattern.confidence_score >= 80
-            else "🟡" if pattern.confidence_score >= 60 else "🔴"
+            else "🟡"
+            if pattern.confidence_score >= 60
+            else "🔴"
         )
 
         # 埋め込みデータを作成

@@ -8,8 +8,8 @@ USD/JPY特化の5分おきデータ取得システムの本番環境デプロイ
 import argparse
 import asyncio
 import os
-import sys
 import subprocess
+import sys
 from pathlib import Path
 from typing import List, Optional
 
@@ -43,7 +43,7 @@ class ProductionDeployer:
 
         # 設定マネージャーを初期化
         self.config_manager = SystemConfigManager(self.config_file)
-        
+
         print("Production deployment setup completed")
         logger.info("Production deployment setup completed")
 
@@ -96,21 +96,27 @@ class ProductionDeployer:
         必要なパッケージをチェック
         """
         required_packages = [
-            "asyncio", "aiohttp", "pandas", "numpy", "sqlalchemy",
-            "asyncpg", "yfinance", "ta"
+            "asyncio",
+            "aiohttp",
+            "pandas",
+            "numpy",
+            "sqlalchemy",
+            "asyncpg",
+            "yfinance",
+            "ta",
         ]
-        
+
         missing_packages = []
         for package in required_packages:
             try:
                 __import__(package)
             except ImportError:
                 missing_packages.append(package)
-        
+
         if missing_packages:
             logger.warning(f"Missing packages: {missing_packages}")
             return False
-        
+
         return True
 
     async def _check_database_connection(self) -> bool:
@@ -119,6 +125,7 @@ class ProductionDeployer:
         """
         try:
             from src.infrastructure.database.connection import get_async_session
+
             session = await get_async_session()
             await session.close()
             return True
@@ -139,7 +146,7 @@ class ProductionDeployer:
         """
         log_path = self.config_manager.get("logging.file_path")
         log_dir = Path(log_path).parent
-        
+
         try:
             log_dir.mkdir(parents=True, exist_ok=True)
             return True
@@ -156,13 +163,17 @@ class ProductionDeployer:
 
         try:
             # データベースマイグレーションスクリプトを実行
-            migration_script = self.project_root / "scripts/deployment/data_migration.py"
-            
+            migration_script = (
+                self.project_root / "scripts/deployment/data_migration.py"
+            )
+
             if migration_script.exists():
-                result = subprocess.run([
-                    sys.executable, str(migration_script)
-                ], capture_output=True, text=True)
-                
+                result = subprocess.run(
+                    [sys.executable, str(migration_script)],
+                    capture_output=True,
+                    text=True,
+                )
+
                 if result.returncode == 0:
                     print("✅ Database migration completed")
                     logger.info("Database migration completed")
@@ -175,7 +186,7 @@ class ProductionDeployer:
                 print("⚠️  Migration script not found, skipping migration")
                 logger.warning("Migration script not found, skipping migration")
                 return True
-                
+
         except Exception as e:
             print(f"❌ Database migration error: {e}")
             logger.error(f"Database migration error: {e}")
@@ -191,18 +202,18 @@ class ProductionDeployer:
         try:
             log_path = self.config_manager.get("logging.file_path")
             log_dir = Path(log_path).parent
-            
+
             # ログディレクトリを作成
             log_dir.mkdir(parents=True, exist_ok=True)
-            
+
             # ログファイルのパーミッションを設定
             if log_path and Path(log_path).exists():
                 os.chmod(log_path, 0o644)
-            
+
             print("✅ Logging setup completed")
             logger.info("Logging setup completed")
             return True
-            
+
         except Exception as e:
             print(f"❌ Logging setup failed: {e}")
             logger.error(f"Logging setup failed: {e}")
@@ -219,21 +230,21 @@ class ProductionDeployer:
             # systemdサービスファイルを作成
             service_content = self._generate_systemd_service()
             service_path = Path("/etc/systemd/system/forex-analytics.service")
-            
+
             # サービスファイルを書き込み（sudo権限が必要）
             with open(service_path, "w") as f:
                 f.write(service_content)
-            
+
             # パーミッションを設定
             os.chmod(service_path, 0o644)
-            
+
             # systemdをリロード
             subprocess.run(["systemctl", "daemon-reload"], check=True)
-            
+
             print("✅ Service files created")
             logger.info("Service files created")
             return True
-            
+
         except Exception as e:
             print(f"❌ Service file creation failed: {e}")
             logger.error(f"Service file creation failed: {e}")
@@ -244,8 +255,10 @@ class ProductionDeployer:
         systemdサービスファイルの内容を生成
         """
         python_path = sys.executable
-        app_path = self.project_root / "src/infrastructure/schedulers/integrated_scheduler.py"
-        
+        app_path = (
+            self.project_root / "src/infrastructure/schedulers/integrated_scheduler.py"
+        )
+
         return f"""[Unit]
 Description=Forex Analytics USD/JPY Pattern Detection System
 After=network.target postgresql.service
@@ -281,11 +294,14 @@ WantedBy=multi-user.target
             # systemdサービスを有効化して開始
             subprocess.run(["systemctl", "enable", "forex-analytics"], check=True)
             subprocess.run(["systemctl", "start", "forex-analytics"], check=True)
-            
+
             # サービス状態を確認
-            result = subprocess.run(["systemctl", "is-active", "forex-analytics"], 
-                                  capture_output=True, text=True)
-            
+            result = subprocess.run(
+                ["systemctl", "is-active", "forex-analytics"],
+                capture_output=True,
+                text=True,
+            )
+
             if result.stdout.strip() == "active":
                 print("✅ Services started successfully")
                 logger.info("Services started successfully")
@@ -294,7 +310,7 @@ WantedBy=multi-user.target
                 print(f"❌ Service failed to start: {result.stderr}")
                 logger.error(f"Service failed to start: {result.stderr}")
                 return False
-                
+
         except Exception as e:
             print(f"❌ Service start failed: {e}")
             logger.error(f"Service start failed: {e}")
@@ -345,9 +361,12 @@ WantedBy=multi-user.target
             if "test" in self.config_manager.get("database.url", ""):
                 logger.info("Service status check skipped in test environment")
                 return True
-            
-            result = subprocess.run(["systemctl", "is-active", "forex-analytics"], 
-                                  capture_output=True, text=True)
+
+            result = subprocess.run(
+                ["systemctl", "is-active", "forex-analytics"],
+                capture_output=True,
+                text=True,
+            )
             return result.stdout.strip() == "active"
         except Exception:
             return False
@@ -358,6 +377,7 @@ WantedBy=multi-user.target
         """
         try:
             from src.infrastructure.database.connection import get_async_session
+
             session = await get_async_session()
             await session.close()
             return True
@@ -369,16 +389,16 @@ WantedBy=multi-user.target
         ログファイルをチェック
         """
         log_path = self.config_manager.get("logging.file_path")
-        
+
         try:
             # ログディレクトリを作成
             log_dir = Path(log_path).parent
             log_dir.mkdir(parents=True, exist_ok=True)
-            
+
             # ログファイルが存在しない場合は空ファイルを作成
             if not Path(log_path).exists():
                 Path(log_path).touch()
-            
+
             return True
         except Exception as e:
             logger.error(f"Log file check failed: {e}")
@@ -441,18 +461,22 @@ async def main():
     メイン関数
     """
     parser = argparse.ArgumentParser(description="Production deployment script")
-    parser.add_argument("--config", default="config/production_config.json",
-                       help="Configuration file path")
-    parser.add_argument("--check-only", action="store_true",
-                       help="Only check prerequisites")
-    
+    parser.add_argument(
+        "--config",
+        default="config/production_config.json",
+        help="Configuration file path",
+    )
+    parser.add_argument(
+        "--check-only", action="store_true", help="Only check prerequisites"
+    )
+
     args = parser.parse_args()
 
     deployer = ProductionDeployer(args.config)
-    
+
     try:
         await deployer.setup()
-        
+
         if args.check_only:
             # 前提条件のみチェック
             success = await deployer.check_prerequisites()
@@ -461,7 +485,7 @@ async def main():
             # フルデプロイメント
             success = await deployer.deploy()
             sys.exit(0 if success else 1)
-            
+
     except Exception as e:
         print(f"Deployment script failed: {e}")
         logger.error(f"Deployment script failed: {e}")

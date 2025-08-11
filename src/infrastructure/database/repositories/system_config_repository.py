@@ -9,9 +9,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-from src.infrastructure.database.models.system_config_model import (
-    SystemConfigModel,
-)
+from src.infrastructure.database.models.system_config_model import SystemConfigModel
 
 
 class SystemConfigRepository(ABC):
@@ -183,9 +181,7 @@ class SystemConfigRepository(ABC):
         pass
 
     @abstractmethod
-    async def count_by_category(
-        self, category: str, is_active: bool = True
-    ) -> int:
+    async def count_by_category(self, category: str, is_active: bool = True) -> int:
         """
         カテゴリ別の設定数を取得
 
@@ -235,9 +231,7 @@ class SystemConfigRepository(ABC):
         pass
 
     @abstractmethod
-    async def delete_old_history(
-        self, days_to_keep: int = 90
-    ) -> int:
+    async def delete_old_history(self, days_to_keep: int = 90) -> int:
         """
         古い設定履歴を削除
 
@@ -250,9 +244,7 @@ class SystemConfigRepository(ABC):
         pass
 
     @abstractmethod
-    async def exists_by_key(
-        self, key: str, is_active: bool = True
-    ) -> bool:
+    async def exists_by_key(self, key: str, is_active: bool = True) -> bool:
         """
         キーの設定が存在するかチェック
 

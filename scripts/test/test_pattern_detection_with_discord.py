@@ -19,13 +19,11 @@ from src.infrastructure.database.connection import get_async_session
 from src.infrastructure.database.services.efficient_pattern_detection_service import (
     EfficientPatternDetectionService,
 )
-from tests.database.test_data_generator_service import (
-    TestDataGeneratorService,
-)
 from src.infrastructure.notification.discord_notification_service import (
     DiscordNotificationService,
 )
 from src.utils.logging_config import get_infrastructure_logger
+from tests.database.test_data_generator_service import TestDataGeneratorService
 
 logger = get_infrastructure_logger()
 

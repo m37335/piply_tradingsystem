@@ -181,9 +181,9 @@ class TestNotificationIntegration:
 
             for pattern_number, patterns in pattern_results.items():
                 accuracy_stats["total_patterns"] += len(patterns)
-                accuracy_stats["pattern_distribution"][f"pattern_{pattern_number}"] = (
-                    len(patterns)
-                )
+                accuracy_stats["pattern_distribution"][
+                    f"pattern_{pattern_number}"
+                ] = len(patterns)
 
                 for pattern in patterns:
                     # 高信頼度パターンのカウント

@@ -24,9 +24,7 @@ from .base_repository import BaseRepositoryImpl
 logger = get_infrastructure_logger()
 
 
-class ExchangeRateRepositoryImpl(
-    BaseRepositoryImpl, ExchangeRateRepository
-):
+class ExchangeRateRepositoryImpl(BaseRepositoryImpl, ExchangeRateRepository):
     """
     為替レートリポジトリ実装クラス
 

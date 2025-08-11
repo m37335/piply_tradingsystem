@@ -283,9 +283,7 @@ class IntegratedScheduler:
                 )
 
                 if detected_patterns:
-                    self.logger.info(
-                        f"{len(detected_patterns)}個のパターンが検出されました"
-                    )
+                    self.logger.info(f"{len(detected_patterns)}個のパターンが検出されました")
 
                     # Discord通知を送信
                     await self._send_pattern_notifications(detected_patterns)
@@ -323,13 +321,9 @@ class IntegratedScheduler:
                     success = await self.discord_sender.send_embed(embed)
 
                     if success:
-                        self.logger.info(
-                            f"パターン通知を送信しました: {pattern.pattern_name}"
-                        )
+                        self.logger.info(f"パターン通知を送信しました: {pattern.pattern_name}")
                     else:
-                        self.logger.error(
-                            f"パターン通知の送信に失敗しました: {pattern.pattern_name}"
-                        )
+                        self.logger.error(f"パターン通知の送信に失敗しました: {pattern.pattern_name}")
 
                     # 通知間隔を空ける
                     await asyncio.sleep(1)
@@ -356,7 +350,9 @@ class IntegratedScheduler:
         confidence_emoji = (
             "🟢"
             if pattern.confidence_score >= 80
-            else "🟡" if pattern.confidence_score >= 60 else "🔴"
+            else "🟡"
+            if pattern.confidence_score >= 60
+            else "🔴"
         )
 
         # detection_dataから値を取得
@@ -489,9 +485,7 @@ class IntegratedScheduler:
         """
 
         def signal_handler(signum, frame):
-            self.logger.info(
-                f"シグナル {signum} を受信しました。スケジューラーを停止します。"
-            )
+            self.logger.info(f"シグナル {signum} を受信しました。スケジューラーを停止します。")
             asyncio.create_task(self.stop())
 
         signal.signal(signal.SIGINT, signal_handler)

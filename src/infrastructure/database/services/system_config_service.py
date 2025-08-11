@@ -128,7 +128,7 @@ class SystemConfigService:
             for config_key, config_data in self.default_configs.items():
                 # 既存設定をチェック
                 existing = await self.config_repo.find_by_key(config_key)
-                
+
                 if not existing:
                     # 新しい設定を作成
                     config = SystemConfigModel(
@@ -167,7 +167,7 @@ class SystemConfigService:
 
             # データベースから取得
             config = await self.config_repo.find_by_key(config_key)
-            
+
             if not config or not config.is_active:
                 # デフォルト値を返す
                 if config_key in self.default_configs:
@@ -378,19 +378,25 @@ class SystemConfigService:
                 try:
                     int(config_value)
                 except (ValueError, TypeError):
-                    logger.error(f"Invalid integer value for {config_key}: {config_value}")
+                    logger.error(
+                        f"Invalid integer value for {config_key}: {config_value}"
+                    )
                     return False
 
             elif config_type == "float":
                 try:
                     float(config_value)
                 except (ValueError, TypeError):
-                    logger.error(f"Invalid float value for {config_key}: {config_value}")
+                    logger.error(
+                        f"Invalid float value for {config_key}: {config_value}"
+                    )
                     return False
 
             elif config_type == "boolean":
                 if str(config_value).lower() not in ["true", "false", "1", "0"]:
-                    logger.error(f"Invalid boolean value for {config_key}: {config_value}")
+                    logger.error(
+                        f"Invalid boolean value for {config_key}: {config_value}"
+                    )
                     return False
 
             elif config_type == "json":
@@ -503,7 +509,7 @@ class SystemConfigService:
         try:
             total_configs = await self.config_repo.count_all()
             active_configs = await self.config_repo.count_active()
-            
+
             return {
                 "total_configs": total_configs,
                 "active_configs": active_configs,

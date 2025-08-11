@@ -50,10 +50,10 @@ class PatternDetectionWithTestDataTester:
 
         # セッションを取得
         self.session = await get_async_session()
-        
+
         # 効率的パターン検出サービスを初期化
         self.pattern_service = EfficientPatternDetectionService(self.session)
-        
+
         # テストデータ生成サービスを初期化
         self.test_data_generator = TestDataGeneratorService(self.session)
 
@@ -78,20 +78,26 @@ class PatternDetectionWithTestDataTester:
 
             # 過去24時間のデータでパターン検出を実行
             from datetime import datetime, timedelta
-            
+
             end_date = datetime.now()
             start_date = end_date - timedelta(hours=24)
-            
-            patterns = await self.pattern_service.detect_all_patterns(start_date, end_date)
-            
+
+            patterns = await self.pattern_service.detect_all_patterns(
+                start_date, end_date
+            )
+
             if patterns and 1 in patterns:
                 pattern_list = patterns[1]
                 print(f"✅ Pattern 1 detected: {len(pattern_list)} patterns")
                 for pattern in pattern_list:
-                    print(f"  - {pattern.pattern_name} (confidence: {pattern.confidence_score}, direction: {pattern.direction})")
+                    print(
+                        f"  - {pattern.pattern_name} (confidence: {pattern.confidence_score}, direction: {pattern.direction})"
+                    )
             else:
                 print("❌ Pattern 1 not detected")
-                print(f"Available patterns: {list(patterns.keys()) if patterns else 'None'}")
+                print(
+                    f"Available patterns: {list(patterns.keys()) if patterns else 'None'}"
+                )
 
         except Exception as e:
             print(f"❌ Pattern 1 detection test failed: {e}")
@@ -115,20 +121,26 @@ class PatternDetectionWithTestDataTester:
 
             # 過去24時間のデータでパターン検出を実行
             from datetime import datetime, timedelta
-            
+
             end_date = datetime.now()
             start_date = end_date - timedelta(hours=24)
-            
-            patterns = await self.pattern_service.detect_all_patterns(start_date, end_date)
-            
+
+            patterns = await self.pattern_service.detect_all_patterns(
+                start_date, end_date
+            )
+
             if patterns and 2 in patterns:
                 pattern_list = patterns[2]
                 print(f"✅ Pattern 2 detected: {len(pattern_list)} patterns")
                 for pattern in pattern_list:
-                    print(f"  - {pattern.pattern_name} (confidence: {pattern.confidence_score}, direction: {pattern.direction})")
+                    print(
+                        f"  - {pattern.pattern_name} (confidence: {pattern.confidence_score}, direction: {pattern.direction})"
+                    )
             else:
                 print("❌ Pattern 2 not detected")
-                print(f"Available patterns: {list(patterns.keys()) if patterns else 'None'}")
+                print(
+                    f"Available patterns: {list(patterns.keys()) if patterns else 'None'}"
+                )
 
         except Exception as e:
             print(f"❌ Pattern 2 detection test failed: {e}")
@@ -145,7 +157,7 @@ class PatternDetectionWithTestDataTester:
             # パターン1とパターン2のテストデータを生成
             success1 = await self.test_data_generator.generate_pattern_1_test_data()
             success2 = await self.test_data_generator.generate_pattern_2_test_data()
-            
+
             if not success1 or not success2:
                 print("❌ Failed to generate test data")
                 return
@@ -154,18 +166,22 @@ class PatternDetectionWithTestDataTester:
 
             # 過去24時間のデータでパターン検出を実行
             from datetime import datetime, timedelta
-            
+
             end_date = datetime.now()
             start_date = end_date - timedelta(hours=24)
-            
-            patterns = await self.pattern_service.detect_all_patterns(start_date, end_date)
-            
+
+            patterns = await self.pattern_service.detect_all_patterns(
+                start_date, end_date
+            )
+
             if patterns:
                 print(f"✅ All patterns detected: {len(patterns)} pattern types")
                 for pattern_type, pattern_list in patterns.items():
                     print(f"  Pattern {pattern_type}: {len(pattern_list)} detections")
                     for pattern in pattern_list[:2]:  # 最初の2つを表示
-                        print(f"    - {pattern.pattern_name} (confidence: {pattern.confidence_score}, direction: {pattern.direction})")
+                        print(
+                            f"    - {pattern.pattern_name} (confidence: {pattern.confidence_score}, direction: {pattern.direction})"
+                        )
             else:
                 print("❌ No patterns detected")
 
@@ -183,33 +199,45 @@ class PatternDetectionWithTestDataTester:
         try:
             # テストデータを生成
             await self.test_data_generator.generate_pattern_1_test_data()
-            
+
             # 過去6時間のデータでマルチタイムフレームデータを構築
             from datetime import datetime, timedelta
-            
+
             end_date = datetime.now()
             start_date = end_date - timedelta(hours=6)
-            
-            multi_timeframe_data = await self.pattern_service._build_efficient_multi_timeframe_data(
-                start_date, end_date
+
+            multi_timeframe_data = (
+                await self.pattern_service._build_efficient_multi_timeframe_data(
+                    start_date, end_date
+                )
             )
-            
+
             if multi_timeframe_data:
-                print(f"✅ Multi-timeframe data built: {len(multi_timeframe_data)} timeframes")
+                print(
+                    f"✅ Multi-timeframe data built: {len(multi_timeframe_data)} timeframes"
+                )
                 for timeframe, data in multi_timeframe_data.items():
                     price_data = data.get("price_data", pd.DataFrame())
                     indicators = data.get("indicators", {})
-                    print(f"  {timeframe}: {len(price_data)} price records, {len(indicators)} indicators")
-                    
+                    print(
+                        f"  {timeframe}: {len(price_data)} price records, {len(indicators)} indicators"
+                    )
+
                     # 指標の詳細を表示
                     if indicators:
                         for indicator_type, indicator_data in indicators.items():
                             if indicator_type == "rsi":
-                                print(f"    RSI: {indicator_data.iloc[-1] if hasattr(indicator_data, 'iloc') else indicator_data}")
+                                print(
+                                    f"    RSI: {indicator_data.iloc[-1] if hasattr(indicator_data, 'iloc') else indicator_data}"
+                                )
                             elif indicator_type == "macd":
-                                print(f"    MACD: {indicator_data['macd'].iloc[-1] if hasattr(indicator_data, 'iloc') else indicator_data}")
+                                print(
+                                    f"    MACD: {indicator_data['macd'].iloc[-1] if hasattr(indicator_data, 'iloc') else indicator_data}"
+                                )
                             elif indicator_type == "bollinger_bands":
-                                print(f"    BB: {indicator_data['middle'].iloc[-1] if hasattr(indicator_data, 'iloc') else indicator_data}")
+                                print(
+                                    f"    BB: {indicator_data['middle'].iloc[-1] if hasattr(indicator_data, 'iloc') else indicator_data}"
+                                )
             else:
                 print("❌ No multi-timeframe data built")
 
@@ -252,34 +280,34 @@ async def main():
     logger.info("Starting pattern detection with test data test...")
 
     tester = PatternDetectionWithTestDataTester()
-    
+
     try:
         await tester.setup()
-        
+
         # マルチタイムフレームデータ構築テスト（テストデータ使用）
         await tester.test_multi_timeframe_data_with_test_data()
-        
+
         # パターン1検出テスト
         await tester.test_pattern_1_detection()
-        
+
         # テストデータをクリーンアップ
         await tester.cleanup_test_data()
-        
+
         # パターン2検出テスト
         await tester.test_pattern_2_detection()
-        
+
         # テストデータをクリーンアップ
         await tester.cleanup_test_data()
-        
+
         # 全パターン検出テスト
         await tester.test_all_patterns_detection()
-        
+
         # 最終クリーンアップ
         await tester.cleanup_test_data()
-        
+
         print("Pattern detection with test data test completed successfully!")
         logger.info("Pattern detection with test data test completed successfully!")
-        
+
     except Exception as e:
         print(f"Pattern detection with test data test failed: {e}")
         logger.error(f"Pattern detection with test data test failed: {e}")

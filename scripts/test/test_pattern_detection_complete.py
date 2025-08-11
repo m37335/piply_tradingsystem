@@ -253,7 +253,9 @@ class CompletePatternDetectionTester:
         confidence_emoji = (
             "🟢"
             if pattern.confidence_score >= 80
-            else "🟡" if pattern.confidence_score >= 60 else "🔴"
+            else "🟡"
+            if pattern.confidence_score >= 60
+            else "🔴"
         )
 
         # detection_dataから値を取得

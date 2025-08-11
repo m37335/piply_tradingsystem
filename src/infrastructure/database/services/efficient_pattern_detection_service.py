@@ -141,12 +141,178 @@ class EfficientPatternDetectionService:
         全パターンを検出
 
         Args:
-            start_date: 開始日時（デフォルト: 過去24時間）
-            end_date: 終了日時（デフォルト: 現在時刻）
+            start_date: 開始日時 (デフォルト: 過去24時間)
+            end_date: 終了日時 (デフォルト: 現在時刻)
 
         Returns:
             Dict[int, List[PatternDetectionModel]]: パターン番号別の検出結果
         """
+        try:
+            # デフォルト日時の設定
+            if end_date is None:
+                end_date = datetime.now()
+            if start_date is None:
+                start_date = end_date - timedelta(hours=24)
+
+            logger.info(f"Detecting all patterns from {start_date} to {end_date}")
+
+            # 効率的なマルチタイムフレームデータを構築
+            multi_timeframe_data = await self._build_efficient_multi_timeframe_data(
+                start_date, end_date
+            )
+
+            # 全パターンを検出
+            all_patterns = {}
+            for pattern_number, detector in self.detectors.items():
+                try:
+                    patterns = await self._detect_single_pattern(
+                        pattern_number, detector, multi_timeframe_data
+                    )
+                    all_patterns[pattern_number] = patterns
+                except Exception as e:
+                    logger.error(f"❌ パターン{pattern_number}検出エラー: {e}")
+                    all_patterns[pattern_number] = []
+
+            # 重複チェック付きで保存
+            for pattern_number, patterns in all_patterns.items():
+                if patterns:
+                    saved_patterns = await self._save_patterns_with_duplicate_check(patterns)
+                    all_patterns[pattern_number] = saved_patterns
+
+            total_patterns = sum(len(patterns) for patterns in all_patterns.values())
+            logger.info(f"✅ 全パターン検出完了: {total_patterns}件")
+
+            return all_patterns
+
+        except Exception as e:
+            logger.error(f"❌ 全パターン検出エラー: {e}")
+            return {}
+
+    async def detect_all_patterns_for_timeframe(
+        self,
+        timeframe: str,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+    ) -> List[PatternDetectionModel]:
+        """
+        指定時間軸の全パターンを検出
+
+        Args:
+            timeframe: 時間軸（5m, 1h, 4h, 1d）
+            start_date: 開始日時
+            end_date: 終了日時
+
+        Returns:
+            List[PatternDetectionModel]: 検出されたパターン
+        """
+        try:
+            logger.info(f"🔍 {timeframe}時間軸のパターン検出開始")
+
+            # 日付範囲の設定
+            if end_date is None:
+                end_date = datetime.now()
+            if start_date is None:
+                start_date = end_date - timedelta(days=7)
+
+            # マルチタイムフレームデータを構築
+            multi_timeframe_data = await self._build_efficient_multi_timeframe_data(
+                start_date, end_date
+            )
+
+            # 指定時間軸のデータを取得
+            if timeframe not in multi_timeframe_data:
+                logger.warning(f"⚠️ {timeframe}時間軸のデータが見つかりません")
+                return []
+
+            timeframe_data = multi_timeframe_data[timeframe]
+            if timeframe_data is None or timeframe_data["price_data"].empty:
+                logger.warning(f"⚠️ {timeframe}時間軸のデータが空です")
+                return []
+
+            # 全パターンを検出
+            all_patterns = []
+            for pattern_number, detector in self.detectors.items():
+                try:
+                    patterns = await self._detect_single_pattern(
+                        pattern_number, detector, multi_timeframe_data
+                    )
+                    
+                    # 指定時間軸のパターンのみをフィルタリング
+                    timeframe_patterns = [
+                        p for p in patterns 
+                        if p.timeframe == timeframe
+                    ]
+                    
+                    all_patterns.extend(timeframe_patterns)
+                    
+                except Exception as e:
+                    logger.error(f"❌ パターン{pattern_number}検出エラー: {e}")
+
+            # 重複チェック付きで保存
+            saved_patterns = await self._save_patterns_with_duplicate_check(all_patterns)
+
+            logger.info(f"✅ {timeframe}時間軸のパターン検出完了: {len(saved_patterns)}件")
+            return saved_patterns
+
+        except Exception as e:
+            logger.error(f"❌ {timeframe}時間軸のパターン検出エラー: {e}")
+            return []
+
+    async def detect_patterns_for_timeframe(self, timeframe: str) -> Dict[str, int]:
+        """
+        指定時間軸のパターン検出を実行
+
+        Args:
+            timeframe: 時間軸（5m, 1h, 4h, 1d）
+
+        Returns:
+            Dict[str, int]: 検出されたパターン数
+        """
+        try:
+            logger.info(f"🔍 {timeframe}時間軸のパターン検出開始")
+
+            # 既存のdetect_all_patterns_for_timeframeメソッドを使用
+            patterns = await self.detect_all_patterns_for_timeframe(timeframe)
+            
+            if patterns:
+                # データベースに保存
+                saved_count = 0
+                for pattern in patterns:
+                    try:
+                        await self.pattern_repo.save(pattern)
+                        saved_count += 1
+                    except Exception as e:
+                        logger.error(f"パターン保存エラー: {e}")
+                
+                logger.info(f"✅ {timeframe}時間軸のパターン検出完了: {saved_count}件")
+                return {"detected": saved_count}
+            else:
+                logger.warning(f"⚠️ {timeframe}時間軸のパターン検出完了: 0件")
+                return {"detected": 0}
+
+        except Exception as e:
+            logger.error(f"❌ {timeframe}時間軸のパターン検出エラー: {e}")
+            return {"error": str(e)}
+
+    async def get_unnotified_patterns(self) -> List[PatternDetectionModel]:
+        """
+        未通知のパターンを取得
+
+        Returns:
+            List[PatternDetectionModel]: 未通知のパターンリスト
+        """
+        try:
+            logger.info("🔍 未通知パターン取得開始")
+            
+            # パターンリポジトリから未通知のパターンを取得
+            unnotified_patterns = await self.pattern_repo.find_unnotified_patterns()
+            
+            logger.info(f"✅ 未通知パターン取得完了: {len(unnotified_patterns)}件")
+            return unnotified_patterns
+
+        except Exception as e:
+            logger.error(f"❌ 未通知パターン取得エラー: {e}")
+            return []
         try:
             # デフォルト日時の設定
             if end_date is None:
@@ -208,20 +374,48 @@ class EfficientPatternDetectionService:
         効率的なマルチタイムフレームデータを構築
 
         アプローチ:
-        - 時間軸データサービスを使用してマルチタイムフレームデータを取得
+        - 5分足データを基本として取得
+        - 各時間軸のデータを5分足から動的に集計
         - マルチタイムフレームテクニカル指標サービスを使用して指標を取得
         """
         try:
-            # 時間軸データサービスを使用してマルチタイムフレームデータを取得
-            multi_timeframe_data = (
-                await self.timeframe_service.get_multi_timeframe_data(
-                    start_date, end_date
-                )
+            # 5分足データを取得（基本データ）- 最新データを確実に取得
+            # データベースの最新データ時刻を取得
+            from sqlalchemy import text
+            result = await self.session.execute(
+                text('SELECT MAX(timestamp) as latest_data FROM price_data WHERE currency_pair = :currency_pair'),
+                {'currency_pair': self.currency_pair}
+            )
+            latest_data_str = result.scalar()
+            
+            if latest_data_str:
+                latest_data = datetime.fromisoformat(latest_data_str.replace('Z', '+00:00'))
+                # より短い期間で最新データを取得
+                actual_start_date = latest_data - timedelta(hours=24)  # 24時間前から
+                actual_end_date = latest_data
+            else:
+                actual_start_date = start_date
+                actual_end_date = end_date
+            
+            m5_price_data = await self.price_repo.find_by_date_range(
+                actual_start_date, actual_end_date, self.currency_pair, 1000
             )
 
-            if not multi_timeframe_data or len(multi_timeframe_data) == 0:
-                logger.warning("No multi-timeframe data available")
+            if not m5_price_data:
+                logger.warning("No 5m price data available")
                 return {}
+
+            # 5分足データをDataFrameに変換
+            m5_df = self._convert_to_dataframe(m5_price_data)
+
+            if m5_df.empty:
+                logger.warning("5m DataFrame is empty")
+                return {}
+
+            # 各時間軸のデータを5分足から集計
+            h1_df = self._aggregate_timeframe(m5_df, "1H")
+            h4_df = self._aggregate_timeframe(m5_df, "4H")
+            d1_df = self._aggregate_timeframe(m5_df, "1D")
 
             # 各時間軸の指標データを取得
             m5_indicators = await self.technical_indicator_service.get_latest_indicators_by_timeframe(
@@ -256,8 +450,16 @@ class EfficientPatternDetectionService:
                     macd_value = indicators["macd"]["value"]
                     # additional_dataからsignalとhistogramを取得
                     additional_data = indicators["macd"].get("additional_data", {})
-                    signal_value = additional_data.get("signal", [0.0] * 20)[0] if additional_data.get("signal") else 0.0
-                    histogram_value = additional_data.get("histogram", [0.0] * 20)[0] if additional_data.get("histogram") else 0.0
+                    signal_value = (
+                        additional_data.get("signal", [0.0] * 20)[0]
+                        if additional_data.get("signal")
+                        else 0.0
+                    )
+                    histogram_value = (
+                        additional_data.get("histogram", [0.0] * 20)[0]
+                        if additional_data.get("histogram")
+                        else 0.0
+                    )
                     # パターン検出器はpandas Seriesを期待
                     normalized["macd"] = {
                         "macd": pd.Series([macd_value] * 20),
@@ -270,9 +472,21 @@ class EfficientPatternDetectionService:
                     bb_value = indicators["bb"]["value"]
                     # additional_dataからupper、middle、lowerを取得
                     additional_data = indicators["bb"].get("additional_data", {})
-                    upper_value = additional_data.get("upper", [0.0] * 20)[0] if additional_data.get("upper") else bb_value + 1.0
-                    middle_value = additional_data.get("middle", [0.0] * 20)[0] if additional_data.get("middle") else bb_value
-                    lower_value = additional_data.get("lower", [0.0] * 20)[0] if additional_data.get("lower") else bb_value - 1.0
+                    upper_value = (
+                        additional_data.get("upper", [0.0] * 20)[0]
+                        if additional_data.get("upper")
+                        else bb_value + 1.0
+                    )
+                    middle_value = (
+                        additional_data.get("middle", [0.0] * 20)[0]
+                        if additional_data.get("middle")
+                        else bb_value
+                    )
+                    lower_value = (
+                        additional_data.get("lower", [0.0] * 20)[0]
+                        if additional_data.get("lower")
+                        else bb_value - 1.0
+                    )
                     # パターン検出器はpandas Seriesを期待
                     normalized["bollinger_bands"] = {
                         "upper": pd.Series([upper_value] * 20),
@@ -291,40 +505,32 @@ class EfficientPatternDetectionService:
             result_data = {}
 
             # 5分足データ
-            if "5m" in multi_timeframe_data:
-                m5_df = multi_timeframe_data["5m"]["price_data"]
-                if not m5_df.empty:
-                    result_data["M5"] = {
-                        "price_data": m5_df,
-                        "indicators": m5_indicators,
-                    }
+            if not m5_df.empty:
+                result_data["5m"] = {
+                    "price_data": m5_df,
+                    "indicators": m5_indicators,
+                }
 
             # 1時間足データ
-            if "1h" in multi_timeframe_data:
-                h1_df = multi_timeframe_data["1h"]["price_data"]
-                if not h1_df.empty:
-                    result_data["H1"] = {
-                        "price_data": h1_df,
-                        "indicators": h1_indicators,
-                    }
+            if not h1_df.empty:
+                result_data["1h"] = {
+                    "price_data": h1_df,
+                    "indicators": h1_indicators,
+                }
 
             # 4時間足データ
-            if "4h" in multi_timeframe_data:
-                h4_df = multi_timeframe_data["4h"]["price_data"]
-                if not h4_df.empty:
-                    result_data["H4"] = {
-                        "price_data": h4_df,
-                        "indicators": h4_indicators,
-                    }
+            if not h4_df.empty:
+                result_data["4h"] = {
+                    "price_data": h4_df,
+                    "indicators": h4_indicators,
+                }
 
             # 日足データ
-            if "1d" in multi_timeframe_data:
-                d1_df = multi_timeframe_data["1d"]["price_data"]
-                if not d1_df.empty:
-                    result_data["D1"] = {
-                        "price_data": d1_df,
-                        "indicators": d1_indicators,
-                    }
+            if not d1_df.empty:
+                result_data["1d"] = {
+                    "price_data": d1_df,
+                    "indicators": d1_indicators,
+                }
 
             logger.info(
                 f"Built efficient multi-timeframe data with {len(result_data)} timeframes"

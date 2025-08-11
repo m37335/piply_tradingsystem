@@ -132,7 +132,7 @@ class DataScheduler:
 
     async def _setup_schedules(self):
         """スケジュール設定"""
-        # データ取得スケジュール（15分間隔）
+        # データ取得スケジュール（5分間隔）
         self.scheduler.add_job(
             self._scheduled_data_fetch,
             IntervalTrigger(minutes=self.fetch_interval_minutes),
@@ -281,7 +281,9 @@ class DataScheduler:
                     datetime.now(self.jst) - self.stats["last_successful_fetch"]
                 )
                 if time_since_last > timedelta(hours=2):
-                    await self._send_health_alert("長時間データ取得なし", time_since_last)
+                    await self._send_health_alert(
+                        "長時間データ取得なし", time_since_last
+                    )
 
             # 失敗率チェック
             total = self.stats["total_fetches"]
@@ -296,7 +298,7 @@ class DataScheduler:
     async def _send_error_notification(self, currency_pair: str, error_msg: str):
         """エラー通知"""
         try:
-            webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
+            webhook_url = os.getenv("DISCORD_MONITORING_WEBHOOK_URL")
             if not webhook_url:
                 return
 
@@ -341,7 +343,7 @@ class DataScheduler:
     async def _send_health_alert(self, issue_type: str, details):
         """ヘルスアラート"""
         try:
-            webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
+            webhook_url = os.getenv("DISCORD_MONITORING_WEBHOOK_URL")
             if not webhook_url:
                 return
 
@@ -397,7 +399,7 @@ class DataScheduler:
     async def _send_daily_report(self):
         """日次レポート送信"""
         try:
-            webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
+            webhook_url = os.getenv("DISCORD_MONITORING_WEBHOOK_URL")
             if not webhook_url:
                 return
 

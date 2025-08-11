@@ -26,9 +26,9 @@ from src.infrastructure.messaging.templates import (
 async def test_pattern1_notification(webhook_sender: DiscordWebhookSender):
     """パターン1の通知テスト"""
     print("=== パターン1: 強力なトレンド転換シグナル ===")
-    
+
     template = Pattern1Template()
-    
+
     # モック検出結果
     detection_result = {
         "pattern_number": 1,
@@ -45,27 +45,27 @@ async def test_pattern1_notification(webhook_sender: DiscordWebhookSender):
         "bb_upper": 150.80,
         "bb_lower": 149.70,
     }
-    
+
     # Embedを作成
     embed = template.create_embed(detection_result, "USD/JPY")
-    
+
     # Discordに送信
     success = await webhook_sender.send_embed(embed)
-    
+
     if success:
         print("✅ パターン1通知を送信しました")
     else:
         print("❌ パターン1通知の送信に失敗しました")
-    
+
     return success
 
 
 async def test_pattern2_notification(webhook_sender: DiscordWebhookSender):
     """パターン2の通知テスト"""
     print("\n=== パターン2: 押し目買いチャンス ===")
-    
+
     template = Pattern2Template()
-    
+
     # モック検出結果
     detection_result = {
         "pattern_number": 2,
@@ -82,27 +82,27 @@ async def test_pattern2_notification(webhook_sender: DiscordWebhookSender):
         "bb_upper": 150.20,
         "bb_lower": 149.50,
     }
-    
+
     # Embedを作成
     embed = template.create_embed(detection_result, "USD/JPY")
-    
+
     # Discordに送信
     success = await webhook_sender.send_embed(embed)
-    
+
     if success:
         print("✅ パターン2通知を送信しました")
     else:
         print("❌ パターン2通知の送信に失敗しました")
-    
+
     return success
 
 
 async def test_pattern3_notification(webhook_sender: DiscordWebhookSender):
     """パターン3の通知テスト"""
     print("\n=== パターン3: ダイバージェンス警戒 ===")
-    
+
     template = Pattern3Template()
-    
+
     # モック検出結果
     detection_result = {
         "pattern_number": 3,
@@ -119,27 +119,27 @@ async def test_pattern3_notification(webhook_sender: DiscordWebhookSender):
         "bb_upper": 150.60,
         "bb_lower": 149.90,
     }
-    
+
     # Embedを作成
     embed = template.create_embed(detection_result, "USD/JPY")
-    
+
     # Discordに送信
     success = await webhook_sender.send_embed(embed)
-    
+
     if success:
         print("✅ パターン3通知を送信しました")
     else:
         print("❌ パターン3通知の送信に失敗しました")
-    
+
     return success
 
 
 async def test_pattern4_notification(webhook_sender: DiscordWebhookSender):
     """パターン4の通知テスト"""
     print("\n=== パターン4: ブレイクアウト狙い ===")
-    
+
     template = Pattern4Template()
-    
+
     # モック検出結果
     detection_result = {
         "pattern_number": 4,
@@ -156,27 +156,27 @@ async def test_pattern4_notification(webhook_sender: DiscordWebhookSender):
         "bb_upper": 150.90,
         "bb_lower": 149.80,
     }
-    
+
     # Embedを作成
     embed = template.create_embed(detection_result, "USD/JPY")
-    
+
     # Discordに送信
     success = await webhook_sender.send_embed(embed)
-    
+
     if success:
         print("✅ パターン4通知を送信しました")
     else:
         print("❌ パターン4通知の送信に失敗しました")
-    
+
     return success
 
 
 async def test_pattern6_notification(webhook_sender: DiscordWebhookSender):
     """パターン6の通知テスト"""
     print("\n=== パターン6: 複合シグナル強化 ===")
-    
+
     template = Pattern6Template()
-    
+
     # モック検出結果
     detection_result = {
         "pattern_number": 6,
@@ -193,39 +193,39 @@ async def test_pattern6_notification(webhook_sender: DiscordWebhookSender):
         "bb_upper": 150.70,
         "bb_lower": 149.60,
     }
-    
+
     # Embedを作成
     embed = template.create_embed(detection_result, "USD/JPY")
-    
+
     # Discordに送信
     success = await webhook_sender.send_embed(embed)
-    
+
     if success:
         print("✅ パターン6通知を送信しました")
     else:
         print("❌ パターン6通知の送信に失敗しました")
-    
+
     return success
 
 
 async def test_simple_message(webhook_sender: DiscordWebhookSender):
     """シンプルメッセージのテスト"""
     print("\n=== シンプルメッセージテスト ===")
-    
+
     message = (
         "🎯 **Discord通知パターンシステム**\n"
         "テスト配信が完了しました！\n"
         f"時刻: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
         "✅ 全パターンの通知が正常に送信されました"
     )
-    
+
     success = await webhook_sender.send_simple_message(message)
-    
+
     if success:
         print("✅ シンプルメッセージを送信しました")
     else:
         print("❌ シンプルメッセージの送信に失敗しました")
-    
+
     return success
 
 
@@ -233,52 +233,52 @@ async def main():
     """メイン関数"""
     print("🚀 Discord通知配信テスト開始")
     print(f"開始時刻: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    
+
     # Webhook URLを取得（環境変数または入力）
     webhook_url = os.getenv("DISCORD_WEBHOOK_URL", "")
-    
+
     if not webhook_url:
         print("Discord Webhook URLを入力してください:")
         webhook_url = input().strip()
-    
+
     if not webhook_url:
         print("❌ Webhook URLが設定されていません")
         return
-    
+
     # テスト実行
     async with DiscordWebhookSender(webhook_url) as webhook_sender:
         results = []
-        
+
         # 各パターンのテスト
         results.append(await test_pattern1_notification(webhook_sender))
         await asyncio.sleep(2)  # 2秒間隔
-        
+
         results.append(await test_pattern2_notification(webhook_sender))
         await asyncio.sleep(2)
-        
+
         results.append(await test_pattern3_notification(webhook_sender))
         await asyncio.sleep(2)
-        
+
         results.append(await test_pattern4_notification(webhook_sender))
         await asyncio.sleep(2)
-        
+
         results.append(await test_pattern6_notification(webhook_sender))
         await asyncio.sleep(2)
-        
+
         # シンプルメッセージ
         results.append(await test_simple_message(webhook_sender))
-        
+
         # 結果サマリー
         print(f"\n📊 テスト結果サマリー")
         print(f"成功: {sum(results)}件")
         print(f"失敗: {len(results) - sum(results)}件")
         print(f"成功率: {sum(results) / len(results) * 100:.1f}%")
-        
+
         if all(results):
             print("🎉 全てのテストが成功しました！")
         else:
             print("⚠️ 一部のテストが失敗しました")
-    
+
     print(f"\n完了時刻: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 

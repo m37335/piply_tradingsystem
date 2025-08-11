@@ -27,9 +27,7 @@ async def test_discord():
 
             # シンプルメッセージを送信
             print("📝 Sending simple message...")
-            success = await sender.send_simple_message(
-                "🧪 直接テスト - シンプルメッセージ"
-            )
+            success = await sender.send_simple_message("🧪 直接テスト - シンプルメッセージ")
 
             if success:
                 print("✅ Simple message sent successfully")

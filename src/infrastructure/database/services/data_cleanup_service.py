@@ -10,7 +10,6 @@ from typing import Dict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
 from src.infrastructure.database.repositories.data_fetch_history_repository_impl import (
     DataFetchHistoryRepositoryImpl,
 )
@@ -137,9 +136,7 @@ class DataCleanupService:
             logger.error(f"Error in data cleanup: {e}")
             raise
 
-    async def _cleanup_price_data(
-        self, retention_days: int, dry_run: bool
-    ) -> int:
+    async def _cleanup_price_data(self, retention_days: int, dry_run: bool) -> int:
         """
         価格データのクリーンアップ
 
@@ -298,9 +295,7 @@ class DataCleanupService:
         """
         try:
             # 設定から保持期間を取得
-            retention_days = await self.config_service.get_config(
-                "data_retention_days"
-            )
+            retention_days = await self.config_service.get_config("data_retention_days")
 
             return {
                 "price_data": retention_days,
@@ -415,7 +410,9 @@ class DataCleanupService:
 
             return {
                 "total_records": total_count,
-                "latest_timestamp": latest_record.detection_time if latest_record else None,
+                "latest_timestamp": latest_record.detection_time
+                if latest_record
+                else None,
                 "currency_pair": self.currency_pair,
             }
 
@@ -463,7 +460,7 @@ class DataCleanupService:
 
             for data_type, days in retention_days.items():
                 cutoff_date = datetime.now() - timedelta(days=days)
-                
+
                 if data_type == "price_data":
                     count = await self.price_repo.count_old_data(
                         cutoff_date, self.currency_pair

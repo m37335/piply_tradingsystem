@@ -204,7 +204,8 @@ class DatabaseManager:
             raise RuntimeError("Database manager is not initialized")
 
         try:
-            from .models.base import Base
+            # モデルパッケージ全体をインポート（Baseに全モデルが登録される）
+            from src.infrastructure.database.models import Base
 
             async with self._engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
@@ -225,7 +226,8 @@ class DatabaseManager:
             raise RuntimeError("Database manager is not initialized")
 
         try:
-            from .models.base import Base
+            # モデルパッケージ全体をインポート（Baseに全モデルが登録される）
+            from src.infrastructure.database.models import Base
 
             async with self._engine.begin() as conn:
                 await conn.run_sync(Base.metadata.drop_all)

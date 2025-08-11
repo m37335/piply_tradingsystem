@@ -82,9 +82,9 @@ class PatternTestDataSetup:
             await conn.execute(
                 text(
                     """
-                    INSERT INTO price_data 
+                    INSERT INTO price_data
                     (id, currency_pair, timestamp, open_price, high_price, low_price, close_price, volume, data_source, created_at, updated_at, uuid, version)
-                    VALUES 
+                    VALUES
                     (:id, :currency_pair, :timestamp, :open_price, :high_price, :low_price, :close_price, :volume, :data_source, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, :uuid, :version)
                 """
                 ),
@@ -130,9 +130,9 @@ class PatternTestDataSetup:
             await conn.execute(
                 text(
                     """
-                    INSERT INTO technical_indicators 
+                    INSERT INTO technical_indicators
                     (id, currency_pair, timestamp, indicator_type, timeframe, value, additional_data, parameters, created_at, updated_at, uuid, version)
-                    VALUES 
+                    VALUES
                     (:id, :currency_pair, :timestamp, :indicator_type, :timeframe, :value, :additional_data, :parameters, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, :uuid, :version)
                 """
                 ),
@@ -159,9 +159,9 @@ class PatternTestDataSetup:
             await conn.execute(
                 text(
                     """
-                    INSERT INTO technical_indicators 
+                    INSERT INTO technical_indicators
                     (id, currency_pair, timestamp, indicator_type, timeframe, value, additional_data, parameters, created_at, updated_at, uuid, version)
-                    VALUES 
+                    VALUES
                     (:id, :currency_pair, :timestamp, :indicator_type, :timeframe, :value, :additional_data, :parameters, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, :uuid, :version)
                 """
                 ),
@@ -202,9 +202,9 @@ class PatternTestDataSetup:
             await conn.execute(
                 text(
                     """
-                    INSERT INTO pattern_detections 
+                    INSERT INTO pattern_detections
                     (id, currency_pair, timestamp, pattern_type, pattern_name, confidence_score, direction, detection_data, indicator_data, notification_sent, notification_sent_at, notification_message, created_at, updated_at, uuid, version)
-                    VALUES 
+                    VALUES
                     (:id, :currency_pair, :timestamp, :pattern_type, :pattern_name, :confidence_score, :direction, :detection_data, :indicator_data, :notification_sent, :notification_sent_at, :notification_message, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, :uuid, :version)
                     """
                 ),

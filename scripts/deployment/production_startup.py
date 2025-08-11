@@ -25,22 +25,22 @@ try:
     from src.infrastructure.database.services.data_fetcher_service import (
         DataFetcherService,
     )
-    from src.infrastructure.database.services.technical_indicator_service import (
-        TechnicalIndicatorService,
+    from src.infrastructure.database.services.notification_integration_service import (
+        NotificationIntegrationService,
     )
     from src.infrastructure.database.services.pattern_detection_service import (
         PatternDetectionService,
     )
-    from src.infrastructure.database.services.notification_integration_service import (
-        NotificationIntegrationService,
-    )
     from src.infrastructure.database.services.system_config_service import (
         SystemConfigService,
     )
-    from src.infrastructure.scheduler.usdjpy_data_scheduler import USDJPYDataScheduler
+    from src.infrastructure.database.services.technical_indicator_service import (
+        TechnicalIndicatorService,
+    )
     from src.infrastructure.scheduler.technical_indicator_scheduler import (
         TechnicalIndicatorScheduler,
     )
+    from src.infrastructure.scheduler.usdjpy_data_scheduler import USDJPYDataScheduler
     from src.utils.logging_config import get_infrastructure_logger
 except ImportError as e:
     print(f"Import error: {e}")
@@ -592,7 +592,7 @@ async def main():
     logger.info("Starting production system startup...")
 
     startup = ProductionStartup()
-    
+
     try:
         # 本番システム起動
         await startup.start_production_system()

@@ -208,14 +208,16 @@ class MultiTimeframeDataFetcherService:
             )
 
             # Yahoo Financeから履歴データを取得
-            # 期間を計算（最大30日分）
+            # 期間を計算（最大2年分）
             days_diff = (end_date - start_date).days
-            if days_diff <= 7:
-                period = "7d"
-            elif days_diff <= 30:
+            if days_diff <= 30:
                 period = "30d"
+            elif days_diff <= 90:
+                period = "90d"
+            elif days_diff <= 180:
+                period = "180d"
             else:
-                period = "1y"
+                period = "730d"  # 2年分
 
             historical_data = await self.yahoo_client.get_historical_data(
                 self.currency_pair, period=period, interval=config["interval"]
@@ -260,11 +262,11 @@ class MultiTimeframeDataFetcherService:
             return PriceDataModel(
                 currency_pair=self.currency_pair,
                 timestamp=adjusted_timestamp,
-                open_price=ticker_data.get("regularMarketOpen", 0.0),
-                high_price=ticker_data.get("regularMarketDayHigh", 0.0),
-                low_price=ticker_data.get("regularMarketDayLow", 0.0),
-                close_price=ticker_data.get("regularMarketPrice", 0.0),
-                volume=ticker_data.get("regularMarketVolume", 0),
+                open_price=ticker_data.get("previous_close", 0.0),  # 前日終値をオープン価格として使用
+                high_price=ticker_data.get("day_high", 0.0),
+                low_price=ticker_data.get("day_low", 0.0),
+                close_price=ticker_data.get("rate", 0.0),  # 現在価格をクローズ価格として使用
+                volume=1000000,  # デフォルトボリューム
                 data_source="Yahoo Finance",
             )
 

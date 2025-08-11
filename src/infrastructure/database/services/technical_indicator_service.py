@@ -584,9 +584,9 @@ class TechnicalIndicatorService:
             if not start_date:
                 start_date = end_date - timedelta(days=30)  # 30日分
 
-            # 価格データを取得（計算に必要な分より多めに取得）
+            # 価格データを取得（十分なデータを取得するため制限を緩和）
             price_data = await self.price_repo.find_by_date_range(
-                start_date, end_date, self.currency_pair, min_periods * 2
+                start_date, end_date, self.currency_pair, 10000  # 十分なデータを取得
             )
 
             # タイムスタンプ順にソート

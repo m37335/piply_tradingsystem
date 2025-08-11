@@ -44,7 +44,7 @@ class MultiTimeframeFetcherTester:
 
         # セッションを取得
         self.session = await get_async_session()
-        
+
         # マルチタイムフレームデータ取得サービスを初期化
         self.fetcher_service = MultiTimeframeDataFetcherService(self.session)
 
@@ -66,7 +66,7 @@ class MultiTimeframeFetcherTester:
             else:
                 print("❌ Connection test failed")
                 logger.error("Connection test failed")
-            
+
             return is_connected
 
         except Exception as e:
@@ -128,7 +128,7 @@ class MultiTimeframeFetcherTester:
         try:
             # 全時間軸のデータを取得
             results = await self.fetcher_service.fetch_all_timeframes()
-            
+
             print(f"Fetched data for {len(results)} timeframes:")
             for timeframe, data in results.items():
                 if data:
@@ -149,18 +149,20 @@ class MultiTimeframeFetcherTester:
 
         try:
             from datetime import datetime, timedelta
-            
+
             # 過去7日間のデータを取得
             end_date = datetime.now()
             start_date = end_date - timedelta(days=7)
-            
+
             # 各時間軸の履歴データを取得
             for timeframe in ["5m", "1h", "4h", "1d"]:
                 print(f"Fetching {timeframe} historical data...")
-                historical_data = await self.fetcher_service.fetch_historical_data_for_timeframe(
-                    timeframe, start_date, end_date
+                historical_data = (
+                    await self.fetcher_service.fetch_historical_data_for_timeframe(
+                        timeframe, start_date, end_date
+                    )
                 )
-                
+
                 if historical_data:
                     print(f"  ✅ {timeframe}: {len(historical_data)} records fetched")
                 else:
@@ -188,26 +190,26 @@ async def main():
     logger.info("Starting multi-timeframe fetcher test...")
 
     tester = MultiTimeframeFetcherTester()
-    
+
     try:
         await tester.setup()
-        
+
         # 接続テスト
         if await tester.test_connection():
             # 単一時間軸テスト
             await tester.test_single_timeframe_fetch()
-            
+
             # 全時間軸テスト
             await tester.test_all_timeframes_fetch()
-            
+
             # 履歴データテスト
             await tester.test_historical_data_fetch()
         else:
             print("Skipping tests due to connection failure")
-        
+
         print("Multi-timeframe fetcher test completed successfully!")
         logger.info("Multi-timeframe fetcher test completed successfully!")
-        
+
     except Exception as e:
         print(f"Multi-timeframe fetcher test failed: {e}")
         logger.error(f"Multi-timeframe fetcher test failed: {e}")

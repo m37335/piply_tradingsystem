@@ -7,16 +7,16 @@ USD/JPY特化の5分おきデータ取得システム用のデータベースモ
 from datetime import datetime
 from decimal import Decimal
 
-from src.infrastructure.database.models.price_data_model import PriceDataModel
-from src.infrastructure.database.models.technical_indicator_model import (
-    TechnicalIndicatorModel,
+from src.infrastructure.database.models.data_fetch_history_model import (
+    DataFetchHistoryModel,
 )
 from src.infrastructure.database.models.pattern_detection_model import (
     PatternDetectionModel,
 )
+from src.infrastructure.database.models.price_data_model import PriceDataModel
 from src.infrastructure.database.models.system_config_model import SystemConfigModel
-from src.infrastructure.database.models.data_fetch_history_model import (
-    DataFetchHistoryModel,
+from src.infrastructure.database.models.technical_indicator_model import (
+    TechnicalIndicatorModel,
 )
 
 
@@ -183,7 +183,7 @@ class TestPatternDetectionModel:
     def test_confidence_levels(self):
         """信頼度レベルのテスト"""
         timestamp = datetime.now()
-        
+
         # 高信頼度
         high_confidence = PatternDetectionModel(
             currency_pair="USD/JPY",

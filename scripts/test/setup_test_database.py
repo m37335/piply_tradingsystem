@@ -237,9 +237,9 @@ class TestDatabaseSetup:
                 await self.session.execute(
                     text(
                         """
-                        INSERT INTO price_data 
+                        INSERT INTO price_data
                         (id, currency_pair, timestamp, open_price, high_price, low_price, close_price, volume, data_source, created_at, updated_at, uuid, version)
-                        VALUES 
+                        VALUES
                         (:id, :currency_pair, :timestamp, :open_price, :high_price, :low_price, :close_price, :volume, :data_source, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, :uuid, :version)
                     """
                     ),
@@ -286,9 +286,9 @@ class TestDatabaseSetup:
                 await self.session.execute(
                     text(
                         """
-                        INSERT INTO technical_indicators 
+                        INSERT INTO technical_indicators
                         (id, currency_pair, timestamp, indicator_type, timeframe, value, additional_data, parameters, created_at, updated_at, uuid, version)
-                        VALUES 
+                        VALUES
                         (:id, :currency_pair, :timestamp, :indicator_type, :timeframe, :value, :additional_data, :parameters, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, :uuid, :version)
                     """
                     ),
@@ -310,9 +310,9 @@ class TestDatabaseSetup:
                 await self.session.execute(
                     text(
                         """
-                        INSERT INTO technical_indicators 
+                        INSERT INTO technical_indicators
                         (id, currency_pair, timestamp, indicator_type, timeframe, value, additional_data, parameters, created_at, updated_at, uuid, version)
-                        VALUES 
+                        VALUES
                         (:id, :currency_pair, :timestamp, :indicator_type, :timeframe, :value, :additional_data, :parameters, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, :uuid, :version)
                     """
                     ),
@@ -404,9 +404,9 @@ class TestDatabaseSetup:
                 await self.session.execute(
                     text(
                         """
-                        INSERT INTO system_config 
+                        INSERT INTO system_config
                         (id, config_key, config_category, config_value, description, is_active, config_type, default_value, validation_rules, created_at, updated_at, uuid, version)
-                        VALUES 
+                        VALUES
                         (:id, :config_key, :config_category, :config_value, :description, :is_active, :config_type, :default_value, :validation_rules, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, :uuid, :version)
                     """
                     ),
@@ -455,9 +455,9 @@ class TestDatabaseSetup:
                 await self.session.execute(
                     text(
                         """
-                        INSERT INTO data_fetch_history 
+                        INSERT INTO data_fetch_history
                         (id, currency_pair, fetch_timestamp, data_source, fetch_type, success, response_time_ms, http_status_code, data_count, cache_used, created_at, updated_at, uuid, version)
-                        VALUES 
+                        VALUES
                         (:id, :currency_pair, :fetch_timestamp, :data_source, :fetch_type, :success, :response_time_ms, :http_status_code, :data_count, :cache_used, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, :uuid, :version)
                     """
                     ),

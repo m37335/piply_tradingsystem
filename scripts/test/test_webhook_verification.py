@@ -170,9 +170,7 @@ class WebhookVerificationTester:
 
         print(f"\n=== 期待される動作 ===")
         print(f"通常のWebhook ({discord_url[:50]}...): #一般チャンネル")
-        print(
-            f"監視用Webhook ({monitoring_url[:50]}...): #システム監視・ログ管理システムチャンネル"
-        )
+        print(f"監視用Webhook ({monitoring_url[:50]}...): #システム監視・ログ管理システムチャンネル")
 
         # システム監視のWebhook使用確認
         await self.test_system_monitor_webhook_usage()

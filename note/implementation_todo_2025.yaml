@@ -8,7 +8,7 @@ phases:
     description: "各時間軸のデータを適切に取得・保存し、テクニカル指標を計算する"
     priority: "High"
     estimated_hours: 16
-    
+
     tasks:
       task1_1:
         name: "マルチタイムフレームデータ取得システムの修正"
@@ -16,7 +16,7 @@ phases:
         status: "In Progress"
         priority: "High"
         estimated_hours: 4
-        
+
         files:
           modify:
             - path: "src/infrastructure/database/services/multi_timeframe_data_fetcher_service.py"
@@ -26,14 +26,14 @@ phases:
                 - "各時間軸のデータ取得ロジックを修正"
                 - "重複チェック機能の改善"
                 - "エラーハンドリングの強化"
-        
+
         dependencies:
           - "src/infrastructure/external_apis/yahoo_finance_client.py"
           - "src/infrastructure/database/repositories/price_data_repository_impl.py"
-        
+
         test_files:
           - "scripts/test/test_multi_timeframe_fetcher.py"
-        
+
         acceptance_criteria:
           - "5分足、1時間足、4時間足、日足のデータが正しく取得できる"
           - "重複データが適切にチェックされる"
@@ -45,7 +45,7 @@ phases:
         status: "Not Started"
         priority: "High"
         estimated_hours: 6
-        
+
         files:
           create:
             - path: "src/infrastructure/database/services/timeframe_data_service.py"
@@ -58,14 +58,14 @@ phases:
                     - "aggregate_and_save_h1_data() -> List[PriceDataModel]"
                     - "aggregate_and_save_h4_data() -> List[PriceDataModel]"
                     - "get_multi_timeframe_data(start_date: datetime, end_date: datetime) -> Dict"
-        
+
         dependencies:
           - "src/infrastructure/database/services/multi_timeframe_data_fetcher_service.py"
           - "src/infrastructure/database/repositories/price_data_repository_impl.py"
-        
+
         test_files:
           - "scripts/test/test_timeframe_data_service.py"
-        
+
         acceptance_criteria:
           - "5分足データが正しく保存される"
           - "日足データが個別に取得・保存される"
@@ -78,7 +78,7 @@ phases:
         status: "Not Started"
         priority: "High"
         estimated_hours: 6
-        
+
         files:
           create:
             - path: "src/infrastructure/database/services/multi_timeframe_technical_indicator_service.py"
@@ -90,15 +90,15 @@ phases:
                     - "calculate_timeframe_indicators(timeframe: str) -> Dict"
                     - "save_timeframe_indicators(timeframe: str, indicators: Dict) -> bool"
                     - "get_latest_indicators_by_timeframe(timeframe: str) -> Dict"
-        
+
         dependencies:
           - "src/infrastructure/database/services/timeframe_data_service.py"
           - "src/infrastructure/database/repositories/technical_indicator_repository_impl.py"
           - "src/infrastructure/analysis/technical_indicators/*.py"
-        
+
         test_files:
           - "scripts/test/test_multi_timeframe_technical_indicators.py"
-        
+
         acceptance_criteria:
           - "各時間軸（5m, 1h, 4h, 1d）のRSI, MACD, BBが正しく計算される"
           - "計算結果がデータベースに正しく保存される"
@@ -109,7 +109,7 @@ phases:
     description: "マルチタイムフレームデータを使用したパターン検出システムの実装"
     priority: "High"
     estimated_hours: 12
-    
+
     tasks:
       task2_1:
         name: "効率的パターン検出サービスの修正"
@@ -117,7 +117,7 @@ phases:
         status: "In Progress"
         priority: "High"
         estimated_hours: 6
-        
+
         files:
           modify:
             - path: "src/infrastructure/database/services/efficient_pattern_detection_service.py"
@@ -127,16 +127,16 @@ phases:
                 - "パターン検出器との連携改善"
                 - "重複検出防止機能の強化"
                 - "エラーハンドリングの改善"
-        
+
         dependencies:
           - "src/infrastructure/database/services/timeframe_data_service.py"
           - "src/infrastructure/database/services/multi_timeframe_technical_indicator_service.py"
           - "src/infrastructure/database/repositories/pattern_detection_repository_impl.py"
           - "src/infrastructure/analysis/pattern_detectors/*.py"
-        
+
         test_files:
           - "scripts/test/test_efficient_pattern_detection.py"
-        
+
         acceptance_criteria:
           - "6つのパターン検出器が正しく動作する"
           - "マルチタイムフレームデータが適切に構築される"
@@ -149,7 +149,7 @@ phases:
         status: "In Progress"
         priority: "Medium"
         estimated_hours: 2
-        
+
         files:
           modify:
             - path: "src/infrastructure/database/repositories/pattern_detection_repository_impl.py"
@@ -158,13 +158,13 @@ phases:
                 - "find_latestメソッドの追加"
                 - "find_recent_duplicateメソッドの追加"
                 - "セッション管理の修正（_session → session）"
-        
+
         dependencies:
           - "src/infrastructure/database/repositories/base_repository_impl.py"
-        
+
         test_files:
           - "scripts/test/test_pattern_detection_repository.py"
-        
+
         acceptance_criteria:
           - "最新パターンの取得が正常に動作する"
           - "重複チェックが正常に動作する"
@@ -176,18 +176,18 @@ phases:
         status: "Not Started"
         priority: "Medium"
         estimated_hours: 4
-        
+
         files:
           create:
             - path: "scripts/test/test_pattern_detection_integration.py"
               description: "パターン検出統合テスト"
             - path: "scripts/test/test_pattern_detectors.py"
               description: "個別パターン検出器テスト"
-        
+
         dependencies:
           - "src/infrastructure/database/services/efficient_pattern_detection_service.py"
           - "src/infrastructure/analysis/pattern_detectors/*.py"
-        
+
         acceptance_criteria:
           - "全パターン検出器が正常に動作する"
           - "統合テストが正常に完了する"
@@ -198,7 +198,7 @@ phases:
     description: "自動化されたデータ取得・パターン検出・通知システムの実装"
     priority: "Medium"
     estimated_hours: 8
-    
+
     tasks:
       task3_1:
         name: "統合スケジューラーの作成"
@@ -206,7 +206,7 @@ phases:
         status: "Not Started"
         priority: "Medium"
         estimated_hours: 6
-        
+
         files:
           create:
             - path: "src/infrastructure/schedulers/integrated_scheduler.py"
@@ -220,15 +220,15 @@ phases:
                     - "schedule_5m_data_fetch() -> None"
                     - "schedule_d1_data_fetch() -> None"
                     - "schedule_pattern_detection() -> None"
-        
+
         dependencies:
           - "src/infrastructure/database/services/multi_timeframe_data_fetcher_service.py"
           - "src/infrastructure/database/services/multi_timeframe_technical_indicator_service.py"
           - "src/infrastructure/database/services/efficient_pattern_detection_service.py"
-        
+
         test_files:
           - "scripts/test/test_integrated_scheduler.py"
-        
+
         acceptance_criteria:
           - "5分足データが5分間隔で取得される"
           - "日足データが1日1回取得される"
@@ -241,7 +241,7 @@ phases:
         status: "Not Started"
         priority: "Low"
         estimated_hours: 2
-        
+
         files:
           modify:
             - path: "src/infrastructure/notification/discord_notification_service.py"
@@ -250,14 +250,14 @@ phases:
                 - "パターン検出結果の通知機能を追加"
                 - "重複通知防止機能を追加"
                 - "通知メッセージのフォーマット改善"
-        
+
         dependencies:
           - "src/infrastructure/database/services/efficient_pattern_detection_service.py"
           - "src/infrastructure/database/repositories/pattern_detection_repository_impl.py"
-        
+
         test_files:
           - "scripts/test/test_discord_notification.py"
-        
+
         acceptance_criteria:
           - "パターン検出結果がDiscordに通知される"
           - "重複通知が防止される"
@@ -276,12 +276,12 @@ testing_strategy:
     - "各サービスの個別テスト"
     - "各リポジトリの個別テスト"
     - "各パターン検出器の個別テスト"
-  
+
   integration_tests:
     - "データ取得からパターン検出までの統合テスト"
     - "マルチタイムフレームデータ構築テスト"
     - "通知システム統合テスト"
-  
+
   performance_tests:
     - "大量データでのパフォーマンステスト"
     - "同時実行テスト"

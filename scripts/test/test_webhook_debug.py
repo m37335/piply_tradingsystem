@@ -191,17 +191,13 @@ class WebhookDebugTester:
 
         print(f"\n期待される動作:")
         print(f"通常のWebhook ({env_discord[:50]}...): #一般チャンネル")
-        print(
-            f"監視用Webhook ({env_monitoring[:50]}...): #システム監視・ログ管理システムチャンネル"
-        )
+        print(f"監視用Webhook ({env_monitoring[:50]}...): #システム監視・ログ管理システムチャンネル")
 
         print(f"\n実際の動作:")
         print(
             f"システム監視: {'#一般' if system_webhook == env_discord else '#システム監視・ログ管理システム'}"
         )
-        print(
-            f"ログ管理: {'#一般' if log_webhook == env_discord else '#システム監視・ログ管理システム'}"
-        )
+        print(f"ログ管理: {'#一般' if log_webhook == env_discord else '#システム監視・ログ管理システム'}")
 
 
 async def main():

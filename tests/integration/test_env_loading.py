@@ -60,9 +60,9 @@ def test_env_loading():
 
 def test_discord_connection():
     """Discord Webhook接続テスト"""
-    webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
+    webhook_url = os.getenv("DISCORD_MONITORING_WEBHOOK_URL")
     if not webhook_url:
-        print("❌ DISCORD_WEBHOOK_URL が設定されていません")
+        print("❌ DISCORD_MONITORING_WEBHOOK_URL が設定されていません")
         return False
 
     try:

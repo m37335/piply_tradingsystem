@@ -334,30 +334,58 @@ class DataFetcherService:
             Optional[PriceDataModel]: 正規化された価格データ
         """
         try:
-            # 必要なデータの抽出
-            regular_market_price = ticker_data.get("regularMarketPrice", 0)
-            regular_market_high = ticker_data.get(
-                "regularMarketDayHigh", regular_market_price
-            )
-            regular_market_low = ticker_data.get(
-                "regularMarketDayLow", regular_market_price
-            )
-            regular_market_open = ticker_data.get(
-                "regularMarketOpen", regular_market_price
-            )
-            volume = ticker_data.get("volume", 0)
-            timestamp = datetime.fromtimestamp(
-                ticker_data.get("regularMarketTime", datetime.now().timestamp())
-            )
+            # 実際のYahoo Financeクライアントのデータ形式に対応
+            if "rate" in ticker_data:
+                # カスタムYahoo Financeクライアントの形式
+                close_price = ticker_data.get("rate", 0)
+                high_price = ticker_data.get("day_high", close_price)
+                low_price = ticker_data.get("day_low", close_price)
+                open_price = ticker_data.get(
+                    "previous_close", close_price
+                )  # 前日終値をオープンとして使用
+                volume = ticker_data.get("volume", 1000000)  # デフォルトボリューム
+
+                # タイムスタンプの処理
+                timestamp_str = ticker_data.get("timestamp", "")
+                if timestamp_str:
+                    try:
+                        timestamp = datetime.strptime(
+                            timestamp_str, "%Y-%m-%d %H:%M:%S JST"
+                        )
+                    except:
+                        timestamp = datetime.now()
+                else:
+                    timestamp = datetime.now()
+            else:
+                # 標準的なYahoo Financeティッカーデータ形式
+                regular_market_price = ticker_data.get("regularMarketPrice", 0)
+                regular_market_high = ticker_data.get(
+                    "regularMarketDayHigh", regular_market_price
+                )
+                regular_market_low = ticker_data.get(
+                    "regularMarketDayLow", regular_market_price
+                )
+                regular_market_open = ticker_data.get(
+                    "regularMarketOpen", regular_market_price
+                )
+                volume = ticker_data.get("volume", 0)
+                timestamp = datetime.fromtimestamp(
+                    ticker_data.get("regularMarketTime", datetime.now().timestamp())
+                )
+
+                close_price = regular_market_price
+                high_price = regular_market_high
+                low_price = regular_market_low
+                open_price = regular_market_open
 
             # 価格データモデルの作成
             price_data = PriceDataModel(
                 currency_pair=self.currency_pair,
                 timestamp=timestamp,
-                open_price=regular_market_open,
-                high_price=regular_market_high,
-                low_price=regular_market_low,
-                close_price=regular_market_price,
+                open_price=open_price,
+                high_price=high_price,
+                low_price=low_price,
+                close_price=close_price,
                 volume=volume,
             )
 

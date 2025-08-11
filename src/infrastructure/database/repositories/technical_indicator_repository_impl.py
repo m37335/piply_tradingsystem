@@ -424,10 +424,14 @@ class TechnicalIndicatorRepositoryImpl(
             int: データ数
         """
         try:
+            # 文字列型のタイムスタンプに対応するため、文字列比較を使用
+            start_date_str = start_date.strftime("%Y-%m-%d %H:%M:%S")
+            end_date_str = end_date.strftime("%Y-%m-%d %H:%M:%S")
+
             conditions = [
                 TechnicalIndicatorModel.currency_pair == currency_pair,
-                TechnicalIndicatorModel.timestamp >= start_date,
-                TechnicalIndicatorModel.timestamp <= end_date,
+                TechnicalIndicatorModel.timestamp >= start_date_str,
+                TechnicalIndicatorModel.timestamp <= end_date_str,
             ]
 
             if indicator_type:

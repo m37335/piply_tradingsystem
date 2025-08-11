@@ -157,9 +157,9 @@ class SystemMonitor:
                 time_diff = datetime.now() - latest_fetch
                 minutes_since_last_fetch = time_diff.total_seconds() / 60
 
-                self.monitoring_data["minutes_since_last_fetch"] = (
-                    minutes_since_last_fetch
-                )
+                self.monitoring_data[
+                    "minutes_since_last_fetch"
+                ] = minutes_since_last_fetch
 
                 # 5分以上データが取得されていない場合はアラート
                 if minutes_since_last_fetch > 10:

@@ -9,9 +9,9 @@ USD/JPY特化の本番環境設定スクリプト
     python scripts/deployment/production_setup.py
 """
 
+import asyncio
 import os
 import sys
-import asyncio
 from pathlib import Path
 
 # プロジェクトルートをパスに追加
@@ -20,11 +20,11 @@ sys.path.insert(0, str(project_root))
 
 try:
     from src.infrastructure.database.connection import get_async_session
-    from src.infrastructure.database.services.system_config_service import (
-        SystemConfigService,
-    )
     from src.infrastructure.database.services.data_cleanup_service import (
         DataCleanupService,
+    )
+    from src.infrastructure.database.services.system_config_service import (
+        SystemConfigService,
     )
     from src.utils.logging_config import get_infrastructure_logger
 except ImportError as e:
@@ -358,7 +358,7 @@ async def main():
     logger.info("Starting production environment setup...")
 
     setup = ProductionSetup()
-    
+
     try:
         # 本番環境設定
         await setup.setup_production_environment()

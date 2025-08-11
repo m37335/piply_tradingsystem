@@ -40,9 +40,9 @@ class IntegratedSchedulerTester:
 
         # Discord Webhook URLの設定
         if not os.getenv("DISCORD_WEBHOOK_URL"):
-            os.environ["DISCORD_WEBHOOK_URL"] = (
-                "https://canary.discord.com/api/webhooks/1403643478361116672/nf6aIMHvPjNVX4x10i_ARpbTa9V5_XAtGUenrbkauV1ibdDZbT9l5U7EoTreZ5LiwwKZ"
-            )
+            os.environ[
+                "DISCORD_WEBHOOK_URL"
+            ] = "https://canary.discord.com/api/webhooks/1403643478361116672/nf6aIMHvPjNVX4x10i_ARpbTa9V5_XAtGUenrbkauV1ibdDZbT9l5U7EoTreZ5LiwwKZ"
 
         # 統合スケジューラーを初期化
         self.scheduler = IntegratedScheduler()

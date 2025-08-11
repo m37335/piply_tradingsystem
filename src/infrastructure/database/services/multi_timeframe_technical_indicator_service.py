@@ -513,3 +513,96 @@ class MultiTimeframeTechnicalIndicatorService:
         """
         timeframe_mapping = {"5m": "M5", "1h": "H1", "4h": "H4", "1d": "D1"}
         return timeframe_mapping.get(timeframe, timeframe)
+
+    async def count_latest_indicators(self) -> int:
+        """
+        最新のテクニカル指標数を取得
+
+        Returns:
+            int: 最新の指標数
+        """
+        try:
+            # 過去30日間の指標数をカウント
+            from datetime import datetime, timedelta
+
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=30)
+
+            # 直接SQLで検索（文字列比較の問題を回避）
+            from sqlalchemy import text
+            
+            query = text("""
+                SELECT COUNT(*) FROM technical_indicators 
+                WHERE timestamp >= :start_date AND timestamp <= :end_date
+            """)
+            
+            result = await self.session.execute(
+                query, 
+                {
+                    'start_date': start_date.strftime('%Y-%m-%d %H:%M:%S'),
+                    'end_date': end_date.strftime('%Y-%m-%d %H:%M:%S')
+                }
+            )
+            total_count = result.scalar()
+            
+            logger.info(f"総指標数: {total_count}件 ({start_date} から {end_date})")
+
+            return total_count
+
+        except Exception as e:
+            logger.error(f"最新指標数取得エラー: {e}")
+            return 0
+
+    async def calculate_indicators_for_timeframe(self, timeframe: str) -> Dict[str, int]:
+        """
+        指定時間軸のテクニカル指標を計算
+
+        Args:
+            timeframe: 時間軸（5m, 1h, 4h, 1d）
+
+        Returns:
+            Dict[str, int]: 計算された指標数
+        """
+        try:
+            logger.info(f"📈 {timeframe}時間軸のテクニカル指標計算開始")
+
+            # 既存のcalculate_timeframe_indicatorsメソッドを使用
+            indicators = await self.calculate_timeframe_indicators(timeframe)
+            
+            if indicators:
+                # データベースに保存
+                await self.save_timeframe_indicators(timeframe, indicators)
+                logger.info(f"✅ {timeframe}時間軸のテクニカル指標計算完了: {len(indicators)}件")
+                return {"calculated": len(indicators)}
+            else:
+                logger.warning(f"⚠️ {timeframe}時間軸のテクニカル指標計算完了: 0件")
+                return {"calculated": 0}
+
+        except Exception as e:
+            logger.error(f"❌ {timeframe}時間軸のテクニカル指標計算エラー: {e}")
+            return {"error": str(e)}
+
+    async def get_service_status(self) -> Dict:
+        """
+        サービスの状態を取得
+
+        Returns:
+            Dict: サービス状態
+        """
+        try:
+            from datetime import datetime
+
+            return {
+                "service": "MultiTimeframeTechnicalIndicatorService",
+                "status": "healthy",
+                "currency_pair": self.currency_pair,
+                "timeframes": list(self.timeframes.keys()),
+                "timestamp": datetime.now(),
+            }
+        except Exception as e:
+            return {
+                "service": "MultiTimeframeTechnicalIndicatorService",
+                "status": "unhealthy",
+                "error": str(e),
+                "timestamp": datetime.now(),
+            }

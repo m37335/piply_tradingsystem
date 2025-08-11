@@ -216,6 +216,9 @@ class PriceDataRepositoryImpl(BaseRepositoryImpl, PriceDataRepository):
             List[PriceDataModel]: 価格データリスト
         """
         try:
+            # デバッグ用ログ
+            logger.info(f"Finding price data: {start_date} to {end_date} for {currency_pair}")
+            
             query = (
                 select(PriceDataModel)
                 .where(
@@ -232,7 +235,14 @@ class PriceDataRepositoryImpl(BaseRepositoryImpl, PriceDataRepository):
                 query = query.limit(limit)
 
             result = await self.session.execute(query)
-            return result.scalars().all()
+            price_data_list = result.scalars().all()
+            
+            # デバッグ用ログ
+            logger.info(f"Found {len(price_data_list)} price data records")
+            if price_data_list:
+                logger.info(f"Range: {price_data_list[0].timestamp} to {price_data_list[-1].timestamp}")
+            
+            return list(price_data_list)
 
         except Exception as e:
             logger.error(f"Error finding price data by date range: {e}")
@@ -618,9 +628,7 @@ class PriceDataRepositoryImpl(BaseRepositoryImpl, PriceDataRepository):
             await self.session.commit()
 
             deleted_count = result.rowcount
-            logger.info(
-                f"Deleted {deleted_count} price data records for {data_source}"
-            )
+            logger.info(f"Deleted {deleted_count} price data records for {data_source}")
             return deleted_count
 
         except Exception as e:
