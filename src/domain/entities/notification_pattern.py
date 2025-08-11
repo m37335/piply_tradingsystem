@@ -184,6 +184,69 @@ class NotificationPattern:
             confidence="最高（複合シグナル）",
         )
 
+    @classmethod
+    def create_pattern_7(cls) -> "NotificationPattern":
+        """パターン7: つつみ足検出を作成"""
+        return cls(
+            pattern_number=7,
+            name="つつみ足検出",
+            description="前の足を完全に包み込むローソク足パターン",
+            priority=PatternPriority.HIGH,
+            conditions={
+                "D1": ["陽のつつみ足", "陰のつつみ足"],
+                "H4": ["陽のつつみ足", "陰のつつみ足"],
+                "H1": ["陽のつつみ足", "陰のつつみ足"],
+                "M5": ["陽のつつみ足", "陰のつつみ足"],
+            },
+            notification_title="🔄 つつみ足パターン検出",
+            notification_color="0xFF6B6B",
+            take_profit="+80pips",
+            stop_loss="-40pips",
+            confidence="高（85-90%）",
+        )
+
+    @classmethod
+    def create_pattern_8(cls) -> "NotificationPattern":
+        """パターン8: 赤三兵検出を作成"""
+        return cls(
+            pattern_number=8,
+            name="赤三兵検出",
+            description="3本連続陽線による強い上昇トレンド",
+            priority=PatternPriority.HIGH,
+            conditions={
+                "D1": ["3本連続陽線", "終値高値更新"],
+                "H4": ["3本連続陽線", "終値高値更新"],
+                "H1": ["3本連続陽線", "終値高値更新"],
+                "M5": ["3本連続陽線", "終値高値更新"],
+            },
+            notification_title="🔴 赤三兵パターン検出",
+            notification_color="0x4ECDC4",
+            take_profit="+100pips",
+            stop_loss="-50pips",
+            confidence="高（80-85%）",
+        )
+
+    @classmethod
+    def create_pattern_9(cls) -> "NotificationPattern":
+        """パターン9: 引け坊主検出を作成"""
+        return cls(
+            pattern_number=9,
+            name="引け坊主検出",
+            description="ヒゲのない強いローソク足パターン",
+            priority=PatternPriority.MEDIUM,
+            conditions={
+                "D1": ["大陽線引け坊主", "大陰線引け坊主"],
+                "H4": ["大陽線引け坊主", "大陰線引け坊主"],
+                "H1": ["大陽線引け坊主", "大陰線引け坊主"],
+                "M5": ["大陽線引け坊主", "大陰線引け坊主"],
+            },
+            notification_title="⚡ 引け坊主パターン検出",
+            notification_color="0x45B7D1",
+            take_profit="+60pips",
+            stop_loss="-30pips",
+            confidence="中（75-80%）",
+        )
+
     def increment_detection_count(self) -> None:
         """検出回数を増加"""
         self.detection_count += 1

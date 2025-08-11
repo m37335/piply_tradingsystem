@@ -15,7 +15,10 @@ from ...utils.pattern_utils import PatternUtils
 from .pattern_detectors.breakout_detector import BreakoutDetector
 from .pattern_detectors.composite_signal_detector import CompositeSignalDetector
 from .pattern_detectors.divergence_detector import DivergenceDetector
+from .pattern_detectors.engulfing_pattern_detector import EngulfingPatternDetector
+from .pattern_detectors.marubozu_detector import MarubozuDetector
 from .pattern_detectors.pullback_detector import PullbackDetector
+from .pattern_detectors.red_three_soldiers_detector import RedThreeSoldiersDetector
 from .pattern_detectors.rsi_battle_detector import RSIBattleDetector
 from .pattern_detectors.trend_reversal_detector import TrendReversalDetector
 
@@ -32,6 +35,9 @@ class NotificationPatternAnalyzer:
             4: BreakoutDetector(),
             5: RSIBattleDetector(),
             6: CompositeSignalDetector(),
+            7: EngulfingPatternDetector(),
+            8: RedThreeSoldiersDetector(),
+            9: MarubozuDetector(),
         }
 
         # パターン定義
@@ -42,6 +48,9 @@ class NotificationPatternAnalyzer:
             4: NotificationPattern.create_pattern_4(),
             5: NotificationPattern.create_pattern_5(),
             6: NotificationPattern.create_pattern_6(),
+            7: NotificationPattern.create_pattern_7(),
+            8: NotificationPattern.create_pattern_8(),
+            9: NotificationPattern.create_pattern_9(),
         }
 
     def analyze_multi_timeframe_data(
