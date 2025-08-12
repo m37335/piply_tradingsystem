@@ -122,7 +122,9 @@ def git_commit_and_push(pattern_number: int, message: str | None = None) -> bool
     """Gitコミット・プッシュ"""
     if message is None:
         pattern_info = PATTERN_INFO[pattern_number]
-        message = f"feat: Phase 1 パターン{pattern_number}（{pattern_info['name']}）実装完了"
+        message = (
+            f"feat: Phase 1 パターン{pattern_number}（{pattern_info['name']}）実装完了"
+        )
 
     commands = ["git add .", f"git commit -m '{message}'", "git push"]
 
@@ -247,7 +249,7 @@ def generate_phase1_report() -> str:
 """
 
     # レポートファイル保存
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     report_file = f"reports/phase1_completion_report_{timestamp}.md"
     os.makedirs("reports", exist_ok=True)
 

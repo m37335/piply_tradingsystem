@@ -247,6 +247,69 @@ class NotificationPattern:
             confidence="中（75-80%）",
         )
 
+    @classmethod
+    def create_pattern_10(cls) -> "NotificationPattern":
+        """パターン10: ダブルトップ/ボトム検出を作成"""
+        return cls(
+            pattern_number=10,
+            name="ダブルトップ/ボトム検出",
+            description="2つの高値/安値が同じレベルで形成されるパターン",
+            priority=PatternPriority.HIGH,
+            conditions={
+                "D1": ["ダブルトップ", "ダブルボトム"],
+                "H4": ["ダブルトップ", "ダブルボトム"],
+                "H1": ["ダブルトップ", "ダブルボトム"],
+                "M5": ["ダブルトップ", "ダブルボトム"],
+            },
+            notification_title="🔄 ダブルトップ/ボトムパターン検出",
+            notification_color="0x4ECDC4",
+            take_profit="+100pips",
+            stop_loss="-50pips",
+            confidence="高（80-85%）",
+        )
+
+    @classmethod
+    def create_pattern_11(cls) -> "NotificationPattern":
+        """パターン11: トリプルトップ/ボトム検出を作成"""
+        return cls(
+            pattern_number=11,
+            name="トリプルトップ/ボトム検出",
+            description="3つの高値/安値が同じレベルで形成される強力なパターン",
+            priority=PatternPriority.HIGH,
+            conditions={
+                "D1": ["トリプルトップ", "トリプルボトム"],
+                "H4": ["トリプルトップ", "トリプルボトム"],
+                "H1": ["トリプルトップ", "トリプルボトム"],
+                "M5": ["トリプルトップ", "トリプルボトム"],
+            },
+            notification_title="🔄 トリプルトップ/ボトムパターン検出",
+            notification_color="0xFF6B6B",
+            take_profit="+120pips",
+            stop_loss="-60pips",
+            confidence="高（85-90%）",
+        )
+
+    @classmethod
+    def create_pattern_12(cls) -> "NotificationPattern":
+        """パターン12: フラッグパターン検出を作成"""
+        return cls(
+            pattern_number=12,
+            name="フラッグパターン検出",
+            description="トレンド継続を示すフラッグパターン",
+            priority=PatternPriority.MEDIUM,
+            conditions={
+                "D1": ["ブルフラッグ", "ベアフラッグ"],
+                "H4": ["ブルフラッグ", "ベアフラッグ"],
+                "H1": ["ブルフラッグ", "ベアフラッグ"],
+                "M5": ["ブルフラッグ", "ベアフラッグ"],
+            },
+            notification_title="🔄 フラッグパターン検出",
+            notification_color="0x45B7D1",
+            take_profit="+80pips",
+            stop_loss="-40pips",
+            confidence="中（75-80%）",
+        )
+
     def increment_detection_count(self) -> None:
         """検出回数を増加"""
         self.detection_count += 1

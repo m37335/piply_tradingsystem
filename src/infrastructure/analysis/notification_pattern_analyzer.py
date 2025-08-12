@@ -15,12 +15,15 @@ from ...utils.pattern_utils import PatternUtils
 from .pattern_detectors.breakout_detector import BreakoutDetector
 from .pattern_detectors.composite_signal_detector import CompositeSignalDetector
 from .pattern_detectors.divergence_detector import DivergenceDetector
+from .pattern_detectors.double_top_bottom_detector import DoubleTopBottomDetector
 from .pattern_detectors.engulfing_pattern_detector import EngulfingPatternDetector
+from .pattern_detectors.flag_pattern_detector import FlagPatternDetector
 from .pattern_detectors.marubozu_detector import MarubozuDetector
 from .pattern_detectors.pullback_detector import PullbackDetector
 from .pattern_detectors.red_three_soldiers_detector import RedThreeSoldiersDetector
 from .pattern_detectors.rsi_battle_detector import RSIBattleDetector
 from .pattern_detectors.trend_reversal_detector import TrendReversalDetector
+from .pattern_detectors.triple_top_bottom_detector import TripleTopBottomDetector
 
 
 class NotificationPatternAnalyzer:
@@ -38,6 +41,9 @@ class NotificationPatternAnalyzer:
             7: EngulfingPatternDetector(),
             8: RedThreeSoldiersDetector(),
             9: MarubozuDetector(),
+            10: DoubleTopBottomDetector(),
+            11: TripleTopBottomDetector(),
+            12: FlagPatternDetector(),
         }
 
         # パターン定義
@@ -51,6 +57,9 @@ class NotificationPatternAnalyzer:
             7: NotificationPattern.create_pattern_7(),
             8: NotificationPattern.create_pattern_8(),
             9: NotificationPattern.create_pattern_9(),
+            10: NotificationPattern.create_pattern_10(),
+            11: NotificationPattern.create_pattern_11(),
+            12: NotificationPattern.create_pattern_12(),
         }
 
     def analyze_multi_timeframe_data(

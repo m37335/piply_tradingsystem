@@ -146,7 +146,9 @@ class IntegratedAIDiscordReporter:
                     await self.analysis_cache.invalidate_analysis(
                         "technical_indicators", currency_pair
                     )
-                    self.console.print(f"🔄 {currency_pair} キャッシュ無効化、再計算実行")
+                    self.console.print(
+                        f"🔄 {currency_pair} キャッシュ無効化、再計算実行"
+                    )
                 except Exception as e:
                     self.console.print(f"⚠️ キャッシュ無効化エラー: {str(e)}")
                     self.console.print(f"🔄 {currency_pair} 強制再計算実行")
@@ -156,9 +158,10 @@ class IntegratedAIDiscordReporter:
 
             # 複数期間の履歴データ取得（最適化版）
             timeframes = {
-                "D1": ("3mo", "1d"),  # 3ヶ月、日足
+                "D1": ("1y", "1d"),  # 1年、日足（MA200計算のため）
                 "H4": ("1mo", "1h"),  # 1ヶ月、1時間足
                 "H1": ("1wk", "1h"),  # 1週間、1時間足
+                "M5": ("3d", "5m"),  # 3日、5分足
             }
 
             indicators_data = {}
@@ -170,10 +173,19 @@ class IntegratedAIDiscordReporter:
                         currency_pair, period, interval
                     )
                     if hist_data is not None and not hist_data.empty:
-                        # RSI計算
-                        rsi_result = self.technical_analyzer.calculate_rsi(
-                            hist_data, tf
+                        # RSI計算（複数期間）
+                        rsi_long_result = self.technical_analyzer.calculate_rsi(
+                            hist_data, tf, period=70
                         )
+                        rsi_medium_result = self.technical_analyzer.calculate_rsi(
+                            hist_data, tf, period=50
+                        )
+                        rsi_short_result = self.technical_analyzer.calculate_rsi(
+                            hist_data, tf, period=30
+                        )
+                        indicators_data[f"{tf}_RSI_LONG"] = rsi_long_result
+                        indicators_data[f"{tf}_RSI_MEDIUM"] = rsi_medium_result
+                        indicators_data[f"{tf}_RSI_SHORT"] = rsi_short_result
 
                         # MACD計算（D1のみ）
                         if tf == "D1" and len(hist_data) >= 40:
@@ -187,15 +199,70 @@ class IntegratedAIDiscordReporter:
                             hist_data, tf
                         )
 
-                        indicators_data[f"{tf}_RSI"] = rsi_result
-                        indicators_data[f"{tf}_BB"] = bb_result
+                        # 移動平均線計算（時間軸別に異なる期間）
+                        if tf == "D1":
+                            # D1: 長期(200)と中期(50)
+                            ma_long_result = (
+                                self.technical_analyzer.calculate_moving_averages(
+                                    hist_data, tf, ma_type="SMA", period=200
+                                )
+                            )
+                            ma_medium_result = (
+                                self.technical_analyzer.calculate_moving_averages(
+                                    hist_data, tf, ma_type="SMA", period=50
+                                )
+                            )
+                            indicators_data[f"{tf}_MA_LONG"] = ma_long_result
+                            indicators_data[f"{tf}_MA_MEDIUM"] = ma_medium_result
+                        elif tf == "H4":
+                            # H4: 中期(50)と短期(20)
+                            ma_medium_result = (
+                                self.technical_analyzer.calculate_moving_averages(
+                                    hist_data, tf, ma_type="SMA", period=50
+                                )
+                            )
+                            ma_short_result = (
+                                self.technical_analyzer.calculate_moving_averages(
+                                    hist_data, tf, ma_type="SMA", period=20
+                                )
+                            )
+                            indicators_data[f"{tf}_MA_MEDIUM"] = ma_medium_result
+                            indicators_data[f"{tf}_MA_SHORT"] = ma_short_result
+                        elif tf == "H1":
+                            # H1: 短期(20)
+                            ma_short_result = (
+                                self.technical_analyzer.calculate_moving_averages(
+                                    hist_data, tf, ma_type="SMA", period=20
+                                )
+                            )
+                            indicators_data[f"{tf}_MA_SHORT"] = ma_short_result
+                        elif tf == "M5":
+                            # M5: 短期(20)
+                            ma_short_result = (
+                                self.technical_analyzer.calculate_moving_averages(
+                                    hist_data, tf, ma_type="SMA", period=20
+                                )
+                            )
+                            indicators_data[f"{tf}_MA_SHORT"] = ma_short_result
 
                         # RSI出力
-                        rsi_val = rsi_result.get("current_value", "N/A")
+                        rsi_val = rsi_long_result.get("current_value", "N/A")
                         if isinstance(rsi_val, (int, float)):
-                            self.console.print(f"✅ {tf}: RSI={rsi_val:.1f}")
+                            self.console.print(f"✅ {tf}: RSI_LONG={rsi_val:.1f}")
                         else:
-                            self.console.print(f"✅ {tf}: RSI={rsi_val}")
+                            self.console.print(f"✅ {tf}: RSI_LONG={rsi_val}")
+
+                        rsi_val = rsi_medium_result.get("current_value", "N/A")
+                        if isinstance(rsi_val, (int, float)):
+                            self.console.print(f"✅ {tf}: RSI_MEDIUM={rsi_val:.1f}")
+                        else:
+                            self.console.print(f"✅ {tf}: RSI_MEDIUM={rsi_val}")
+
+                        rsi_val = rsi_short_result.get("current_value", "N/A")
+                        if isinstance(rsi_val, (int, float)):
+                            self.console.print(f"✅ {tf}: RSI_SHORT={rsi_val:.1f}")
+                        else:
+                            self.console.print(f"✅ {tf}: RSI_SHORT={rsi_val}")
 
                         # MACD出力（D1のみ）
                         if tf == "D1" and f"{tf}_MACD" in indicators_data:
@@ -221,6 +288,58 @@ class IntegratedAIDiscordReporter:
                             self.console.print(
                                 f"✅ {tf}: BB Upper={upper_band:.4f}, Middle={middle_band:.4f}, Lower={lower_band:.4f}"
                             )
+
+                        # 移動平均線出力
+                        if tf == "D1":
+                            if f"{tf}_MA_LONG" in indicators_data:
+                                ma_long_data = indicators_data[f"{tf}_MA_LONG"]
+                                ma_long_val = ma_long_data.get("ma_long", "N/A")
+                                if isinstance(ma_long_val, (int, float)):
+                                    self.console.print(
+                                        f"✅ {tf}: MA200={ma_long_val:.4f}"
+                                    )
+
+                            if f"{tf}_MA_MEDIUM" in indicators_data:
+                                ma_medium_data = indicators_data[f"{tf}_MA_MEDIUM"]
+                                ma_medium_val = ma_medium_data.get("ma_medium", "N/A")
+                                if isinstance(ma_medium_val, (int, float)):
+                                    self.console.print(
+                                        f"✅ {tf}: MA50={ma_medium_val:.4f}"
+                                    )
+
+                        elif tf == "H4":
+                            if f"{tf}_MA_MEDIUM" in indicators_data:
+                                ma_medium_data = indicators_data[f"{tf}_MA_MEDIUM"]
+                                ma_medium_val = ma_medium_data.get("ma_medium", "N/A")
+                                if isinstance(ma_medium_val, (int, float)):
+                                    self.console.print(
+                                        f"✅ {tf}: MA50={ma_medium_val:.4f}"
+                                    )
+
+                            if f"{tf}_MA_SHORT" in indicators_data:
+                                ma_short_data = indicators_data[f"{tf}_MA_SHORT"]
+                                ma_short_val = ma_short_data.get("ma_short", "N/A")
+                                if isinstance(ma_short_val, (int, float)):
+                                    self.console.print(
+                                        f"✅ {tf}: MA20={ma_short_val:.4f}"
+                                    )
+
+                        elif tf == "H1":
+                            if f"{tf}_MA_SHORT" in indicators_data:
+                                ma_short_data = indicators_data[f"{tf}_MA_SHORT"]
+                                ma_short_val = ma_short_data.get("ma_short", "N/A")
+                                if isinstance(ma_short_val, (int, float)):
+                                    self.console.print(
+                                        f"✅ {tf}: MA20={ma_short_val:.4f}"
+                                    )
+                        elif tf == "M5":
+                            if f"{tf}_MA_SHORT" in indicators_data:
+                                ma_short_data = indicators_data[f"{tf}_MA_SHORT"]
+                                ma_short_val = ma_short_data.get("ma_short", "N/A")
+                                if isinstance(ma_short_val, (int, float)):
+                                    self.console.print(
+                                        f"✅ {tf}: MA20={ma_short_val:.4f}"
+                                    )
                     else:
                         self.console.print(f"❌ {tf}: 履歴データ取得失敗")
             else:
@@ -231,10 +350,19 @@ class IntegratedAIDiscordReporter:
                         currency_pair, period, interval
                     )
                     if hist_data is not None and not hist_data.empty:
-                        # RSI計算
-                        rsi_result = self.technical_analyzer.calculate_rsi(
-                            hist_data, tf
+                        # RSI計算（複数期間）
+                        rsi_long_result = self.technical_analyzer.calculate_rsi(
+                            hist_data, tf, period=70
                         )
+                        rsi_medium_result = self.technical_analyzer.calculate_rsi(
+                            hist_data, tf, period=50
+                        )
+                        rsi_short_result = self.technical_analyzer.calculate_rsi(
+                            hist_data, tf, period=30
+                        )
+                        indicators_data[f"{tf}_RSI_LONG"] = rsi_long_result
+                        indicators_data[f"{tf}_RSI_MEDIUM"] = rsi_medium_result
+                        indicators_data[f"{tf}_RSI_SHORT"] = rsi_short_result
 
                         # MACD計算（D1のみ）
                         if tf == "D1" and len(hist_data) >= 40:
@@ -248,15 +376,70 @@ class IntegratedAIDiscordReporter:
                             hist_data, tf
                         )
 
-                        indicators_data[f"{tf}_RSI"] = rsi_result
-                        indicators_data[f"{tf}_BB"] = bb_result
+                        # 移動平均線計算（時間軸別に異なる期間）
+                        if tf == "D1":
+                            # D1: 長期(200)と中期(50)
+                            ma_long_result = (
+                                self.technical_analyzer.calculate_moving_averages(
+                                    hist_data, tf, ma_type="SMA", period=200
+                                )
+                            )
+                            ma_medium_result = (
+                                self.technical_analyzer.calculate_moving_averages(
+                                    hist_data, tf, ma_type="SMA", period=50
+                                )
+                            )
+                            indicators_data[f"{tf}_MA_LONG"] = ma_long_result
+                            indicators_data[f"{tf}_MA_MEDIUM"] = ma_medium_result
+                        elif tf == "H4":
+                            # H4: 中期(50)と短期(20)
+                            ma_medium_result = (
+                                self.technical_analyzer.calculate_moving_averages(
+                                    hist_data, tf, ma_type="SMA", period=50
+                                )
+                            )
+                            ma_short_result = (
+                                self.technical_analyzer.calculate_moving_averages(
+                                    hist_data, tf, ma_type="SMA", period=20
+                                )
+                            )
+                            indicators_data[f"{tf}_MA_MEDIUM"] = ma_medium_result
+                            indicators_data[f"{tf}_MA_SHORT"] = ma_short_result
+                        elif tf == "H1":
+                            # H1: 短期(20)
+                            ma_short_result = (
+                                self.technical_analyzer.calculate_moving_averages(
+                                    hist_data, tf, ma_type="SMA", period=20
+                                )
+                            )
+                            indicators_data[f"{tf}_MA_SHORT"] = ma_short_result
+                        elif tf == "M5":
+                            # M5: 短期(20)
+                            ma_short_result = (
+                                self.technical_analyzer.calculate_moving_averages(
+                                    hist_data, tf, ma_type="SMA", period=20
+                                )
+                            )
+                            indicators_data[f"{tf}_MA_SHORT"] = ma_short_result
 
                         # RSI出力
-                        rsi_val = rsi_result.get("current_value", "N/A")
+                        rsi_val = rsi_long_result.get("current_value", "N/A")
                         if isinstance(rsi_val, (int, float)):
-                            self.console.print(f"✅ {tf}: RSI={rsi_val:.1f}")
+                            self.console.print(f"✅ {tf}: RSI_LONG={rsi_val:.1f}")
                         else:
-                            self.console.print(f"✅ {tf}: RSI={rsi_val}")
+                            self.console.print(f"✅ {tf}: RSI_LONG={rsi_val}")
+
+                        rsi_val = rsi_medium_result.get("current_value", "N/A")
+                        if isinstance(rsi_val, (int, float)):
+                            self.console.print(f"✅ {tf}: RSI_MEDIUM={rsi_val:.1f}")
+                        else:
+                            self.console.print(f"✅ {tf}: RSI_MEDIUM={rsi_val}")
+
+                        rsi_val = rsi_short_result.get("current_value", "N/A")
+                        if isinstance(rsi_val, (int, float)):
+                            self.console.print(f"✅ {tf}: RSI_SHORT={rsi_val:.1f}")
+                        else:
+                            self.console.print(f"✅ {tf}: RSI_SHORT={rsi_val}")
 
                         # MACD出力（D1のみ）
                         if tf == "D1" and f"{tf}_MACD" in indicators_data:
@@ -282,6 +465,58 @@ class IntegratedAIDiscordReporter:
                             self.console.print(
                                 f"✅ {tf}: BB Upper={upper_band:.4f}, Middle={middle_band:.4f}, Lower={lower_band:.4f}"
                             )
+
+                        # 移動平均線出力
+                        if tf == "D1":
+                            if f"{tf}_MA_LONG" in indicators_data:
+                                ma_long_data = indicators_data[f"{tf}_MA_LONG"]
+                                ma_long_val = ma_long_data.get("ma_long", "N/A")
+                                if isinstance(ma_long_val, (int, float)):
+                                    self.console.print(
+                                        f"✅ {tf}: MA200={ma_long_val:.4f}"
+                                    )
+
+                            if f"{tf}_MA_MEDIUM" in indicators_data:
+                                ma_medium_data = indicators_data[f"{tf}_MA_MEDIUM"]
+                                ma_medium_val = ma_medium_data.get("ma_medium", "N/A")
+                                if isinstance(ma_medium_val, (int, float)):
+                                    self.console.print(
+                                        f"✅ {tf}: MA50={ma_medium_val:.4f}"
+                                    )
+
+                        elif tf == "H4":
+                            if f"{tf}_MA_MEDIUM" in indicators_data:
+                                ma_medium_data = indicators_data[f"{tf}_MA_MEDIUM"]
+                                ma_medium_val = ma_medium_data.get("ma_medium", "N/A")
+                                if isinstance(ma_medium_val, (int, float)):
+                                    self.console.print(
+                                        f"✅ {tf}: MA50={ma_medium_val:.4f}"
+                                    )
+
+                            if f"{tf}_MA_SHORT" in indicators_data:
+                                ma_short_data = indicators_data[f"{tf}_MA_SHORT"]
+                                ma_short_val = ma_short_data.get("ma_short", "N/A")
+                                if isinstance(ma_short_val, (int, float)):
+                                    self.console.print(
+                                        f"✅ {tf}: MA20={ma_short_val:.4f}"
+                                    )
+
+                        elif tf == "H1":
+                            if f"{tf}_MA_SHORT" in indicators_data:
+                                ma_short_data = indicators_data[f"{tf}_MA_SHORT"]
+                                ma_short_val = ma_short_data.get("ma_short", "N/A")
+                                if isinstance(ma_short_val, (int, float)):
+                                    self.console.print(
+                                        f"✅ {tf}: MA20={ma_short_val:.4f}"
+                                    )
+                        elif tf == "M5":
+                            if f"{tf}_MA_SHORT" in indicators_data:
+                                ma_short_data = indicators_data[f"{tf}_MA_SHORT"]
+                                ma_short_val = ma_short_data.get("ma_short", "N/A")
+                                if isinstance(ma_short_val, (int, float)):
+                                    self.console.print(
+                                        f"✅ {tf}: MA20={ma_short_val:.4f}"
+                                    )
                     else:
                         self.console.print(f"❌ {tf}: 履歴データ取得失敗")
 
@@ -339,13 +574,33 @@ class IntegratedAIDiscordReporter:
             technical_info = "\n【USD/JPYテクニカル指標】"
             for key, data in technical_data.items():
                 if isinstance(data, dict):
-                    if "RSI" in key:
+                    if "RSI_LONG" in key:
                         rsi_val = data.get("current_value", "N/A")
                         rsi_state = data.get("state", "N/A")
                         if isinstance(rsi_val, (int, float)):
-                            technical_info += f"\n{key}: {rsi_val:.1f} ({rsi_state})"
+                            technical_info += (
+                                f"\n{key}: RSI70={rsi_val:.1f} ({rsi_state})"
+                            )
                         else:
-                            technical_info += f"\n{key}: {rsi_val} ({rsi_state})"
+                            technical_info += f"\n{key}: RSI70={rsi_val} ({rsi_state})"
+                    elif "RSI_MEDIUM" in key:
+                        rsi_val = data.get("current_value", "N/A")
+                        rsi_state = data.get("state", "N/A")
+                        if isinstance(rsi_val, (int, float)):
+                            technical_info += (
+                                f"\n{key}: RSI50={rsi_val:.1f} ({rsi_state})"
+                            )
+                        else:
+                            technical_info += f"\n{key}: RSI50={rsi_val} ({rsi_state})"
+                    elif "RSI_SHORT" in key:
+                        rsi_val = data.get("current_value", "N/A")
+                        rsi_state = data.get("state", "N/A")
+                        if isinstance(rsi_val, (int, float)):
+                            technical_info += (
+                                f"\n{key}: RSI30={rsi_val:.1f} ({rsi_state})"
+                            )
+                        else:
+                            technical_info += f"\n{key}: RSI30={rsi_val} ({rsi_state})"
                     elif "MACD" in key:
                         macd_line = data.get("macd_line", "N/A")
                         signal_line = data.get("signal_line", "N/A")
@@ -360,10 +615,46 @@ class IntegratedAIDiscordReporter:
                         bb_position = data.get("band_position", "N/A")
                         bb_signal = data.get("band_walk", "N/A")
                         technical_info += f"\n{key}: {bb_position} ({bb_signal})"
+                    elif "MA_LONG" in key:
+                        ma_long_val = data.get("ma_long", "N/A")
+                        ma_position = data.get("ma_position", "N/A")
+                        if isinstance(ma_long_val, (int, float)):
+                            technical_info += (
+                                f"\n{key}: MA200={ma_long_val:.4f} ({ma_position})"
+                            )
+                        else:
+                            technical_info += (
+                                f"\n{key}: MA200={ma_long_val} ({ma_position})"
+                            )
+                    elif "MA_MEDIUM" in key:
+                        ma_medium_val = data.get("ma_medium", "N/A")
+                        ma_position = data.get("ma_position", "N/A")
+                        if isinstance(ma_medium_val, (int, float)):
+                            technical_info += (
+                                f"\n{key}: MA50={ma_medium_val:.4f} ({ma_position})"
+                            )
+                        else:
+                            technical_info += (
+                                f"\n{key}: MA50={ma_medium_val} ({ma_position})"
+                            )
+                    elif "MA_SHORT" in key:
+                        ma_short_val = data.get("ma_short", "N/A")
+                        ma_position = data.get("ma_position", "N/A")
+                        if isinstance(ma_short_val, (int, float)):
+                            technical_info += (
+                                f"\n{key}: MA20={ma_short_val:.4f} ({ma_position})"
+                            )
+                        else:
+                            technical_info += (
+                                f"\n{key}: MA20={ma_short_val} ({ma_position})"
+                            )
 
         # 統合分析プロンプト作成
         prompt = f"""
-あなたは経験豊富なプロFXトレーダーかつ親切な投資教育者です。FX初学者にも理解できるよう、専門用語には必ず説明を付けながら、通貨間の相関性とテクニカル指標を活用した統合分析に基づいて、USD/JPY の実践的な売買シナリオを作成してください。
+あなたは経験豊富なプロFXトレーダーかつ親切な投資教育者です。
+FX初学者にも理解できるよう、専門用語には必ず説明を付けながら、
+通貨間の相関性とテクニカル指標を活用した統合分析に基づいて、
+USD/JPY の実践的な売買シナリオを作成してください。
 
 【統合相関分析結果】
 分析時刻: {current_time}
@@ -394,27 +685,41 @@ GBP/JPY: {gbpjpy_data.get('rate', 'N/A')} ({gbpjpy_data.get('market_change_perce
 トレンド整合: {usdjpy_forecast.get('trend_alignment', 'N/A')}
 相関要因: {', '.join(usdjpy_forecast.get('forecast_factors', []))}
 
+【トレード戦略ルール】
+1. D1・H4で方向性（売買方針）を固定
+2. H1でゾーンと反発・継続サインを探す
+3. M5でタイミングを絞る（過熱・反発・形状確認）
+4. ダイバージェンスは警戒信号として活用
+5. シナリオ外（急騰・急落）のケースも1パターン事前に想定に含める。
+6. 予測信頼度も考慮し、「待ち」というシナリオも想定する。
+
 【戦略要求】
 上記の通貨相関分析とテクニカル指標を踏まえ、以下の形式で1024文字以内の売買シナリオを作成。
-その際、移動平均線からのサポートラインやレジスタンスラインを考慮してください。
-売買の際には押し目での売り買いを考慮してください。
-レポートの中では特に数値を示すと評価が高くなります。
+
 情報の優先順位はテクニカル指標・分析＞通貨の相関関係です。
-また、テクニカル指標の数値は具体的に示してください：
+また、テクニカル指標の数値は具体的に示してください。
+pipsは0.01円=1pipです。
+価格は○○.○○○のように具体的な3桁価格で示してください。：
 
 【相関分析】他通貨の動きから見るUSD/JPY方向性
 【大局観】D1・H4マルチタイムフレーム分析（※テクニカル指標含む）
+  - D1: 長期トレンド（MA200、MA50）、MACD、RSI
+  - H4: 中期トレンド（MA50、MA20）、ボリンジャーバンド
 【戦術】H1エントリーゾーン・タイミング分析
+  - H1: 短期トレンド（MA20）、RSI、ボリンジャーバンド
+【タイミング】M5エントリーポイント
+  - M5: 短期トレンド（MA20）、RSI
 【統合シナリオ】相関性とテクニカル指標を考慮した売買戦略・具体的価格指示
- ・エントリー価格: ○○.○○○〜○○.○○○（具体的な3桁価格）:改行
- ・利確目標: ○○.○○○（〇〇〜〇〇pips※利益）:改行
- ・損切り価格: ○○.○○○（〇〇pips※損失）:改行
- サポートライン（○○.○○○）やレジスタンスライン（○○.○○○）を明確にした利確、または損切りの根拠や理由を明記してください。
-【リスク管理】通貨相関リスク・ダイバージェンス※警戒
+ ・エントリー価格: ○○.○○○〜○○.○○○
+ ・利確目標: ○○.○○○（〇〇〜〇〇pips※利益）
+ ・損切り価格: ○○.○○○（〇〇pips※損失）
+ 今のトレードの目的や時間軸によって利確、または損切り価格を決め、直近の安値/高値や移動平均線/ボリンジャーバンドの基準線、時間切れ損切りなどの根拠や理由を明記してください。
+【リスク管理】通貨相関リスク・ダイバージェンス、サポートラインや抵抗線、揉み合いによる反転を元に予測が異なる展開を考慮してください。
 
 ※専門用語解説：
 ・pips: 通貨ペアの最小価格単位（USD/JPYなら0.01円=1pip）
 ・ダイバージェンス: 価格とテクニカル指標の動きが逆行する現象
+・移動平均線: 過去の価格の平均値を示すトレンド指標
 ・その他専門用語があれば簡潔に説明
 
 「EUR/USDがこうだから」「クロス円がこうだから」「テクニカル指標がこうだから」「だからUSD/JPYはこう動く可能性が高い」という統合的で根拠のある分析を重視し、必ず具体的な価格（小数点以下3桁）とpips数を明記してください。
@@ -667,7 +972,9 @@ GBP/JPY: {gbpjpy_data.get('rate', 'N/A')} ({gbpjpy_data.get('market_change_perce
             import traceback
 
             error_details = traceback.format_exc()
-            error_msg = f"❌ 統合レポート生成・配信エラー: {str(e)}\n詳細: {error_details}"
+            error_msg = (
+                f"❌ 統合レポート生成・配信エラー: {str(e)}\n詳細: {error_details}"
+            )
             self.console.print(error_msg)
 
             # エラー通知をDiscordに送信
@@ -715,8 +1022,12 @@ async def main():
     parser = argparse.ArgumentParser(
         description="Integrated AI Discord Reporter (Optimized)"
     )
-    parser.add_argument("--test", action="store_true", help="テストモード（Discordに送信しない）")
-    parser.add_argument("--no-optimization", action="store_true", help="最適化機能を無効にする")
+    parser.add_argument(
+        "--test", action="store_true", help="テストモード（Discordに送信しない）"
+    )
+    parser.add_argument(
+        "--no-optimization", action="store_true", help="最適化機能を無効にする"
+    )
 
     args = parser.parse_args()
 

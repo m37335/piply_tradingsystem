@@ -40,7 +40,11 @@ class TechnicalIndicatorsAnalyzer:
         self.jst = pytz.timezone("Asia/Tokyo")
 
         # 設定値（trade_chart_settings_2025.mdに基づく）
-        self.rsi_period = 14
+        # RSI設定（複数期間対応）
+        self.rsi_period = 14  # デフォルト期間
+        self.rsi_long = 70  # 長期RSI
+        self.rsi_medium = 50  # 中期RSI
+        self.rsi_short = 30  # 短期RSI
         self.rsi_levels = {"overbought": 70, "neutral": 50, "oversold": 30}
 
         self.macd_fast = 12
@@ -50,22 +54,34 @@ class TechnicalIndicatorsAnalyzer:
         self.bb_period = 20
         self.bb_std = 2
 
+        # 移動平均線設定
+        self.ma_short = 20  # 短期移動平均
+        self.ma_medium = 50  # 中期移動平均
+        self.ma_long = 200  # 長期移動平均
+
         logger.info("Initialized Technical Indicators Analyzer")
 
     def calculate_rsi(
-        self, data: pd.DataFrame, timeframe: str = "D1"
+        self, data: pd.DataFrame, timeframe: str = "D1", period: Optional[int] = None
     ) -> Dict[str, Any]:
         """
-        RSI計算 (期間14, レベル70/50/30)
+        RSI計算 (複数期間対応)
 
         Args:
             data: OHLCV データ
             timeframe: 時間軸 (D1, H4, H1, M5)
+            period: 指定期間（Noneの場合はデフォルト値を使用）
 
         Returns:
             Dict: RSI値と分析結果
         """
         try:
+            # 期間の決定
+            if period is not None:
+                rsi_period = period
+            else:
+                rsi_period = self.rsi_period
+
             # データ型の詳細ログ
             logger.info(f"RSI calculation - Data type: {type(data)}")
             logger.info(
@@ -88,9 +104,9 @@ class TechnicalIndicatorsAnalyzer:
                     logger.error(f"Failed to convert dict to DataFrame: {str(e)}")
                     return {"error": "データ変換エラー"}
 
-            if len(data) < self.rsi_period:
+            if len(data) < rsi_period:
                 logger.warning(
-                    f"Insufficient data for RSI calculation: {len(data)} < {self.rsi_period}"
+                    f"Insufficient data for RSI calculation: {len(data)} < {rsi_period}"
                 )
                 return {"error": "データ不足"}
 
@@ -100,7 +116,7 @@ class TechnicalIndicatorsAnalyzer:
                 return {"error": "Close列が見つかりません"}
 
             close = data["Close"]
-            rsi = ta.momentum.RSIIndicator(close, window=self.rsi_period).rsi()
+            rsi = ta.momentum.RSIIndicator(close, window=rsi_period).rsi()
 
             current_rsi = rsi.iloc[-1] if not np.isnan(rsi.iloc[-1]) else None
             previous_rsi = (
@@ -119,7 +135,7 @@ class TechnicalIndicatorsAnalyzer:
             result = {
                 "indicator": "RSI",
                 "timeframe": timeframe,
-                "period": self.rsi_period,
+                "period": rsi_period,
                 "current_value": round(current_rsi, 2) if current_rsi else None,
                 "previous_value": round(previous_rsi, 2) if previous_rsi else None,
                 "state": rsi_state,
@@ -129,6 +145,14 @@ class TechnicalIndicatorsAnalyzer:
                 "timestamp": datetime.now(self.jst).isoformat(),
                 "data_points": len(data),
             }
+
+            # 期間に応じてキーを設定
+            if rsi_period == 70:
+                result["rsi_long"] = result["current_value"]
+            elif rsi_period == 50:
+                result["rsi_medium"] = result["current_value"]
+            elif rsi_period == 30:
+                result["rsi_short"] = result["current_value"]
 
             logger.info(
                 f"RSI calculated for {timeframe}: {current_rsi:.2f} ({rsi_state})"
@@ -219,9 +243,7 @@ class TechnicalIndicatorsAnalyzer:
             zero_line_position = (
                 "above"
                 if current_macd > 0
-                else "below"
-                if current_macd < 0
-                else "neutral"
+                else "below" if current_macd < 0 else "neutral"
             )
 
             result = {
@@ -334,6 +356,216 @@ class TechnicalIndicatorsAnalyzer:
             logger.error(f"Bollinger Bands calculation error: {str(e)}")
             return {"error": str(e)}
 
+    def calculate_moving_averages(
+        self,
+        data: pd.DataFrame,
+        timeframe: str = "D1",
+        ma_type: str = "SMA",
+        period: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """
+        移動平均線計算
+
+        Args:
+            data: OHLCV データ
+            timeframe: 時間軸
+            ma_type: 移動平均線タイプ ("SMA" or "EMA")
+            period: 指定期間（Noneの場合はデフォルト値を使用）
+
+        Returns:
+            Dict: 移動平均線値と分析結果
+        """
+        try:
+            # データがnumpy配列の場合はDataFrameに変換
+            if isinstance(data, np.ndarray):
+                logger.warning("Data is numpy array, converting to DataFrame")
+                return {"error": "データ形式エラー: DataFrameが必要"}
+
+            # データが辞書の場合はDataFrameに変換を試行
+            if isinstance(data, dict):
+                try:
+                    data = pd.DataFrame(data)
+                except Exception as e:
+                    logger.error(f"Failed to convert dict to DataFrame: {str(e)}")
+                    return {"error": "データ変換エラー"}
+
+            # 期間の決定
+            if period is not None:
+                # 指定された期間で単一の移動平均を計算
+                ma_period = period
+                required_periods = ma_period + 10
+
+                if len(data) < required_periods:
+                    logger.warning(
+                        f"Insufficient data for Moving Average: {len(data)} < {required_periods}"
+                    )
+                    return {"error": f"データ不足（{required_periods}件必要）"}
+
+                # Close列が存在するかチェック
+                if "Close" not in data.columns:
+                    logger.error("Close column not found in data")
+                    return {"error": "Close列が見つかりません"}
+
+                close = data["Close"]
+                current_price = close.iloc[-1]
+
+                # 指定された期間の移動平均を計算
+                if ma_type.upper() == "EMA":
+                    ma_value = ta.trend.EMAIndicator(
+                        close, window=ma_period
+                    ).ema_indicator()
+                else:
+                    ma_value = ta.trend.SMAIndicator(
+                        close, window=ma_period
+                    ).sma_indicator()
+
+                current_ma = (
+                    ma_value.iloc[-1] if not np.isnan(ma_value.iloc[-1]) else None
+                )
+                previous_ma = (
+                    ma_value.iloc[-2]
+                    if len(ma_value) > 1 and not np.isnan(ma_value.iloc[-2])
+                    else None
+                )
+
+                # 移動平均の位置関係を分析
+                ma_position = self._analyze_single_ma_position(
+                    current_price, current_ma
+                )
+
+                # 移動平均の傾きを分析
+                ma_slope = self._analyze_single_ma_slope(ma_value, periods=5)
+
+                # 結果を返す
+                result = {
+                    "indicator": f"Moving Average ({ma_type.upper()})",
+                    "timeframe": timeframe,
+                    "parameters": f"{ma_type.upper()}({ma_period})",
+                    "current_price": round(current_price, 4),
+                    f"ma_{ma_period}": round(current_ma, 4) if current_ma else None,
+                    "ma_position": ma_position,
+                    "ma_slope": ma_slope,
+                    "timestamp": datetime.now(self.jst).isoformat(),
+                    "data_points": len(data),
+                }
+
+                # 期間に応じてキーを設定
+                if ma_period == 200:
+                    result["ma_long"] = result[f"ma_{ma_period}"]
+                elif ma_period == 50:
+                    result["ma_medium"] = result[f"ma_{ma_period}"]
+                elif ma_period == 20:
+                    result["ma_short"] = result[f"ma_{ma_period}"]
+
+                return result
+
+            else:
+                # 従来の3期間（短期20, 中期50, 長期200）での計算
+                required_periods = self.ma_long + 10
+                if len(data) < required_periods:
+                    logger.warning(
+                        f"Insufficient data for Moving Averages: {len(data)} < {required_periods}"
+                    )
+                    return {"error": f"データ不足（{required_periods}件必要）"}
+
+                # Close列が存在するかチェック
+                if "Close" not in data.columns:
+                    logger.error("Close column not found in data")
+                    return {"error": "Close列が見つかりません"}
+
+                close = data["Close"]
+                current_price = close.iloc[-1]
+
+                # 各期間の移動平均を計算
+                ma_short = ta.trend.SMAIndicator(
+                    close, window=self.ma_short
+                ).sma_indicator()
+                ma_medium = ta.trend.SMAIndicator(
+                    close, window=self.ma_medium
+                ).sma_indicator()
+                ma_long = ta.trend.SMAIndicator(
+                    close, window=self.ma_long
+                ).sma_indicator()
+
+                # 現在値を取得
+                current_ma_short = (
+                    ma_short.iloc[-1] if not np.isnan(ma_short.iloc[-1]) else None
+                )
+                current_ma_medium = (
+                    ma_medium.iloc[-1] if not np.isnan(ma_medium.iloc[-1]) else None
+                )
+                current_ma_long = (
+                    ma_long.iloc[-1] if not np.isnan(ma_long.iloc[-1]) else None
+                )
+
+                # 前回値を取得
+                previous_ma_short = (
+                    ma_short.iloc[-2]
+                    if len(ma_short) > 1 and not np.isnan(ma_short.iloc[-2])
+                    else None
+                )
+                previous_ma_medium = (
+                    ma_medium.iloc[-2]
+                    if len(ma_medium) > 1 and not np.isnan(ma_medium.iloc[-2])
+                    else None
+                )
+                previous_ma_long = (
+                    ma_long.iloc[-2]
+                    if len(ma_long) > 1 and not np.isnan(ma_long.iloc[-2])
+                    else None
+                )
+
+                # 移動平均の位置関係を分析
+                ma_position = self._analyze_ma_position(
+                    current_price, current_ma_short, current_ma_medium, current_ma_long
+                )
+
+                # 移動平均の傾きを分析
+                ma_slope = self._analyze_ma_slope(
+                    ma_short, ma_medium, ma_long, periods=5
+                )
+
+                # ゴールデンクロス・デッドクロス検出
+                cross_signals = self._detect_ma_crosses(
+                    ma_short,
+                    ma_medium,
+                    ma_long,
+                    previous_ma_short,
+                    previous_ma_medium,
+                    previous_ma_long,
+                )
+
+                # サポート・レジスタンスレベル
+                support_resistance = self._identify_ma_support_resistance(
+                    current_ma_short, current_ma_medium, current_ma_long
+                )
+
+                result = {
+                    "indicator": "Moving Averages",
+                    "timeframe": timeframe,
+                    "parameters": f"MA({self.ma_short},{self.ma_medium},{self.ma_long})",
+                    "current_price": round(current_price, 4),
+                    "ma_short": (
+                        round(current_ma_short, 4) if current_ma_short else None
+                    ),
+                    "ma_medium": (
+                        round(current_ma_medium, 4) if current_ma_medium else None
+                    ),
+                    "ma_long": round(current_ma_long, 4) if current_ma_long else None,
+                    "ma_position": ma_position,
+                    "ma_slope": ma_slope,
+                    "cross_signals": cross_signals,
+                    "support_resistance": support_resistance,
+                    "timestamp": datetime.now(self.jst).isoformat(),
+                    "data_points": len(data),
+                }
+
+                return result
+
+        except Exception as e:
+            logger.error(f"Moving Averages calculation error: {str(e)}")
+            return {"error": f"計算エラー: {str(e)}"}
+
     def multi_timeframe_analysis(
         self, data_dict: Dict[str, pd.DataFrame]
     ) -> Dict[str, Any]:
@@ -383,8 +615,10 @@ class TechnicalIndicatorsAnalyzer:
                 h4_analysis = {}
                 h4_rsi = self.calculate_rsi(data_dict["H4"], "H4")
                 h4_bb = self.calculate_bollinger_bands(data_dict["H4"], "H4")
+                h4_ma = self.calculate_moving_averages(data_dict["H4"], "H4")
                 h4_analysis["RSI"] = h4_rsi
                 h4_analysis["BollingerBands"] = h4_bb
+                h4_analysis["MovingAverages"] = h4_ma
                 h4_analysis["purpose"] = "戦術判断"
                 analysis_result["timeframes"]["H4"] = h4_analysis
 
@@ -393,8 +627,10 @@ class TechnicalIndicatorsAnalyzer:
                 h1_analysis = {}
                 h1_rsi = self.calculate_rsi(data_dict["H1"], "H1")
                 h1_bb = self.calculate_bollinger_bands(data_dict["H1"], "H1")
+                h1_ma = self.calculate_moving_averages(data_dict["H1"], "H1")
                 h1_analysis["RSI"] = h1_rsi
                 h1_analysis["BollingerBands"] = h1_bb
+                h1_analysis["MovingAverages"] = h1_ma
                 h1_analysis["purpose"] = "ゾーン決定"
                 analysis_result["timeframes"]["H1"] = h1_analysis
 
@@ -552,6 +788,126 @@ class TechnicalIndicatorsAnalyzer:
         except Exception:
             return "detection_error"
 
+    def _analyze_ma_position(
+        self, price: float, ma_short: float, ma_medium: float, ma_long: float
+    ) -> str:
+        """移動平均線の位置関係を分析"""
+        if any(x is None for x in [ma_short, ma_medium, ma_long]):
+            return "unknown"
+
+        # 理想的な上昇トレンド: 価格 > 短期 > 中期 > 長期
+        if price > ma_short > ma_medium > ma_long:
+            return "strong_uptrend"
+        # 上昇トレンド: 短期 > 中期 > 長期
+        elif ma_short > ma_medium > ma_long:
+            return "uptrend"
+        # 理想的な下降トレンド: 価格 < 短期 < 中期 < 長期
+        elif price < ma_short < ma_medium < ma_long:
+            return "strong_downtrend"
+        # 下降トレンド: 短期 < 中期 < 長期
+        elif ma_short < ma_medium < ma_long:
+            return "downtrend"
+        # 揉み合い
+        else:
+            return "sideways"
+
+    def _analyze_ma_slope(
+        self,
+        ma_short: pd.Series,
+        ma_medium: pd.Series,
+        ma_long: pd.Series,
+        periods: int = 5,
+    ) -> Dict[str, str]:
+        """移動平均線の傾きを分析"""
+        try:
+            recent_short = ma_short[-periods:]
+            recent_medium = ma_medium[-periods:]
+            recent_long = ma_long[-periods:]
+
+            # 傾き計算（簡易版）
+            short_slope = (
+                "up" if recent_short.iloc[-1] > recent_short.iloc[0] else "down"
+            )
+            medium_slope = (
+                "up" if recent_medium.iloc[-1] > recent_medium.iloc[0] else "down"
+            )
+            long_slope = "up" if recent_long.iloc[-1] > recent_long.iloc[0] else "down"
+
+            return {
+                "short_slope": short_slope,
+                "medium_slope": medium_slope,
+                "long_slope": long_slope,
+                "trend_alignment": (
+                    "aligned"
+                    if short_slope == medium_slope == long_slope
+                    else "diverging"
+                ),
+            }
+
+        except Exception:
+            return {
+                "short_slope": "unknown",
+                "medium_slope": "unknown",
+                "long_slope": "unknown",
+                "trend_alignment": "unknown",
+            }
+
+    def _detect_ma_crosses(
+        self,
+        ma_short: pd.Series,
+        ma_medium: pd.Series,
+        ma_long: pd.Series,
+        prev_short: float,
+        prev_medium: float,
+        prev_long: float,
+    ) -> Dict[str, str]:
+        """移動平均線のクロス検出"""
+        signals = {}
+
+        # 短期と中期のクロス
+        if prev_short and prev_medium:
+            if prev_short <= prev_medium and ma_short.iloc[-1] > ma_medium.iloc[-1]:
+                signals["short_medium"] = "golden_cross"
+            elif prev_short >= prev_medium and ma_short.iloc[-1] < ma_medium.iloc[-1]:
+                signals["short_medium"] = "dead_cross"
+            else:
+                signals["short_medium"] = "no_cross"
+
+        # 中期と長期のクロス
+        if prev_medium and prev_long:
+            if prev_medium <= prev_long and ma_medium.iloc[-1] > ma_long.iloc[-1]:
+                signals["medium_long"] = "golden_cross"
+            elif prev_medium >= prev_long and ma_medium.iloc[-1] < ma_long.iloc[-1]:
+                signals["medium_long"] = "dead_cross"
+            else:
+                signals["medium_long"] = "no_cross"
+
+        # 短期と長期のクロス
+        if prev_short and prev_long:
+            if prev_short <= prev_long and ma_short.iloc[-1] > ma_long.iloc[-1]:
+                signals["short_long"] = "golden_cross"
+            elif prev_short >= prev_long and ma_short.iloc[-1] < ma_long.iloc[-1]:
+                signals["short_long"] = "dead_cross"
+            else:
+                signals["short_long"] = "no_cross"
+
+        return signals
+
+    def _identify_ma_support_resistance(
+        self, ma_short: float, ma_medium: float, ma_long: float
+    ) -> Dict[str, float]:
+        """移動平均線をサポート・レジスタンスとして識別"""
+        levels = {}
+
+        if ma_short:
+            levels["ma_20"] = round(ma_short, 4)
+        if ma_medium:
+            levels["ma_50"] = round(ma_medium, 4)
+        if ma_long:
+            levels["ma_200"] = round(ma_long, 4)
+
+        return levels
+
     def _generate_overall_signal(self, analysis: Dict[str, Any]) -> Dict[str, Any]:
         """総合シグナル生成"""
         signals = []
@@ -567,6 +923,12 @@ class TechnicalIndicatorsAnalyzer:
                 macd_signal = data["MACD"]["cross_signal"]
                 if macd_signal not in ["no_cross", "no_signal"]:
                     signals.append(f"{tf}_MACD_{macd_signal}")
+
+            if "MovingAverages" in data and "cross_signals" in data["MovingAverages"]:
+                ma_crosses = data["MovingAverages"]["cross_signals"]
+                for cross_type, cross_signal in ma_crosses.items():
+                    if cross_signal not in ["no_cross"]:
+                        signals.append(f"{tf}_MA_{cross_type}_{cross_signal}")
 
         # 総合判断ロジック（簡易版）
         buy_signals = len([s for s in signals if "buy" in s or "golden" in s])
@@ -627,6 +989,36 @@ class TechnicalIndicatorsAnalyzer:
                     bb.get("band_walk", "N/A"),
                 )
 
+            if "MovingAverages" in data:
+                ma = data["MovingAverages"]
+                # 3つの期間すべての値を表示
+                ma_values = (
+                    f"20:{ma.get('ma_short', 'N/A')} | "
+                    f"50:{ma.get('ma_medium', 'N/A')} | "
+                    f"200:{ma.get('ma_long', 'N/A')}"
+                )
+
+                # クロスシグナルを取得
+                cross_signals = ma.get("cross_signals", {})
+                cross_info = []
+                if cross_signals.get("short_medium") != "no_cross":
+                    cross_info.append(
+                        f"20-50:{cross_signals.get('short_medium', 'N/A')}"
+                    )
+                if cross_signals.get("medium_long") != "no_cross":
+                    cross_info.append(
+                        f"50-200:{cross_signals.get('medium_long', 'N/A')}"
+                    )
+
+                signal_display = " | ".join(cross_info) if cross_info else "no_cross"
+
+                table.add_row(
+                    "MA(20,50,200)",
+                    f"{ma.get('current_price', 'N/A')}",
+                    ma.get("ma_position", "N/A"),
+                    f"{ma_values}\n{signal_display}",
+                )
+
             self.console.print(table)
 
         # 総合シグナル表示
@@ -639,3 +1031,54 @@ class TechnicalIndicatorsAnalyzer:
                 title="🎯 総合判断",
             )
             self.console.print(signal_panel)
+
+    def _analyze_single_ma_position(self, price: float, ma_value: float) -> str:
+        """
+        単一移動平均線の位置関係を分析
+
+        Args:
+            price: 現在価格
+            ma_value: 移動平均値
+
+        Returns:
+            str: 位置関係の分析結果
+        """
+        if ma_value is None:
+            return "unknown"
+
+        if price > ma_value:
+            return "uptrend"
+        elif price < ma_value:
+            return "downtrend"
+        else:
+            return "neutral"
+
+    def _analyze_single_ma_slope(self, ma_series: pd.Series, periods: int = 5) -> str:
+        """
+        単一移動平均線の傾きを分析
+
+        Args:
+            ma_series: 移動平均線の時系列データ
+            periods: 分析期間
+
+        Returns:
+            str: 傾きの分析結果
+        """
+        if len(ma_series) < periods + 1:
+            return "insufficient_data"
+
+        recent_values = ma_series.tail(periods + 1).dropna()
+        if len(recent_values) < 2:
+            return "insufficient_data"
+
+        # 線形回帰で傾きを計算
+        x = np.arange(len(recent_values))
+        y = recent_values.values
+        slope = np.polyfit(x, y, 1)[0]
+
+        if slope > 0.001:
+            return "rising"
+        elif slope < -0.001:
+            return "falling"
+        else:
+            return "flat"
