@@ -8,6 +8,7 @@ import asyncio
 import json
 import os
 import sys
+import traceback
 from datetime import datetime
 from typing import Any, Dict, Optional
 
@@ -608,9 +609,15 @@ class IntegratedAIDiscordReporter:
                         if isinstance(macd_line, (int, float)) and isinstance(
                             signal_line, (int, float)
                         ):
-                            technical_info += f"\n{key}: MACD={macd_line:.4f}, Signal={signal_line:.4f}, Cross={cross_signal}"
+                            technical_info += (
+                                f"\n{key}: MACD={macd_line:.4f}, "
+                                f"Signal={signal_line:.4f}, Cross={cross_signal}"
+                            )
                         else:
-                            technical_info += f"\n{key}: MACD={macd_line}, Signal={signal_line}, Cross={cross_signal}"
+                            technical_info += (
+                                f"\n{key}: MACD={macd_line}, "
+                                f"Signal={signal_line}, Cross={cross_signal}"
+                            )
                     elif "BB" in key:
                         bb_position = data.get("band_position", "N/A")
                         bb_signal = data.get("band_walk", "N/A")
@@ -661,26 +668,34 @@ USD/JPY の実践的な売買シナリオを作成してください。
 
 ◆ USD/JPY メイン通貨ペア
 現在レート: {current_rate}
-変動: {usdjpy_data.get('market_change', 'N/A')} ({usdjpy_data.get('market_change_percent', 'N/A')}%)
+            変動: {usdjpy_data.get('market_change', 'N/A')} "
+            f"({usdjpy_data.get('market_change_percent', 'N/A')}%)"
 日中高値: {day_high}
 日中安値: {day_low}{technical_info}
 
 ◆ USD強弱分析
-方向性: {usd_analysis.get('direction', 'N/A')} (信頼度{usd_analysis.get('confidence', 'N/A')}%)
+            方向性: {usd_analysis.get('direction', 'N/A')} "
+            f"(信頼度{usd_analysis.get('confidence', 'N/A')}%)"
 サポート要因: {', '.join(usd_analysis.get('supporting_pairs', []))}
 リスク要因: {', '.join(usd_analysis.get('conflicting_pairs', []))}
-EUR/USD: {eurusd_data.get('rate', 'N/A')} ({eurusd_data.get('market_change_percent', 'N/A')}%)
-GBP/USD: {gbpusd_data.get('rate', 'N/A')} ({gbpusd_data.get('market_change_percent', 'N/A')}%)
+            EUR/USD: {eurusd_data.get('rate', 'N/A')} "
+            f"({eurusd_data.get('market_change_percent', 'N/A')}%)"
+            f"GBP/USD: {gbpusd_data.get('rate', 'N/A')} "
+            f"({gbpusd_data.get('market_change_percent', 'N/A')}%)"
 
 ◆ JPY強弱分析
-方向性: {jpy_analysis.get('direction', 'N/A')} (信頼度{jpy_analysis.get('confidence', 'N/A')}%)
+            方向性: {jpy_analysis.get('direction', 'N/A')} "
+            f"(信頼度{jpy_analysis.get('confidence', 'N/A')}%)"
 サポート要因: {', '.join(jpy_analysis.get('supporting_pairs', []))}
 リスク要因: {', '.join(jpy_analysis.get('conflicting_pairs', []))}
-EUR/JPY: {eurjpy_data.get('rate', 'N/A')} ({eurjpy_data.get('market_change_percent', 'N/A')}%)
-GBP/JPY: {gbpjpy_data.get('rate', 'N/A')} ({gbpjpy_data.get('market_change_percent', 'N/A')}%)
+            EUR/JPY: {eurjpy_data.get('rate', 'N/A')} "
+            f"({eurjpy_data.get('market_change_percent', 'N/A')}%)"
+            f"GBP/JPY: {gbpjpy_data.get('rate', 'N/A')} "
+            f"({gbpjpy_data.get('market_change_percent', 'N/A')}%)"
 
 ◆ 統合予測
-予測方向: {usdjpy_forecast.get('forecast_direction', 'N/A')} (信頼度{usdjpy_forecast.get('forecast_confidence', 'N/A')}%)
+            予測方向: {usdjpy_forecast.get('forecast_direction', 'N/A')} "
+            f"(信頼度{usdjpy_forecast.get('forecast_confidence', 'N/A')}%)"
 戦略バイアス: {usdjpy_forecast.get('strategy_bias', 'N/A')}
 トレンド整合: {usdjpy_forecast.get('trend_alignment', 'N/A')}
 相関要因: {', '.join(usdjpy_forecast.get('forecast_factors', []))}
@@ -713,7 +728,7 @@ pipsは0.01円=1pipです。
  ・エントリー価格: ○○.○○○〜○○.○○○
  ・利確目標: ○○.○○○（〇〇〜〇〇pips※利益）
  ・損切り価格: ○○.○○○（〇〇pips※損失）
- 今のトレードの目的や時間軸によって利確、または損切り価格を決め、直近の安値/高値や移動平均線/ボリンジャーバンドの基準線、時間切れ損切りなどの根拠や理由を明記してください。
+ 今のトレードの目的や時間軸によって利確、または損切り価格を決め、直近の安値/高値や移動平均線/ボリンジャーバンドの基準線などの根拠や理由を明記してください。
 【リスク管理】通貨相関リスク・ダイバージェンス、サポートラインや抵抗線、揉み合いによる反転を元に予測が異なる展開を考慮してください。
 
 ※専門用語解説：
@@ -722,7 +737,9 @@ pipsは0.01円=1pipです。
 ・移動平均線: 過去の価格の平均値を示すトレンド指標
 ・その他専門用語があれば簡潔に説明
 
-「EUR/USDがこうだから」「クロス円がこうだから」「テクニカル指標がこうだから」「だからUSD/JPYはこう動く可能性が高い」という統合的で根拠のある分析を重視し、必ず具体的な価格（小数点以下3桁）とpips数を明記してください。
+「EUR/USDがこうだから」「クロス円がこうだから」「テクニカル指標がこうだから」"
+            f"「だからUSD/JPYはこう動く可能性が高い」という統合的で根拠のある分析を重視し、"
+            f"必ず具体的な価格（小数点以下3桁）とpips数を明記してください。"
 """
 
         try:
@@ -777,8 +794,6 @@ pipsは0.01円=1pipです。
             self.console.print("📝 サンプル分析を生成します")
             return self._generate_sample_integrated_scenario(correlation_data)
         except Exception as e:
-            import traceback
-
             error_details = traceback.format_exc()
             self.console.print(f"❌ 統合AI分析生成エラー: {str(e)}")
             self.console.print(f"詳細: {error_details}")
@@ -882,12 +897,18 @@ pipsは0.01円=1pipです。
                         },
                         {
                             "name": "💵 USD分析",
-                            "value": f"{usd_analysis.get('direction', 'N/A')} ({usd_analysis.get('confidence', 0)}%)",
+                            "value": (
+                                f"{usd_analysis.get('direction', 'N/A')} "
+                                f"({usd_analysis.get('confidence', 0)}%)"
+                            ),
                             "inline": True,
                         },
                         {
                             "name": "💴 JPY分析",
-                            "value": f"{jpy_analysis.get('direction', 'N/A')} ({jpy_analysis.get('confidence', 0)}%)",
+                            "value": (
+                                f"{jpy_analysis.get('direction', 'N/A')} "
+                                f"({jpy_analysis.get('confidence', 0)}%)"
+                            ),
                             "inline": True,
                         },
                         {
@@ -904,7 +925,10 @@ pipsは0.01円=1pipです。
                         },
                     ],
                     "footer": {
-                        "text": "Integrated Currency Correlation Analysis | Multi-Currency Strategy"
+                        "text": (
+                            "Integrated Currency Correlation Analysis | "
+                            "Multi-Currency Strategy"
+                        )
                     },
                     "timestamp": datetime.now(self.jst).isoformat(),
                 }
@@ -969,8 +993,6 @@ pipsは0.01円=1pipです。
                 return False
 
         except Exception as e:
-            import traceback
-
             error_details = traceback.format_exc()
             error_msg = (
                 f"❌ 統合レポート生成・配信エラー: {str(e)}\n詳細: {error_details}"
@@ -991,8 +1013,6 @@ pipsは0.01円=1pipです。
                             }
                         ],
                     }
-                    import httpx
-
                     # crontab環境でのネットワーク接続問題に対応
                     timeout_config = httpx.Timeout(
                         connect=5.0,  # 接続タイムアウト
@@ -1077,8 +1097,8 @@ async def main():
 
                 # 統計情報表示
                 if reporter.notification_manager:
-                    stats = (
-                        await reporter.notification_manager.get_notification_statistics()
+                    stats = await (
+                        reporter.notification_manager.get_notification_statistics()
                     )
                     reporter.console.print("📊 通知統計情報:")
                     reporter.console.print(f"[yellow]{stats}[/yellow]")
@@ -1099,17 +1119,11 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
-        import traceback
-
         error_msg = f"❌ AI分析レポート実行エラー: {str(e)}\n{traceback.format_exc()}"
         print(error_msg)
 
         # エラー通知をDiscordに送信
         try:
-            import os
-
-            import httpx
-
             discord_webhook = os.getenv("DISCORD_MONITORING_WEBHOOK_URL")
             if discord_webhook:
                 embed_data = {
@@ -1119,7 +1133,9 @@ if __name__ == "__main__":
                             "title": "❌ Integrated AI Discord Reporter Error",
                             "description": f"```\n{error_msg[:4000]}\n```",
                             "color": 0xFF0000,
-                            "timestamp": datetime.now().isoformat(),
+                            "timestamp": datetime.now(
+                                pytz.timezone("Asia/Tokyo")
+                            ).isoformat(),
                         }
                     ],
                 }
