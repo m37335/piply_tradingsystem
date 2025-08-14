@@ -176,7 +176,9 @@ class EfficientPatternDetectionService:
             # 重複チェック付きで保存
             for pattern_number, patterns in all_patterns.items():
                 if patterns:
-                    saved_patterns = await self._save_patterns_with_duplicate_check(patterns)
+                    saved_patterns = await self._save_patterns_with_duplicate_check(
+                        patterns
+                    )
                     all_patterns[pattern_number] = saved_patterns
 
             total_patterns = sum(len(patterns) for patterns in all_patterns.values())
@@ -236,22 +238,25 @@ class EfficientPatternDetectionService:
                     patterns = await self._detect_single_pattern(
                         pattern_number, detector, multi_timeframe_data
                     )
-                    
+
                     # 指定時間軸のパターンのみをフィルタリング
                     timeframe_patterns = [
-                        p for p in patterns 
-                        if p.timeframe == timeframe
+                        p for p in patterns if p.timeframe == timeframe
                     ]
-                    
+
                     all_patterns.extend(timeframe_patterns)
-                    
+
                 except Exception as e:
                     logger.error(f"❌ パターン{pattern_number}検出エラー: {e}")
 
             # 重複チェック付きで保存
-            saved_patterns = await self._save_patterns_with_duplicate_check(all_patterns)
+            saved_patterns = await self._save_patterns_with_duplicate_check(
+                all_patterns
+            )
 
-            logger.info(f"✅ {timeframe}時間軸のパターン検出完了: {len(saved_patterns)}件")
+            logger.info(
+                f"✅ {timeframe}時間軸のパターン検出完了: {len(saved_patterns)}件"
+            )
             return saved_patterns
 
         except Exception as e:
@@ -273,7 +278,7 @@ class EfficientPatternDetectionService:
 
             # 既存のdetect_all_patterns_for_timeframeメソッドを使用
             patterns = await self.detect_all_patterns_for_timeframe(timeframe)
-            
+
             if patterns:
                 # データベースに保存
                 saved_count = 0
@@ -283,7 +288,7 @@ class EfficientPatternDetectionService:
                         saved_count += 1
                     except Exception as e:
                         logger.error(f"パターン保存エラー: {e}")
-                
+
                 logger.info(f"✅ {timeframe}時間軸のパターン検出完了: {saved_count}件")
                 return {"detected": saved_count}
             else:
@@ -303,10 +308,10 @@ class EfficientPatternDetectionService:
         """
         try:
             logger.info("🔍 未通知パターン取得開始")
-            
+
             # パターンリポジトリから未通知のパターンを取得
             unnotified_patterns = await self.pattern_repo.find_unnotified_patterns()
-            
+
             logger.info(f"✅ 未通知パターン取得完了: {len(unnotified_patterns)}件")
             return unnotified_patterns
 
@@ -382,21 +387,26 @@ class EfficientPatternDetectionService:
             # 5分足データを取得（基本データ）- 最新データを確実に取得
             # データベースの最新データ時刻を取得
             from sqlalchemy import text
+
             result = await self.session.execute(
-                text('SELECT MAX(timestamp) as latest_data FROM price_data WHERE currency_pair = :currency_pair'),
-                {'currency_pair': self.currency_pair}
+                text(
+                    "SELECT MAX(timestamp) as latest_data FROM price_data WHERE currency_pair = :currency_pair"
+                ),
+                {"currency_pair": self.currency_pair},
             )
             latest_data_str = result.scalar()
-            
+
             if latest_data_str:
-                latest_data = datetime.fromisoformat(latest_data_str.replace('Z', '+00:00'))
+                latest_data = datetime.fromisoformat(
+                    latest_data_str.replace("Z", "+00:00")
+                )
                 # より短い期間で最新データを取得
                 actual_start_date = latest_data - timedelta(hours=24)  # 24時間前から
                 actual_end_date = latest_data
             else:
                 actual_start_date = start_date
                 actual_end_date = end_date
-            
+
             m5_price_data = await self.price_repo.find_by_date_range(
                 actual_start_date, actual_end_date, self.currency_pair, 1000
             )
@@ -416,6 +426,38 @@ class EfficientPatternDetectionService:
             h1_df = self._aggregate_timeframe(m5_df, "1H")
             h4_df = self._aggregate_timeframe(m5_df, "4H")
             d1_df = self._aggregate_timeframe(m5_df, "1D")
+
+            # 保存済みの集計データを取得（進行中データを含む）
+            saved_h1_data = await self._get_saved_aggregated_data(
+                "1h", actual_start_date, actual_end_date
+            )
+            saved_h4_data = await self._get_saved_aggregated_data(
+                "4h", actual_start_date, actual_end_date
+            )
+            saved_d1_data = await self._get_saved_aggregated_data(
+                "1d", actual_start_date, actual_end_date
+            )
+
+            # 保存済みデータを優先、なければ動的集計データを使用
+            final_h1_df = saved_h1_data if not saved_h1_data.empty else h1_df
+            final_h4_df = saved_h4_data if not saved_h4_data.empty else h4_df
+            final_d1_df = saved_d1_data if not saved_d1_data.empty else d1_df
+
+            # データソースをログ出力
+            if not saved_h1_data.empty:
+                logger.info("✅ 1h時間軸: 保存済みデータを使用")
+            elif not h1_df.empty:
+                logger.info("📊 1h時間軸: 動的集計データを使用")
+
+            if not saved_h4_data.empty:
+                logger.info("✅ 4h時間軸: 保存済みデータを使用")
+            elif not h4_df.empty:
+                logger.info("📊 4h時間軸: 動的集計データを使用")
+
+            if not saved_d1_data.empty:
+                logger.info("✅ 1d時間軸: 保存済みデータを使用")
+            elif not d1_df.empty:
+                logger.info("📊 1d時間軸: 動的集計データを使用")
 
             # 各時間軸の指標データを取得
             m5_indicators = await self.technical_indicator_service.get_latest_indicators_by_timeframe(
@@ -512,23 +554,23 @@ class EfficientPatternDetectionService:
                 }
 
             # 1時間足データ
-            if not h1_df.empty:
+            if not final_h1_df.empty:
                 result_data["1h"] = {
-                    "price_data": h1_df,
+                    "price_data": final_h1_df,
                     "indicators": h1_indicators,
                 }
 
             # 4時間足データ
-            if not h4_df.empty:
+            if not final_h4_df.empty:
                 result_data["4h"] = {
-                    "price_data": h4_df,
+                    "price_data": final_h4_df,
                     "indicators": h4_indicators,
                 }
 
             # 日足データ
-            if not d1_df.empty:
+            if not final_d1_df.empty:
                 result_data["1d"] = {
-                    "price_data": d1_df,
+                    "price_data": final_d1_df,
                     "indicators": d1_indicators,
                 }
 
@@ -540,6 +582,57 @@ class EfficientPatternDetectionService:
         except Exception as e:
             logger.error(f"Error building efficient multi-timeframe data: {e}")
             return {}
+
+    async def _get_saved_aggregated_data(
+        self, timeframe: str, start_date: datetime, end_date: datetime
+    ) -> pd.DataFrame:
+        """
+        保存済みの集計データを取得（進行中データを含む）
+
+        Args:
+            timeframe: 時間軸（1h, 4h, 1d）
+            start_date: 開始日時
+            end_date: 終了日時
+
+        Returns:
+            pd.DataFrame: 集計データ
+        """
+        try:
+            # 期間内の保存済み集計データを検索
+            saved_data = await self.price_repo.find_by_date_range_and_timeframe(
+                start_date, end_date, self.currency_pair, timeframe, 100
+            )
+
+            if saved_data:
+                # DataFrameに変換
+                df_data = []
+                for data in saved_data:
+                    # 進行中データまたは完了データのいずれか
+                    if "Aggregated" in data.data_source:
+                        df_data.append(
+                            {
+                                "timestamp": data.timestamp,
+                                "Open": float(data.open_price),
+                                "High": float(data.high_price),
+                                "Low": float(data.low_price),
+                                "Close": float(data.close_price),
+                                "Volume": int(data.volume),
+                            }
+                        )
+
+                if df_data:
+                    df = pd.DataFrame(df_data)
+                    df.set_index("timestamp", inplace=True)
+                    df.sort_index(inplace=True)
+                    logger.info(f"✅ {timeframe}保存済みデータ取得: {len(df_data)}件")
+                    return df
+
+            logger.info(f"📊 {timeframe}保存済みデータなし、動的集計を使用")
+            return pd.DataFrame()
+
+        except Exception as e:
+            logger.error(f"Error getting saved aggregated data for {timeframe}: {e}")
+            return pd.DataFrame()
 
     def _convert_to_dataframe(self, price_data: List) -> pd.DataFrame:
         """

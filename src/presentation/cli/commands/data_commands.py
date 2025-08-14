@@ -20,13 +20,7 @@ from rich.progress import Progress
 from rich.table import Table
 
 from ....infrastructure.database.optimization.query_optimizer import QueryOptimizer
-from ....infrastructure.error_handling.error_handler import (
-    ErrorCategory,
-    ErrorHandler,
-    ErrorSeverity,
-)
 from ....infrastructure.monitoring.performance_monitor import PerformanceMonitor
-from ....infrastructure.optimization.memory_optimizer import MemoryOptimizer
 from ....utils.logging_config import get_presentation_logger
 
 logger = get_presentation_logger()
@@ -211,11 +205,11 @@ def show(
                 where_clause = " AND ".join(where_conditions)
 
                 query = f"""
-                SELECT timestamp, open_price, high_price, low_price, close_price, 
-                       volume, data_source 
-                FROM price_data 
+                SELECT timestamp, open_price, high_price, low_price, close_price,
+                       volume, data_source
+                FROM price_data
                 WHERE {where_clause}
-                ORDER BY timestamp DESC 
+                ORDER BY timestamp DESC
                 LIMIT ?
                 """
                 params.append(limit)
@@ -224,21 +218,21 @@ def show(
                 # テクニカル指標の場合は時間足でフィルタリング
                 if timeframe != "5m":  # デフォルト以外の場合
                     query = """
-                    SELECT timestamp, indicator_type, timeframe, value, 
-                           additional_data 
-                    FROM technical_indicators 
+                    SELECT timestamp, indicator_type, timeframe, value,
+                           additional_data
+                    FROM technical_indicators
                     WHERE currency_pair = ? AND timeframe = ?
-                    ORDER BY timestamp DESC 
+                    ORDER BY timestamp DESC
                     LIMIT ?
                     """
                     cursor.execute(query, (currency_pair, timeframe, limit))
                 else:
                     query = """
-                    SELECT timestamp, indicator_type, timeframe, value, 
-                           additional_data 
-                    FROM technical_indicators 
-                    WHERE currency_pair = ? 
-                    ORDER BY timestamp DESC 
+                    SELECT timestamp, indicator_type, timeframe, value,
+                           additional_data
+                    FROM technical_indicators
+                    WHERE currency_pair = ?
+                    ORDER BY timestamp DESC
                     LIMIT ?
                     """
                     cursor.execute(query, (currency_pair, limit))
@@ -505,6 +499,136 @@ def init(
 
 
 @app.command()
+def restore_base(
+    force: bool = typer.Option(False, "--force", "-f", help="強制実行"),
+):
+    """
+    基盤データを復元
+
+    Examples:
+        exchange-analytics data restore-base
+        exchange-analytics data restore-base --force
+    """
+    console.print("🔄 基盤データ復元機能")
+
+    if not force:
+        console.print(
+            "[yellow]⚠️ この操作は現在のデータを基盤データで置き換えます！[/yellow]"
+        )
+        confirm = typer.confirm("基盤データを復元しますか？")
+        if not confirm:
+            console.print("❌ 復元をキャンセルしました")
+            return
+
+    try:
+        # 基盤データ復元スクリプトを実行
+        console.print("🚀 基盤データ復元を実行中...")
+
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        # スクリプトパスを設定
+        script_path = Path("/app/scripts/cron/base_data_restorer.py")
+
+        if not script_path.exists():
+            console.print(f"❌ 復元スクリプトが見つかりません: {script_path}")
+            raise typer.Exit(1)
+
+        # 環境変数を設定
+        env = os.environ.copy()
+        if not env.get("DATABASE_URL"):
+            env["DATABASE_URL"] = "sqlite+aiosqlite:///data/exchange_analytics.db"
+        env["PYTHONPATH"] = "/app"
+
+        # 基盤データ復元スクリプトを実行
+        result = subprocess.run(
+            [sys.executable, str(script_path)],
+            capture_output=True,
+            text=True,
+            cwd="/app",
+            env=env,
+        )
+
+        if result.returncode == 0:
+            console.print("✅ 基盤データ復元が完了しました")
+            if result.stdout:
+                console.print(result.stdout)
+        else:
+            console.print(f"❌ 復元エラー: {result.stderr}")
+            raise typer.Exit(1)
+
+    except Exception as e:
+        console.print(f"❌ 復元エラー: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def update(
+    pairs: Optional[str] = typer.Option(
+        "USD/JPY", "--pairs", "-p", help="通貨ペア（カンマ区切り）"
+    ),
+    force: bool = typer.Option(False, "--force", "-f", help="強制実行"),
+):
+    """
+    差分データを更新
+
+    Examples:
+        exchange-analytics data update
+        exchange-analytics data update --pairs "USD/JPY,EUR/USD" --force
+    """
+    console.print("🔄 差分データ更新機能")
+
+    if not force:
+        confirm = typer.confirm("差分データを更新しますか？")
+        if not confirm:
+            console.print("❌ 更新をキャンセルしました")
+            return
+
+    try:
+        # 差分データ更新スクリプトを実行
+        console.print("🚀 差分データ更新を実行中...")
+
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        # スクリプトパスを設定
+        script_path = Path("/app/scripts/cron/differential_updater.py")
+
+        if not script_path.exists():
+            console.print(f"❌ 更新スクリプトが見つかりません: {script_path}")
+            raise typer.Exit(1)
+
+        # 環境変数を設定
+        env = os.environ.copy()
+        if not env.get("DATABASE_URL"):
+            env["DATABASE_URL"] = "sqlite+aiosqlite:///data/exchange_analytics.db"
+        env["PYTHONPATH"] = "/app"
+
+        # 差分データ更新スクリプトを実行
+        result = subprocess.run(
+            [sys.executable, str(script_path)],
+            capture_output=True,
+            text=True,
+            cwd="/app",
+            env=env,
+        )
+
+        if result.returncode == 0:
+            console.print("✅ 差分データ更新が完了しました")
+            if result.stdout:
+                console.print(result.stdout)
+        else:
+            console.print(f"❌ 更新エラー: {result.stderr}")
+            raise typer.Exit(1)
+
+    except Exception as e:
+        console.print(f"❌ 更新エラー: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
 def load(
     pairs: Optional[str] = typer.Option(
         "USD/JPY", "--pairs", "-p", help="通貨ペア（カンマ区切り）"
@@ -551,8 +675,116 @@ def calculate(
         exchange-analytics data calculate --force
     """
     console.print("📈 テクニカル指標計算機能")
-    console.print("⚠️ この機能はPhase 3で実装予定です")
-    console.print("現在は開発中です...")
+
+    if not force:
+        confirm = typer.confirm("テクニカル指標を計算しますか？")
+        if not confirm:
+            console.print("❌ 計算をキャンセルしました")
+            return
+
+    try:
+        # テクニカル指標計算スクリプトを実行
+        console.print("🚀 テクニカル指標計算を実行中...")
+
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        # スクリプトパスを設定
+        script_path = Path("/app/scripts/cron/technical_calculator.py")
+
+        if not script_path.exists():
+            console.print(f"❌ 計算スクリプトが見つかりません: {script_path}")
+            raise typer.Exit(1)
+
+        # 環境変数を設定
+        env = os.environ.copy()
+        if not env.get("DATABASE_URL"):
+            env["DATABASE_URL"] = "sqlite+aiosqlite:///data/exchange_analytics.db"
+        env["PYTHONPATH"] = "/app"
+
+        # テクニカル指標計算スクリプトを実行
+        result = subprocess.run(
+            [sys.executable, str(script_path)],
+            capture_output=True,
+            text=True,
+            cwd="/app",
+            env=env,
+        )
+
+        if result.returncode == 0:
+            console.print("✅ テクニカル指標計算が完了しました")
+            if result.stdout:
+                console.print(result.stdout)
+        else:
+            console.print(f"❌ 計算エラー: {result.stderr}")
+            raise typer.Exit(1)
+
+    except Exception as e:
+        console.print(f"❌ 計算エラー: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def calculate_unified(
+    force: bool = typer.Option(False, "--force", "-f", help="強制実行"),
+):
+    """
+    統合テクニカル指標計算（TA-Lib使用）
+
+    Examples:
+        exchange-analytics data calculate-unified
+        exchange-analytics data calculate-unified --force
+    """
+    console.print("📈 統合テクニカル指標計算機能（TA-Lib使用）")
+
+    if not force:
+        confirm = typer.confirm("統合テクニカル指標を計算しますか？")
+        if not confirm:
+            console.print("❌ 計算をキャンセルしました")
+            return
+
+    try:
+        # 統合テクニカル指標計算スクリプトを実行
+        console.print("🚀 統合テクニカル指標計算を実行中...")
+
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        # スクリプトパスを設定
+        script_path = Path("/app/scripts/cron/unified_technical_calculator.py")
+
+        if not script_path.exists():
+            console.print(f"❌ 統合計算スクリプトが見つかりません: {script_path}")
+            raise typer.Exit(1)
+
+        # 環境変数を設定
+        env = os.environ.copy()
+        if not env.get("DATABASE_URL"):
+            env["DATABASE_URL"] = "sqlite+aiosqlite:///data/exchange_analytics.db"
+        env["PYTHONPATH"] = "/app"
+
+        # 統合テクニカル指標計算スクリプトを実行
+        result = subprocess.run(
+            [sys.executable, str(script_path)],
+            capture_output=True,
+            text=True,
+            cwd="/app",
+            env=env,
+        )
+
+        if result.returncode == 0:
+            console.print("✅ 統合テクニカル指標計算が完了しました")
+            if result.stdout:
+                console.print(result.stdout)
+        else:
+            console.print(f"❌ 統合計算エラー: {result.stderr}")
+            raise typer.Exit(1)
+
+    except Exception as e:
+        console.print(f"❌ 統合計算エラー: {e}")
+        raise typer.Exit(1)
 
 
 @app.command()
@@ -1398,3 +1630,675 @@ def errors(
             raise typer.Exit(1)
 
     run_error_handling()
+
+
+@app.command()
+def visualize(
+    timeframe: str = typer.Option(
+        "M5", "--timeframe", "-tf", help="時間足 (M5, H1, H4, D1)"
+    ),
+    days: int = typer.Option(7, "--days", "-d", help="表示期間（日数）"),
+    detailed: bool = typer.Option(False, "--detailed", help="詳細表示"),
+    indicators: str = typer.Option(
+        "all",
+        "--indicators",
+        "-i",
+        help="表示する指標 (all, rsi, macd, bb, ma, stoch, atr)",
+    ),
+    advanced: bool = typer.Option(False, "--advanced", help="高度なシグナル分析"),
+):
+    """
+    テクニカル指標可視化機能
+
+    時間足ごとにテクニカル指標を組み合わせて視認性の高い出力を提供
+
+    Examples:
+        exchange-analytics data visualize
+        exchange-analytics data visualize --timeframe H1 --days 3
+        exchange-analytics data visualize --detailed --indicators rsi,macd
+        exchange-analytics data visualize --timeframe D1 --indicators all
+    """
+    console.print("📊 テクニカル指標可視化機能")
+
+    # 時間足の検証
+    valid_timeframes = ["M5", "H1", "H4", "D1"]
+    if timeframe not in valid_timeframes:
+        console.print(f"❌ 無効な時間足です: {timeframe}")
+        console.print(f"有効な時間足: {', '.join(valid_timeframes)}")
+        raise typer.Exit(1)
+
+    # 指標の検証
+    valid_indicators = ["all", "rsi", "macd", "bb", "ma", "stoch", "atr"]
+    if indicators not in valid_indicators and not all(
+        ind in valid_indicators[1:] for ind in indicators.split(",")
+    ):
+        console.print(f"❌ 無効な指標です: {indicators}")
+        console.print(f"有効な指標: {', '.join(valid_indicators)}")
+        raise typer.Exit(1)
+
+    try:
+        # 可視化スクリプトを実行
+        console.print(f"🚀 {timeframe}時間足のテクニカル指標可視化を実行中...")
+
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        # スクリプトパスを設定
+        script_path = Path("/app/scripts/cron/technical_visualizer.py")
+
+        if not script_path.exists():
+            console.print(f"❌ 可視化スクリプトが見つかりません: {script_path}")
+            raise typer.Exit(1)
+
+        # 環境変数を設定
+        env = os.environ.copy()
+        if not env.get("DATABASE_URL"):
+            env["DATABASE_URL"] = "sqlite+aiosqlite:///data/exchange_analytics.db"
+        env["PYTHONPATH"] = "/app"
+
+        # 引数を構築
+        args = [
+            sys.executable,
+            str(script_path),
+            "--timeframe",
+            timeframe,
+            "--days",
+            str(days),
+        ]
+        if detailed:
+            args.append("--detailed")
+        if indicators != "all":
+            args.extend(["--indicators", indicators])
+        if advanced:
+            args.append("--advanced")
+
+        # 可視化スクリプトを実行
+        result = subprocess.run(
+            args,
+            capture_output=True,
+            text=True,
+            cwd="/app",
+            env=env,
+        )
+
+        if result.returncode == 0:
+            console.print("✅ テクニカル指標可視化が完了しました")
+            if result.stdout:
+                console.print(result.stdout)
+        else:
+            console.print(f"❌ 可視化エラー: {result.stderr}")
+            raise typer.Exit(1)
+
+    except Exception as e:
+        console.print(f"❌ 可視化エラー: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def detect_divergences(
+    timeframe: str = typer.Option(
+        "M5", "--timeframe", "-tf", help="時間足 (M5, H1, H4, D1)"
+    ),
+    days: int = typer.Option(7, "--days", "-d", help="分析期間（日数）"),
+    currency_pair: str = typer.Option("USD/JPY", "--pair", "-p", help="通貨ペア"),
+):
+    """
+    ダイバージェンス検出機能
+
+    価格とテクニカル指標の乖離を分析し、ダイバージェンスを検出
+
+    Examples:
+        exchange-analytics data detect-divergences
+        exchange-analytics data detect-divergences --timeframe H1 --days 3
+        exchange-analytics data detect-divergences --pair EUR/JPY
+    """
+    console.print("🎯 ダイバージェンス検出機能")
+
+    # 時間足の検証
+    valid_timeframes = ["M5", "H1", "H4", "D1"]
+    if timeframe not in valid_timeframes:
+        console.print(f"❌ 無効な時間足です: {timeframe}")
+        console.print(f"有効な時間足: {', '.join(valid_timeframes)}")
+        raise typer.Exit(1)
+
+    try:
+        # ダイバージェンス検出スクリプトを実行
+        console.print(f"🚀 {timeframe}時間足のダイバージェンス検出を実行中...")
+
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        # スクリプトパスを設定
+        script_path = Path("/app/scripts/cron/divergence_detector.py")
+
+        if not script_path.exists():
+            console.print(f"❌ ダイバージェンス検出スクリプトが見つかりません: {script_path}")
+            raise typer.Exit(1)
+
+        # 環境変数を設定
+        env = os.environ.copy()
+        if not env.get("DATABASE_URL"):
+            env["DATABASE_URL"] = "sqlite+aiosqlite:///data/exchange_analytics.db"
+        env["PYTHONPATH"] = "/app"
+
+        # 引数を構築
+        args = [
+            sys.executable,
+            str(script_path),
+            "--timeframe",
+            timeframe,
+            "--days",
+            str(days),
+            "--currency-pair",
+            currency_pair,
+        ]
+
+        # ダイバージェンス検出スクリプトを実行
+        result = subprocess.run(
+            args,
+            capture_output=True,
+            text=True,
+            cwd="/app",
+            env=env,
+        )
+
+        if result.returncode == 0:
+            console.print("✅ ダイバージェンス検出が完了しました")
+            if result.stdout:
+                console.print(result.stdout)
+        else:
+            console.print(f"❌ ダイバージェンス検出エラー: {result.stderr}")
+            raise typer.Exit(1)
+
+    except Exception as e:
+        console.print(f"❌ ダイバージェンス検出エラー: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def analyze_support_resistance(
+    timeframe: str = typer.Option(
+        "H1", "--timeframe", "-tf", help="時間足 (M5, H1, H4, D1)"
+    ),
+    days: int = typer.Option(30, "--days", "-d", help="分析期間（日数）"),
+    currency_pair: str = typer.Option("USD/JPY", "--pair", "-p", help="通貨ペア"),
+):
+    """
+    サポート・レジスタンス分析機能
+
+    移動平均線を活用した重要レベルの自動検出
+
+    Examples:
+        exchange-analytics data analyze-support-resistance
+        exchange-analytics data analyze-support-resistance --timeframe H4 --days 7
+        exchange-analytics data analyze-support-resistance --pair EUR/JPY
+    """
+    console.print("🎯 サポート・レジスタンス分析機能")
+
+    # 時間足の検証
+    valid_timeframes = ["M5", "H1", "H4", "D1"]
+    if timeframe not in valid_timeframes:
+        console.print(f"❌ 無効な時間足です: {timeframe}")
+        console.print(f"有効な時間足: {', '.join(valid_timeframes)}")
+        raise typer.Exit(1)
+
+    try:
+        # サポート・レジスタンス分析スクリプトを実行
+        console.print(f"🚀 {timeframe}時間足のサポート・レジスタンス分析を実行中...")
+
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        # スクリプトパスを設定
+        script_path = Path("/app/scripts/cron/support_resistance_analyzer.py")
+
+        if not script_path.exists():
+            console.print(f"❌ サポート・レジスタンス分析スクリプトが見つかりません: {script_path}")
+            raise typer.Exit(1)
+
+        # 環境変数を設定
+        env = os.environ.copy()
+        if not env.get("DATABASE_URL"):
+            env["DATABASE_URL"] = "sqlite+aiosqlite:///data/exchange_analytics.db"
+        env["PYTHONPATH"] = "/app"
+
+        # 引数を構築
+        args = [
+            sys.executable,
+            str(script_path),
+            "--timeframe",
+            timeframe,
+            "--days",
+            str(days),
+            "--currency-pair",
+            currency_pair,
+        ]
+
+        # サポート・レジスタンス分析スクリプトを実行
+        result = subprocess.run(
+            args,
+            capture_output=True,
+            text=True,
+            cwd="/app",
+            env=env,
+        )
+
+        if result.returncode == 0:
+            console.print("✅ サポート・レジスタンス分析が完了しました")
+            if result.stdout:
+                console.print(result.stdout)
+        else:
+            console.print(f"❌ サポート・レジスタンス分析エラー: {result.stderr}")
+            raise typer.Exit(1)
+
+    except Exception as e:
+        console.print(f"❌ サポート・レジスタンス分析エラー: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def analyze_momentum(
+    timeframe: str = typer.Option(
+        "M5", "--timeframe", "-tf", help="時間足 (M5, H1, H4, D1)"
+    ),
+    days: int = typer.Option(7, "--days", "-d", help="分析期間（日数）"),
+    currency_pair: str = typer.Option("USD/JPY", "--pair", "-p", help="通貨ペア"),
+):
+    """
+    モメンタム分析機能
+
+    指標の変化速度を分析
+
+    Examples:
+        exchange-analytics data analyze-momentum
+        exchange-analytics data analyze-momentum --timeframe H1 --days 3
+        exchange-analytics data analyze-momentum --pair EUR/JPY
+    """
+    console.print("🎯 モメンタム分析機能")
+
+    # 時間足の検証
+    valid_timeframes = ["M5", "H1", "H4", "D1"]
+    if timeframe not in valid_timeframes:
+        console.print(f"❌ 無効な時間足です: {timeframe}")
+        console.print(f"有効な時間足: {', '.join(valid_timeframes)}")
+        raise typer.Exit(1)
+
+    try:
+        # モメンタム分析スクリプトを実行
+        console.print(f"🚀 {timeframe}時間足のモメンタム分析を実行中...")
+
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        # スクリプトパスを設定
+        script_path = Path("/app/scripts/cron/momentum_analyzer.py")
+
+        if not script_path.exists():
+            console.print(f"❌ モメンタム分析スクリプトが見つかりません: {script_path}")
+            raise typer.Exit(1)
+
+        # 環境変数を設定
+        env = os.environ.copy()
+        if not env.get("DATABASE_URL"):
+            env["DATABASE_URL"] = "sqlite+aiosqlite:///data/exchange_analytics.db"
+        env["PYTHONPATH"] = "/app"
+
+        # 引数を構築
+        args = [
+            sys.executable,
+            str(script_path),
+            "--timeframe",
+            timeframe,
+            "--days",
+            str(days),
+            "--currency-pair",
+            currency_pair,
+        ]
+
+        # モメンタム分析スクリプトを実行
+        result = subprocess.run(
+            args,
+            capture_output=True,
+            text=True,
+            cwd="/app",
+            env=env,
+        )
+
+        if result.returncode == 0:
+            console.print("✅ モメンタム分析が完了しました")
+            if result.stdout:
+                console.print(result.stdout)
+        else:
+            console.print(f"❌ モメンタム分析エラー: {result.stderr}")
+            raise typer.Exit(1)
+
+    except Exception as e:
+        console.print(f"❌ モメンタム分析エラー: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def comprehensive_analysis(
+    timeframe: str = typer.Option(
+        "M5", "--timeframe", "-tf", help="時間足 (M5, H1, H4, D1)"
+    ),
+    days: int = typer.Option(7, "--days", "-d", help="分析期間（日数）"),
+    currency_pair: str = typer.Option("USD/JPY", "--pair", "-p", help="通貨ペア"),
+    show_divergences: bool = typer.Option(True, "--divergences", help="ダイバージェンス分析を表示"),
+    show_support_resistance: bool = typer.Option(True, "--support-resistance", help="サポート・レジスタンス分析を表示"),
+    show_momentum: bool = typer.Option(True, "--momentum", help="モメンタム分析を表示"),
+):
+    """
+    包括的分析機能
+
+    ダイバージェンス、サポート・レジスタンス、モメンタムの3つの分析を統合実行
+
+    Examples:
+        exchange-analytics data comprehensive-analysis
+        exchange-analytics data comprehensive-analysis --timeframe H1 --days 3
+        exchange-analytics data comprehensive-analysis --no-divergences --no-momentum
+    """
+    console.print("🎯 包括的分析機能")
+    console.print(f"📊 分析対象: {currency_pair} ({timeframe}時間足, {days}日間)")
+
+    # 時間足の検証
+    valid_timeframes = ["M5", "H1", "H4", "D1"]
+    if timeframe not in valid_timeframes:
+        console.print(f"❌ 無効な時間足です: {timeframe}")
+        console.print(f"有効な時間足: {', '.join(valid_timeframes)}")
+        raise typer.Exit(1)
+
+    try:
+        import subprocess
+        import sys
+        from pathlib import Path
+        from rich.panel import Panel
+        from rich.text import Text
+
+        # 環境変数を設定
+        env = os.environ.copy()
+        if not env.get("DATABASE_URL"):
+            env["DATABASE_URL"] = "sqlite+aiosqlite:///data/exchange_analytics.db"
+        env["PYTHONPATH"] = "/app"
+
+        results = {}
+        errors = []
+
+        # 1. ダイバージェンス分析
+        if show_divergences:
+            console.print("\n" + "="*80)
+            console.print("🔍 ダイバージェンス分析実行中...")
+            
+            script_path = Path("/app/scripts/cron/divergence_detector.py")
+            if script_path.exists():
+                args = [
+                    sys.executable, str(script_path),
+                    "--timeframe", timeframe,
+                    "--days", str(days),
+                    "--currency-pair", currency_pair,
+                ]
+                
+                result = subprocess.run(args, capture_output=True, text=True, cwd="/app", env=env)
+                if result.returncode == 0:
+                    results["divergences"] = result.stdout
+                    console.print("✅ ダイバージェンス分析完了")
+                else:
+                    errors.append(f"ダイバージェンス分析エラー: {result.stderr}")
+            else:
+                errors.append("ダイバージェンス分析スクリプトが見つかりません")
+
+        # 2. サポート・レジスタンス分析
+        if show_support_resistance:
+            console.print("\n" + "="*80)
+            console.print("📈 サポート・レジスタンス分析実行中...")
+            
+            script_path = Path("/app/scripts/cron/support_resistance_analyzer.py")
+            if script_path.exists():
+                args = [
+                    sys.executable, str(script_path),
+                    "--timeframe", timeframe,
+                    "--days", str(days),
+                    "--currency-pair", currency_pair,
+                ]
+                
+                result = subprocess.run(args, capture_output=True, text=True, cwd="/app", env=env)
+                if result.returncode == 0:
+                    results["support_resistance"] = result.stdout
+                    console.print("✅ サポート・レジスタンス分析完了")
+                else:
+                    errors.append(f"サポート・レジスタンス分析エラー: {result.stderr}")
+            else:
+                errors.append("サポート・レジスタンス分析スクリプトが見つかりません")
+
+        # 3. モメンタム分析
+        if show_momentum:
+            console.print("\n" + "="*80)
+            console.print("⚡ モメンタム分析実行中...")
+            
+            script_path = Path("/app/scripts/cron/momentum_analyzer.py")
+            if script_path.exists():
+                args = [
+                    sys.executable, str(script_path),
+                    "--timeframe", timeframe,
+                    "--days", str(days),
+                    "--currency-pair", currency_pair,
+                ]
+                
+                result = subprocess.run(args, capture_output=True, text=True, cwd="/app", env=env)
+                if result.returncode == 0:
+                    results["momentum"] = result.stdout
+                    console.print("✅ モメンタム分析完了")
+                else:
+                    errors.append(f"モメンタム分析エラー: {result.stderr}")
+            else:
+                errors.append("モメンタム分析スクリプトが見つかりません")
+
+        # エラーがある場合は表示
+        if errors:
+            console.print("\n" + "="*80)
+            console.print("❌ エラーが発生しました:")
+            for error in errors:
+                console.print(f"  • {error}")
+
+        # 結果の表示
+        if results:
+            console.print("\n" + "="*80)
+            console.print("📋 分析結果サマリー")
+            console.print("="*80)
+
+            # ダイバージェンス結果
+            if "divergences" in results:
+                console.print("\n🎯 ダイバージェンス検出結果")
+                console.print("-" * 50)
+                console.print(results["divergences"])
+
+            # サポート・レジスタンス結果
+            if "support_resistance" in results:
+                console.print("\n📊 サポート・レジスタンス分析結果")
+                console.print("-" * 50)
+                console.print(results["support_resistance"])
+
+            # モメンタム結果
+            if "momentum" in results:
+                console.print("\n⚡ モメンタム分析結果")
+                console.print("-" * 50)
+                console.print(results["momentum"])
+
+            # 総合評価
+            console.print("\n" + "="*80)
+            console.print("🎯 総合分析評価")
+            console.print("="*80)
+            
+            # 各分析の結果を要約
+            summary = []
+            if "divergences" in results:
+                div_count = results["divergences"].count("強気ダイバージェンス") + results["divergences"].count("弱気ダイバージェンス")
+                summary.append(f"🔍 ダイバージェンス: {div_count}件検出")
+            
+            if "support_resistance" in results:
+                sr_count = results["support_resistance"].count("レジスタンスレベル") + results["support_resistance"].count("サポートレベル")
+                summary.append(f"📊 サポート・レジスタンス: {sr_count}件検出")
+            
+            if "momentum" in results:
+                if "上昇傾向" in results["momentum"]:
+                    summary.append("⚡ モメンタム: 上昇傾向")
+                elif "下降傾向" in results["momentum"]:
+                    summary.append("⚡ モメンタム: 下降傾向")
+                else:
+                    summary.append("⚡ モメンタム: 中立")
+
+            for item in summary:
+                console.print(f"  {item}")
+
+            # 市場状況の総合判断
+            console.print("\n" + "-"*80)
+            console.print("📈 市場状況の総合判断")
+            console.print("-"*80)
+            
+            # 各分析の傾向を判定
+            trends = []
+            
+            # ダイバージェンス傾向
+            if "divergences" in results:
+                bullish_count = results["divergences"].count("強気ダイバージェンス")
+                bearish_count = results["divergences"].count("弱気ダイバージェンス")
+                if bullish_count > bearish_count:
+                    trends.append("🟢 ダイバージェンス: 強気")
+                elif bearish_count > bullish_count:
+                    trends.append("🔴 ダイバージェンス: 弱気")
+                else:
+                    trends.append("⚪ ダイバージェンス: 中立")
+            
+            # モメンタム傾向
+            if "momentum" in results:
+                if "上昇傾向" in results["momentum"]:
+                    trends.append("🟢 モメンタム: 上昇")
+                elif "下降傾向" in results["momentum"]:
+                    trends.append("🔴 モメンタム: 下降")
+                else:
+                    trends.append("⚪ モメンタム: 中立")
+            
+            # 総合判断
+            bullish_trends = sum(1 for t in trends if "🟢" in t)
+            bearish_trends = sum(1 for t in trends if "🔴" in t)
+            
+            console.print("📊 分析結果:")
+            for trend in trends:
+                console.print(f"  {trend}")
+            
+            console.print(f"\n🎯 総合判断:")
+            if bullish_trends > bearish_trends:
+                console.print("  🟢 強気市場 - 買い機会を探す")
+            elif bearish_trends > bullish_trends:
+                console.print("  🔴 弱気市場 - 売り機会を探す")
+            else:
+                console.print("  ⚪ 中立市場 - 様子見推奨")
+            
+            # 推奨アクション
+            console.print(f"\n💡 推奨アクション:")
+            if bullish_trends > bearish_trends:
+                console.print("  • サポートレベルでの買いエントリーを検討")
+                console.print("  • 強気ダイバージェンスの確認")
+                console.print("  • 上昇トレンドの継続を確認")
+            elif bearish_trends > bullish_trends:
+                console.print("  • レジスタンスレベルでの売りエントリーを検討")
+                console.print("  • 弱気ダイバージェンスの確認")
+                console.print("  • 下降トレンドの継続を確認")
+            else:
+                console.print("  • 明確なシグナルを待つ")
+                console.print("  • レンジ相場での取引を検討")
+                console.print("  • リスク管理を強化")
+
+        else:
+            console.print("❌ 分析結果がありません")
+
+    except Exception as e:
+        console.print(f"❌ 包括的分析エラー: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def analyze_signals(
+    timeframe: str = typer.Option(
+        "M5", "--timeframe", "-tf", help="時間足 (M5, H1, H4, D1)"
+    ),
+    days: int = typer.Option(7, "--days", "-d", help="分析期間（日数）"),
+    currency_pair: str = typer.Option("USD/JPY", "--pair", "-p", help="通貨ペア"),
+):
+    """
+    高度なシグナル分析機能
+
+    複数指標の組み合わせ分析、トレンド分析、強度計算、信頼度評価を含む
+    包括的なシグナル分析を実行
+
+    Examples:
+        exchange-analytics data analyze-signals
+        exchange-analytics data analyze-signals --timeframe H1 --days 3
+        exchange-analytics data analyze-signals --pair EUR/JPY
+    """
+    console.print("🎯 高度なシグナル分析機能")
+
+    # 時間足の検証
+    valid_timeframes = ["M5", "H1", "H4", "D1"]
+    if timeframe not in valid_timeframes:
+        console.print(f"❌ 無効な時間足です: {timeframe}")
+        console.print(f"有効な時間足: {', '.join(valid_timeframes)}")
+        raise typer.Exit(1)
+
+    try:
+        # 高度なシグナル分析スクリプトを実行
+        console.print(f"🚀 {timeframe}時間足の高度なシグナル分析を実行中...")
+
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        # スクリプトパスを設定
+        script_path = Path("/app/scripts/cron/advanced_signal_analyzer.py")
+
+        if not script_path.exists():
+            console.print(f"❌ 高度なシグナル分析スクリプトが見つかりません: {script_path}")
+            raise typer.Exit(1)
+
+        # 環境変数を設定
+        env = os.environ.copy()
+        if not env.get("DATABASE_URL"):
+            env["DATABASE_URL"] = "sqlite+aiosqlite:///data/exchange_analytics.db"
+        env["PYTHONPATH"] = "/app"
+
+        # 引数を構築
+        args = [
+            sys.executable,
+            str(script_path),
+            "--timeframe",
+            timeframe,
+            "--days",
+            str(days),
+            "--currency-pair",
+            currency_pair,
+        ]
+
+        # 高度なシグナル分析スクリプトを実行
+        result = subprocess.run(
+            args,
+            capture_output=True,
+            text=True,
+            cwd="/app",
+            env=env,
+        )
+
+        if result.returncode == 0:
+            console.print("✅ 高度なシグナル分析が完了しました")
+            if result.stdout:
+                console.print(result.stdout)
+        else:
+            console.print(f"❌ 高度なシグナル分析エラー: {result.stderr}")
+            raise typer.Exit(1)
+
+    except Exception as e:
+        console.print(f"❌ 高度なシグナル分析エラー: {e}")
+        raise typer.Exit(1)

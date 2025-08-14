@@ -316,7 +316,6 @@ class DataLoader:
                 ncols=80,
                 bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]",
             ) as pbar:
-
                 # 重複チェックとデータ保存
                 for i, (timestamp, row) in enumerate(df.iterrows()):
                     try:
@@ -370,17 +369,13 @@ class DataLoader:
                         # Invalid price dataエラーの場合はスキップ（データ品質問題）
                         if "Invalid price data" in str(e):
                             # エラーを記録するが処理は続行
-                            error_msg = (
-                                f"⚠️ データ品質エラー (timestamp: {timestamp}): {e}"
-                            )
+                            error_msg = f"⚠️ データ品質エラー (timestamp: {timestamp}): {e}"
                             errors.append(error_msg)
                             continue
 
                         # 重複エラー以外のエラーのみ記録
                         if "UNIQUE constraint failed" not in str(e):
-                            error_msg = (
-                                f"⚠️ データ保存エラー (timestamp: {timestamp}): {e}"
-                            )
+                            error_msg = f"⚠️ データ保存エラー (timestamp: {timestamp}): {e}"
                             errors.append(error_msg)
 
                 # プログレスバーは自動的に100%で完了

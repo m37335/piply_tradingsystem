@@ -104,19 +104,21 @@ class PullbackDetector:
         rsi_data = indicators.get("rsi", {})
         macd_data = indicators.get("macd", {})
 
-        # RSI 30-50 のチェック
+        # RSI 25-55 のチェック（30-50から拡大）
         rsi_condition = False
         if "current_value" in rsi_data:
             rsi_value = rsi_data["current_value"]
-            rsi_condition = 30 <= rsi_value <= 50
+            rsi_condition = 25 <= rsi_value <= 55
 
-        # MACD 上昇継続のチェック
+        # MACD 上昇継続のチェック（条件を緩和）
         macd_condition = False
         if "macd" in macd_data and "signal" in macd_data:
-            # MACDがシグナルを上回っているかチェック
-            current_macd = macd_data["macd"].iloc[-1]
-            current_signal = macd_data["signal"].iloc[-1]
-            macd_condition = current_macd > current_signal
+            # MACDがシグナルを上回っているか、または上昇傾向にあるかチェック
+            macd_values = macd_data["macd"]
+            if len(macd_values) >= 3:
+                # 最近3期間でMACDが上昇しているかチェック
+                recent_macd = macd_values[-3:]
+                macd_condition = recent_macd[-1] > recent_macd[-2] > recent_macd[-3]
 
         return rsi_condition and macd_condition
 
@@ -135,18 +137,21 @@ class PullbackDetector:
         rsi_data = indicators.get("rsi", {})
         bb_data = indicators.get("bollinger_bands", {})
 
-        # RSI 30-40 のチェック
+        # RSI 25-45 のチェック（30-40から拡大）
         rsi_condition = False
         if "current_value" in rsi_data:
             rsi_value = rsi_data["current_value"]
-            rsi_condition = 30 <= rsi_value <= 40
+            rsi_condition = 25 <= rsi_value <= 45
 
-        # ボリンジャーバンド -2σ タッチのチェック
+        # ボリンジャーバンド -1.5σ 近接のチェック（-2σから緩和）
         bb_condition = False
         if bb_data:
-            bb_condition = self.utils.check_bollinger_touch(
-                current_price, bb_data, "-2σ"
-            )
+            bb_lower = bb_data.get("lower", [])
+            if bb_lower:
+                # 価格がボリンジャーバンド下限の5%以内にあるかチェック
+                lower_band = bb_lower[-1]
+                price_diff = abs(current_price - lower_band)
+                bb_condition = price_diff <= lower_band * 0.05
 
         return rsi_condition and bb_condition
 
@@ -165,18 +170,21 @@ class PullbackDetector:
         rsi_data = indicators.get("rsi", {})
         bb_data = indicators.get("bollinger_bands", {})
 
-        # RSI 30-35 のチェック
+        # RSI 25-40 のチェック（30-35から拡大）
         rsi_condition = False
         if "current_value" in rsi_data:
             rsi_value = rsi_data["current_value"]
-            rsi_condition = 30 <= rsi_value <= 35
+            rsi_condition = 25 <= rsi_value <= 40
 
-        # ボリンジャーバンド -2σ タッチのチェック
+        # ボリンジャーバンド -1.5σ 近接のチェック（-2σから緩和）
         bb_condition = False
         if bb_data:
-            bb_condition = self.utils.check_bollinger_touch(
-                current_price, bb_data, "-2σ"
-            )
+            bb_lower = bb_data.get("lower", [])
+            if bb_lower:
+                # 価格がボリンジャーバンド下限の5%以内にあるかチェック
+                lower_band = bb_lower[-1]
+                price_diff = abs(current_price - lower_band)
+                bb_condition = price_diff <= lower_band * 0.05
 
         return rsi_condition and bb_condition
 
@@ -193,11 +201,11 @@ class PullbackDetector:
 
         rsi_data = indicators.get("rsi", {})
 
-        # RSI 30以下 のチェック
+        # RSI 35以下 のチェック（30以下から緩和）
         rsi_condition = False
         if "current_value" in rsi_data:
             rsi_value = rsi_data["current_value"]
-            rsi_condition = rsi_value <= 30
+            rsi_condition = rsi_value <= 35
 
         # 反発サインのチェック（価格が上昇に転じているか）
         bounce_condition = False

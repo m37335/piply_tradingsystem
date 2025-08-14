@@ -104,27 +104,40 @@ class CompositeSignalDetector:
         rsi_data = indicators.get("rsi", {})
         macd_data = indicators.get("macd", {})
 
-        # RSI条件のチェック
+        # RSI条件のチェック（25-75に拡大）
         rsi_condition = False
         if "current_value" in rsi_data:
             rsi_value = rsi_data["current_value"]
             # RSIが適切な範囲にあるかチェック
-            rsi_condition = 30 <= rsi_value <= 70
+            rsi_condition = 25 <= rsi_value <= 75
 
-        # MACD条件のチェック
+        # MACD条件のチェック（条件を緩和）
         macd_condition = False
         if "macd" in macd_data and "signal" in macd_data:
-            current_macd = macd_data["macd"].iloc[-1]
-            current_signal = macd_data["signal"].iloc[-1]
-            # MACDがシグナルを上回っているかチェック
-            macd_condition = current_macd > current_signal
+            macd_series = macd_data["macd"]
+            signal_series = macd_data["signal"]
+            
+            if len(macd_series) >= 3:
+                # 最近3期間でMACDが上昇しているかチェック
+                recent_macd = macd_series.iloc[-3:]
+                recent_signal = signal_series.iloc[-3:]
+                
+                # MACDがシグナルを上回っているか、または上昇傾向にあるか
+                current_macd = recent_macd.iloc[-1]
+                current_signal = recent_signal.iloc[-1]
+                macd_condition = current_macd > current_signal or (
+                    recent_macd.iloc[-1] > recent_macd.iloc[-2] > recent_macd.iloc[-3]
+                )
 
-        # 価格条件のチェック
+        # 価格条件のチェック（条件を緩和）
         price_condition = False
         if len(price_data) >= 5:
             recent_prices = price_data["Close"].iloc[-5:]
-            # 価格が上昇傾向にあるかチェック
-            price_condition = recent_prices.iloc[-1] > recent_prices.iloc[-2]
+            # 価格が上昇傾向にあるか、または安定しているかチェック
+            price_condition = (
+                recent_prices.iloc[-1] > recent_prices.iloc[-2] or
+                abs(recent_prices.iloc[-1] - recent_prices.iloc[-2]) / recent_prices.iloc[-2] < 0.01
+            )
 
         # 3つすべての条件が一致しているかチェック
         return rsi_condition and macd_condition and price_condition
@@ -144,19 +157,25 @@ class CompositeSignalDetector:
         rsi_data = indicators.get("rsi", {})
         bb_data = indicators.get("bollinger_bands", {})
 
-        # RSI条件のチェック
+        # RSI条件のチェック（25-75に拡大）
         rsi_condition = False
         if "current_value" in rsi_data:
             rsi_value = rsi_data["current_value"]
-            rsi_condition = 30 <= rsi_value <= 70
+            rsi_condition = 25 <= rsi_value <= 75
 
-        # ボリンジャーバンド条件のチェック
+        # ボリンジャーバンド条件のチェック（条件を改善）
         bb_condition = False
         if bb_data:
             # 価格がボリンジャーバンドの適切な位置にあるかチェック
             upper_band = bb_data["upper"].iloc[-1]
             lower_band = bb_data["lower"].iloc[-1]
-            bb_condition = lower_band <= current_price <= upper_band
+            middle_band = bb_data["middle"].iloc[-1]
+            
+            # 価格がボリンジャーバンド内にあるか、またはミドル付近にあるか
+            bb_condition = (
+                lower_band <= current_price <= upper_band or
+                abs(current_price - middle_band) / middle_band < 0.02
+            )
 
         # 2つすべての条件が一致しているかチェック
         return rsi_condition and bb_condition
@@ -176,19 +195,25 @@ class CompositeSignalDetector:
         rsi_data = indicators.get("rsi", {})
         bb_data = indicators.get("bollinger_bands", {})
 
-        # RSI条件のチェック
+        # RSI条件のチェック（25-75に拡大）
         rsi_condition = False
         if "current_value" in rsi_data:
             rsi_value = rsi_data["current_value"]
-            rsi_condition = 30 <= rsi_value <= 70
+            rsi_condition = 25 <= rsi_value <= 75
 
-        # ボリンジャーバンド条件のチェック
+        # ボリンジャーバンド条件のチェック（条件を改善）
         bb_condition = False
         if bb_data:
             # 価格がボリンジャーバンドの適切な位置にあるかチェック
             upper_band = bb_data["upper"].iloc[-1]
             lower_band = bb_data["lower"].iloc[-1]
-            bb_condition = lower_band <= current_price <= upper_band
+            middle_band = bb_data["middle"].iloc[-1]
+            
+            # 価格がボリンジャーバンド内にあるか、またはミドル付近にあるか
+            bb_condition = (
+                lower_band <= current_price <= upper_band or
+                abs(current_price - middle_band) / middle_band < 0.02
+            )
 
         # 2つすべての条件が一致しているかチェック
         return rsi_condition and bb_condition
@@ -206,19 +231,19 @@ class CompositeSignalDetector:
 
         rsi_data = indicators.get("rsi", {})
 
-        # RSI条件のチェック
+        # RSI条件のチェック（25-75に拡大）
         rsi_condition = False
         if "current_value" in rsi_data:
             rsi_value = rsi_data["current_value"]
-            rsi_condition = 30 <= rsi_value <= 70
+            rsi_condition = 25 <= rsi_value <= 75
 
-        # 価格形状条件のチェック
+        # 価格形状条件のチェック（条件を緩和）
         price_shape_condition = False
         if len(price_data) >= 5:
             recent_prices = price_data["Close"].iloc[-5:]
-            # 価格が安定した形状を保っているかチェック
+            # 価格が安定した形状を保っているかチェック（5%以下に緩和）
             price_volatility = recent_prices.std() / recent_prices.mean()
-            price_shape_condition = price_volatility < 0.02  # 2%以下の変動率
+            price_shape_condition = price_volatility < 0.05  # 5%以下の変動率
 
         # 2つすべての条件が一致しているかチェック
         return rsi_condition and price_shape_condition

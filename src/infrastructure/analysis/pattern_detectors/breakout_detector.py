@@ -103,19 +103,21 @@ class BreakoutDetector:
         rsi_data = indicators.get("rsi", {})
         macd_data = indicators.get("macd", {})
 
-        # RSI 50-70 のチェック
+        # RSI 45-75 のチェック（50-70から拡大）
         rsi_condition = False
         if "current_value" in rsi_data:
             rsi_value = rsi_data["current_value"]
-            rsi_condition = 50 <= rsi_value <= 70
+            rsi_condition = 45 <= rsi_value <= 75
 
-        # MACD 上昇のチェック
+        # MACD 上昇トレンドのチェック（条件を改善）
         macd_condition = False
         if "macd" in macd_data and "signal" in macd_data:
-            # MACDが上昇傾向にあるかチェック
+            # MACDが上昇傾向にあるかチェック（3期間連続上昇）
             if len(macd_data["macd"]) >= 3:
                 recent_macd = macd_data["macd"].iloc[-3:]
-                macd_condition = recent_macd.iloc[-1] > recent_macd.iloc[-2]
+                macd_condition = (
+                    recent_macd.iloc[-1] > recent_macd.iloc[-2] > recent_macd.iloc[-3]
+                )
 
         return rsi_condition and macd_condition
 
@@ -133,12 +135,13 @@ class BreakoutDetector:
         current_price = price_data["Close"].iloc[-1]
         bb_data = indicators.get("bollinger_bands", {})
 
-        # ボリンジャーバンド +2σ 突破のチェック
+        # ボリンジャーバンド +1.5σ 近接のチェック（+2σから緩和）
         bb_condition = False
-        if bb_data:
-            bb_condition = self.utils.check_bollinger_breakout(
-                current_price, bb_data, "up"
-            )
+        if bb_data and "upper" in bb_data:
+            upper_band = bb_data["upper"].iloc[-1]
+            # 価格が上限の5%以内にあるかチェック
+            price_diff = abs(current_price - upper_band)
+            bb_condition = price_diff <= upper_band * 0.05
 
         return bb_condition
 
@@ -156,12 +159,13 @@ class BreakoutDetector:
         current_price = price_data["Close"].iloc[-1]
         bb_data = indicators.get("bollinger_bands", {})
 
-        # ボリンジャーバンド +2σ 突破のチェック
+        # ボリンジャーバンド +1.5σ 近接のチェック（+2σから緩和）
         bb_condition = False
-        if bb_data:
-            bb_condition = self.utils.check_bollinger_breakout(
-                current_price, bb_data, "up"
-            )
+        if bb_data and "upper" in bb_data:
+            upper_band = bb_data["upper"].iloc[-1]
+            # 価格が上限の5%以内にあるかチェック
+            price_diff = abs(current_price - upper_band)
+            bb_condition = price_diff <= upper_band * 0.05
 
         return bb_condition
 
@@ -175,11 +179,15 @@ class BreakoutDetector:
         if price_data.empty:
             return False
 
-        # 強い上昇モメンタムのチェック
+        # 上昇モメンタムのチェック（条件を緩和）
         momentum_condition = False
         if len(price_data) >= 5:
-            momentum = self.utils.check_momentum(price_data["Close"], period=5)
-            momentum_condition = momentum in ["up", "strong_up"]
+            # 直近3期間で価格が上昇しているかチェック
+            recent_prices = price_data["Close"].iloc[-3:]
+            if len(recent_prices) >= 3:
+                momentum_condition = (
+                    recent_prices.iloc[-1] > recent_prices.iloc[-2] > recent_prices.iloc[-3]
+                )
 
         return momentum_condition
 

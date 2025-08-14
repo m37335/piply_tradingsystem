@@ -56,7 +56,7 @@ class RSIBattleDetector:
     def _check_d1_condition(self, d1_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
         D1時間軸の条件をチェック
-        RSI 45-55 かつ MACD ゼロライン付近
+        RSI 40-60 かつ MACD ゼロライン付近（緩和）
         """
         if d1_data is None:
             return None
@@ -89,11 +89,11 @@ class RSIBattleDetector:
             else signal_series[-1]
         )
 
-        # RSI 45-55の範囲内かチェック
-        rsi_in_range = 45 <= current_rsi <= 55
+        # RSI 40-60の範囲内かチェック（45-55から拡大）
+        rsi_in_range = 40 <= current_rsi <= 60
 
-        # MACDがゼロライン付近かチェック（±0.1の範囲）
-        macd_near_zero = abs(current_macd) <= 0.1 and abs(current_signal) <= 0.1
+        # MACDがゼロライン付近かチェック（±0.2の範囲に緩和）
+        macd_near_zero = abs(current_macd) <= 0.2 and abs(current_signal) <= 0.2
 
         if rsi_in_range and macd_near_zero:
             return {
@@ -108,7 +108,7 @@ class RSIBattleDetector:
     def _check_h4_condition(self, h4_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
         H4時間軸の条件をチェック
-        RSI 45-55 かつ ボリンジャーバンド ミドル付近
+        RSI 40-60 かつ ボリンジャーバンド ミドル付近（緩和）
         """
         if h4_data is None:
             return None
@@ -139,12 +139,12 @@ class RSIBattleDetector:
             bb_middle.iloc[-1] if hasattr(bb_middle, "iloc") else bb_middle[-1]
         )
 
-        # RSI 45-55の範囲内かチェック
-        rsi_in_range = 45 <= current_rsi <= 55
+        # RSI 40-60の範囲内かチェック（45-55から拡大）
+        rsi_in_range = 40 <= current_rsi <= 60
 
-        # 価格がボリンジャーバンドミドル付近かチェック（±0.1%の範囲）
+        # 価格がボリンジャーバンドミドル付近かチェック（±0.5%の範囲に緩和）
         price_near_middle = (
-            abs(current_price - current_bb_middle) / current_bb_middle <= 0.001
+            abs(current_price - current_bb_middle) / current_bb_middle <= 0.005
         )
 
         if rsi_in_range and price_near_middle:
@@ -160,7 +160,7 @@ class RSIBattleDetector:
     def _check_h1_condition(self, h1_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
         H1時間軸の条件をチェック
-        RSI 45-55 かつ 価格変動増加
+        RSI 40-60 かつ 価格変動増加（簡略化）
         """
         if h1_data is None:
             return None
@@ -175,44 +175,44 @@ class RSIBattleDetector:
         current_rsi = rsi_data.get("current_value", 0)
         close_prices = price_data.get("Close", [])
 
-        if close_prices is None or len(close_prices) < 20:
+        if close_prices is None or len(close_prices) < 10:
             return None
 
-        # 価格変動性を計算（過去20期間の標準偏差）
+        # RSI 40-60の範囲内かチェック（45-55から拡大）
+        rsi_in_range = 40 <= current_rsi <= 60
+
+        # 価格変動を簡略化（直近3期間の価格変化）
         recent_prices = (
-            close_prices[-20:] if hasattr(close_prices, "iloc") else close_prices[-20:]
+            close_prices[-3:] if hasattr(close_prices, "iloc") else close_prices[-3:]
         )
-        price_volatility = self.utils.calculate_volatility(recent_prices)
-
-        # RSI 45-55の範囲内かチェック
-        rsi_in_range = 45 <= current_rsi <= 55
-
-        # 価格変動が増加しているかチェック（過去の平均より高い）
-        price_list = (
-            recent_prices.tolist()
-            if hasattr(recent_prices, "tolist")
-            else list(recent_prices)
-        )
-        # 価格変化率の標準偏差を計算（calculate_volatilityと同じ尺度）
-        price_changes = []
-        for i in range(1, len(price_list)):
-            if price_list[i - 1] > 0:
-                change = (price_list[i] - price_list[i - 1]) / price_list[i - 1]
-                price_changes.append(change)
-
-        if len(price_changes) > 0:
-            avg_change_std = sum(price_changes) / len(price_changes)
-            volatility_increased = price_volatility > abs(avg_change_std) * 1.2
+        
+        if len(recent_prices) >= 3:
+            price_list = (
+                recent_prices.tolist()
+                if hasattr(recent_prices, "tolist")
+                else list(recent_prices)
+            )
+            
+            # 価格が変動しているかチェック（単純な条件）
+            price_changes = []
+            for i in range(1, len(price_list)):
+                if price_list[i - 1] > 0:
+                    change = abs(price_list[i] - price_list[i - 1]) / price_list[i - 1]
+                    price_changes.append(change)
+            
+            # 平均変動率が0.1%以上なら変動ありとみなす
+            volatility_increased = (
+                sum(price_changes) / len(price_changes) >= 0.001
+                if len(price_changes) > 0
+                else False
+            )
         else:
             volatility_increased = False
 
         if rsi_in_range and volatility_increased:
             return {
                 "rsi_value": current_rsi,
-                "volatility": price_volatility,
-                "avg_volatility": (
-                    abs(avg_change_std) if len(price_changes) > 0 else 0.0
-                ),
+                "volatility": sum(price_changes) / len(price_changes) if len(price_changes) > 0 else 0.0,
                 "condition_met": True,
             }
 
@@ -221,7 +221,7 @@ class RSIBattleDetector:
     def _check_m5_condition(self, m5_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
         M5時間軸の条件をチェック
-        RSI 50 ライン 攻防
+        RSI 50 ライン 攻防（緩和）
         """
         if m5_data is None:
             return None
@@ -235,23 +235,23 @@ class RSIBattleDetector:
         current_rsi = rsi_data.get("current_value", 0)
         rsi_series = rsi_data.get("series", [])
 
-        if rsi_series is None or len(rsi_series) < 10:
+        if rsi_series is None or len(rsi_series) < 5:
             return None
 
-        # RSIが50ライン付近で攻防しているかチェック
+        # RSIが50ライン付近で攻防しているかチェック（緩和）
         recent_rsi = (
-            rsi_series[-10:] if hasattr(rsi_series, "iloc") else rsi_series[-10:]
+            rsi_series[-5:] if hasattr(rsi_series, "iloc") else rsi_series[-5:]
         )
 
-        # RSIが50の±5の範囲内で変動しているかチェック
+        # RSIが50の±10の範囲内で変動しているかチェック（±5から拡大）
         rsi_values = (
             recent_rsi.tolist() if hasattr(recent_rsi, "tolist") else list(recent_rsi)
         )
-        rsi_near_50 = all(45 <= rsi <= 55 for rsi in rsi_values)
+        rsi_near_50 = all(40 <= rsi <= 60 for rsi in rsi_values)
 
         # RSIが50を跨いでいるかチェック（攻防の証拠）
-        first_half = rsi_values[:5]
-        second_half = rsi_values[-5:]
+        first_half = rsi_values[:3]
+        second_half = rsi_values[-3:]
         rsi_crosses_50 = any(rsi < 50 for rsi in first_half) and any(
             rsi > 50 for rsi in second_half
         )
@@ -290,6 +290,12 @@ class RSIBattleDetector:
             "pattern_number": 5,
             "pattern_name": "RSI50ライン攻防",
             "priority": self.pattern.priority,
+            "conditions_met": {
+                "D1": d1_condition is not None and d1_condition.get("condition_met", False),
+                "H4": h4_condition is not None and h4_condition.get("condition_met", False),
+                "H1": h1_condition is not None and h1_condition.get("condition_met", False),
+                "M5": m5_condition is not None and m5_condition.get("condition_met", False),
+            },
             "confidence_score": confidence_score,
             "detection_time": current_time,
             "notification_title": "🔄 RSI50ライン攻防！",

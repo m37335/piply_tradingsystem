@@ -4,21 +4,23 @@
 """
 
 import pandas as pd
+
 from tests.unit.test_double_top_bottom_detector import TestDoubleTopBottomDetector
+
 
 def debug_test_data():
     """テストデータをデバッグ"""
     test_class = TestDoubleTopBottomDetector()
     test_class.setup_method()
-    
+
     # ダブルトップテストデータを作成
     price_data = test_class._create_double_top_test_data()
     print("ダブルトップテストデータ:")
     print(f"データ数: {len(price_data)}")
-    
+
     # _detect_double_topの各ステップをデバッグ
     detector = test_class.detector
-    
+
     # ステップ1: データ長チェック
     print(f"\nステップ1: データ長チェック")
     print(f"データ長: {len(price_data)}, 最小要件: 20")
@@ -27,22 +29,22 @@ def debug_test_data():
         return
     else:
         print("✅ データ長OK")
-    
+
     # ステップ2: ピーク検出
     print(f"\nステップ2: ピーク検出")
-    peaks = detector._find_peaks(price_data, 'high')
+    peaks = detector._find_peaks(price_data, "high")
     print(f"検出されたピーク: {peaks}")
     if len(peaks) < 2:
         print("❌ ピーク不足")
         return
     else:
         print("✅ ピーク数OK")
-    
+
     # ステップ3: 最新の2つのピークを取得
     print(f"\nステップ3: 最新の2つのピーク")
     recent_peaks = peaks[-2:]
     print(f"最新のピーク: {recent_peaks}")
-    
+
     # ステップ4: ピーク間の距離をチェック
     print(f"\nステップ4: ピーク間の距離チェック")
     peak_distance = recent_peaks[1] - recent_peaks[0]
@@ -52,11 +54,11 @@ def debug_test_data():
         return
     else:
         print("✅ ピーク間距離OK")
-    
+
     # ステップ5: ピークの高さが類似しているかチェック
     print(f"\nステップ5: ピーク高さ類似性チェック")
-    peak1_high = price_data.iloc[recent_peaks[0]]['high']
-    peak2_high = price_data.iloc[recent_peaks[1]]['high']
+    peak1_high = price_data.iloc[recent_peaks[0]]["high"]
+    peak2_high = price_data.iloc[recent_peaks[1]]["high"]
     height_diff = abs(peak1_high - peak2_high) / peak1_high
     print(f"ピーク1の高さ: {peak1_high}")
     print(f"ピーク2の高さ: {peak2_high}")
@@ -66,18 +68,19 @@ def debug_test_data():
         return
     else:
         print("✅ ピーク高さ類似性OK")
-    
+
     # ステップ6: ネックラインの検証
     print(f"\nステップ6: ネックライン検証")
-    neckline_result = detector._validate_neckline(price_data, recent_peaks, 'top')
+    neckline_result = detector._validate_neckline(price_data, recent_peaks, "top")
     print(f"ネックライン検証結果: {neckline_result}")
     if not neckline_result:
         print("❌ ネックライン検証失敗")
         return
     else:
         print("✅ ネックライン検証OK")
-    
+
     print("\n🎉 全ステップ成功！ダブルトップが検出されるはずです。")
+
 
 if __name__ == "__main__":
     debug_test_data()

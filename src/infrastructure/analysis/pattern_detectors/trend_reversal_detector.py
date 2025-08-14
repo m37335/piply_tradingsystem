@@ -101,19 +101,14 @@ class TrendReversalDetector:
             return False
 
         rsi_data = indicators.get("rsi", {})
-        macd_data = indicators.get("macd", {})
 
-        # RSI > 70 のチェック
+        # RSI > 65 のチェック（70から65に調整）
         rsi_condition = False
         if "current_value" in rsi_data:
-            rsi_condition = rsi_data["current_value"] > 70
+            rsi_condition = rsi_data["current_value"] > 65
 
-        # MACD デッドクロスのチェック
-        macd_condition = False
-        if "macd" in macd_data and "signal" in macd_data:
-            macd_condition = self.utils.check_macd_dead_cross(macd_data)
-
-        return rsi_condition and macd_condition
+        # MACD条件を削除し、RSIのみで判定
+        return rsi_condition
 
     def _check_h4_conditions(self, h4_data: Dict[str, Any]) -> bool:
         """H4時間軸の条件をチェック"""
@@ -130,17 +125,20 @@ class TrendReversalDetector:
         rsi_data = indicators.get("rsi", {})
         bb_data = indicators.get("bollinger_bands", {})
 
-        # RSI > 70 のチェック
+        # RSI > 65 のチェック（70から65に調整）
         rsi_condition = False
         if "current_value" in rsi_data:
-            rsi_condition = rsi_data["current_value"] > 70
+            rsi_condition = rsi_data["current_value"] > 65
 
-        # ボリンジャーバンド +2σ タッチのチェック
+        # ボリンジャーバンド +1.5σ 近接のチェック（タッチから緩和）
         bb_condition = False
         if bb_data:
-            bb_condition = self.utils.check_bollinger_touch(
-                current_price, bb_data, "+2σ"
-            )
+            bb_upper = bb_data.get("upper", [])
+            if bb_upper:
+                # 価格がボリンジャーバンド上限の5%以内にあるかチェック
+                upper_band = bb_upper[-1]
+                price_diff = abs(current_price - upper_band)
+                bb_condition = price_diff <= upper_band * 0.05
 
         return rsi_condition and bb_condition
 
@@ -159,17 +157,20 @@ class TrendReversalDetector:
         rsi_data = indicators.get("rsi", {})
         bb_data = indicators.get("bollinger_bands", {})
 
-        # RSI > 70 のチェック
+        # RSI > 65 のチェック（70から65に調整）
         rsi_condition = False
         if "current_value" in rsi_data:
-            rsi_condition = rsi_data["current_value"] > 70
+            rsi_condition = rsi_data["current_value"] > 65
 
-        # ボリンジャーバンド +2σ タッチのチェック
+        # ボリンジャーバンド +1.5σ 近接のチェック（タッチから緩和）
         bb_condition = False
         if bb_data:
-            bb_condition = self.utils.check_bollinger_touch(
-                current_price, bb_data, "+2σ"
-            )
+            bb_upper = bb_data.get("upper", [])
+            if bb_upper:
+                # 価格がボリンジャーバンド上限の5%以内にあるかチェック
+                upper_band = bb_upper[-1]
+                price_diff = abs(current_price - upper_band)
+                bb_condition = price_diff <= upper_band * 0.05
 
         return rsi_condition and bb_condition
 
@@ -186,17 +187,29 @@ class TrendReversalDetector:
 
         rsi_data = indicators.get("rsi", {})
 
-        # RSI > 70 のチェック
+        # RSI > 65 のチェック（70から65に調整）
         rsi_condition = False
         if "current_value" in rsi_data:
-            rsi_condition = rsi_data["current_value"] > 70
+            rsi_condition = rsi_data["current_value"] > 65
 
-        # ヒゲ形成のチェック
+        # ヒゲ形成のチェック（条件を緩和）
         candle_condition = False
         if len(price_data) >= 3:
-            candle_condition = self.utils.check_candle_pattern(
-                price_data["Close"], "ヒゲ形成"
-            )
+            # 最近のローソク足でヒゲがあるかチェック
+            recent_data = price_data.tail(3)
+            for _, row in recent_data.iterrows():
+                high = row["High"]
+                low = row["Low"]
+                close = row["Close"]
+                open_price = row["Open"]
+
+                # 上ヒゲまたは下ヒゲがあるかチェック
+                upper_shadow = high - max(open_price, close)
+                lower_shadow = min(open_price, close) - low
+
+                if upper_shadow > 0.05 or lower_shadow > 0.05:
+                    candle_condition = True
+                    break
 
         return rsi_condition and candle_condition
 

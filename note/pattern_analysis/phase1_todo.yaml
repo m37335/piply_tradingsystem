@@ -1,0 +1,346 @@
+phase: 1
+title: "高頻度パターンの大幅緩和"
+duration: "1週間"
+target_detection_rate: "18.8% → 25%以上"
+target_frequency: "月100回以上の検出"
+
+overview:
+  description: "高頻度パターン（15, 13, 11, 14）の基準を1000倍緩和し、検出率を大幅に向上させる"
+  priority: "最高"
+  impact: "検出率の基盤構築"
+
+target_patterns:
+  - pattern_id: 15
+    name: "レジスタンス/サポート"
+    current_frequency: "876回/月"
+    target_frequency: "月80-200回の検出"
+    relaxation_multiplier: 1000
+  - pattern_id: 13
+    name: "三尊天井/逆三尊"
+    current_frequency: "854回/月"
+    target_frequency: "月80-200回の検出"
+    relaxation_multiplier: 1000
+  - pattern_id: 11
+    name: "トリプルトップ/ボトム"
+    current_frequency: "850回/月"
+    target_frequency: "月80-200回の検出"
+    relaxation_multiplier: 1000
+  - pattern_id: 14
+    name: "ウェッジパターン"
+    current_frequency: "834回/月"
+    target_frequency: "月80-200回の検出"
+    relaxation_multiplier: 1000
+
+tasks:
+  day_1_2:
+    pattern: 15
+    pattern_name: "レジスタンス/サポート"
+    tasks:
+      - task_id: "15-001"
+        title: "基準パラメータの1000倍緩和"
+        description: "パラメータを大幅に緩和して検出感度を向上"
+        file: "src/infrastructure/analysis/pattern_detectors/support_resistance_detector.py"
+        method: "__init__"
+        changes:
+          - parameter: "min_touch_points"
+            current_value: 2
+            target_value: 1
+            description: "最小タッチポイント数を1に緩和"
+          - parameter: "line_tolerance"
+            current_value: 0.01
+            target_value: 0.05
+            description: "ライン許容範囲を5倍に拡大"
+          - parameter: "breakout_threshold"
+            current_value: 0.005
+            target_value: 0.02
+            description: "ブレイクアウト閾値を4倍に緩和"
+          - parameter: "confirmation_candles"
+            current_value: 1
+            target_value: 0
+            description: "確認ローソク足数を0に設定"
+        status: "pending"
+        priority: "high"
+        
+      - task_id: "15-002"
+        title: "検出ロジックの最適化"
+        description: "アルゴリズムを最適化して処理速度を向上"
+        file: "src/infrastructure/analysis/pattern_detectors/support_resistance_detector.py"
+        methods:
+          - "_validate_line_strength"
+          - "_detect_breakout"
+        changes:
+          - method: "_validate_line_strength"
+            description: "ライン強度検証の閾値を0.5→0.3に緩和"
+          - method: "_detect_breakout"
+            description: "ブレイクアウト判定条件を緩和"
+        status: "pending"
+        priority: "high"
+        
+      - task_id: "15-003"
+        title: "個別テストの実行"
+        description: "調整後のパターン15の詳細テストを実行"
+        file: "scripts/test/test_pattern15_detailed.py"
+        test_cases:
+          - "標準レジスタンスライン"
+          - "標準サポートライン"
+          - "強いレジスタンス"
+          - "複数タッチポイント"
+        expected_results:
+          - "全テストケースで検出成功"
+          - "信頼度0.7以上"
+        status: "pending"
+        priority: "medium"
+        
+      - task_id: "15-004"
+        title: "検出率の確認"
+        description: "調整後の検出率を測定・記録"
+        metrics:
+          - "検出成功率"
+          - "平均信頼度"
+          - "処理時間"
+        target_metrics:
+          detection_rate: "100%"
+          confidence: "0.7以上"
+          processing_time: "5秒以内"
+        status: "pending"
+        priority: "medium"
+
+  day_3_4:
+    pattern: 13
+    pattern_name: "三尊天井/逆三尊"
+    tasks:
+      - task_id: "13-001"
+        title: "基準パラメータの1000倍緩和"
+        description: "パラメータを大幅に緩和して検出感度を向上"
+        file: "src/infrastructure/analysis/pattern_detectors/three_buddhas_detector.py"
+        method: "__init__"
+        changes:
+          - parameter: "min_peak_distance"
+            current_value: 10
+            target_value: 3
+            description: "最小ピーク距離を3に緩和"
+          - parameter: "peak_tolerance"
+            current_value: 0.02
+            target_value: 0.1
+            description: "ピーク許容範囲を5倍に拡大"
+          - parameter: "min_pattern_height"
+            current_value: 0.05
+            target_value: 0.01
+            description: "最小パターン高さを5倍に緩和"
+        status: "pending"
+        priority: "high"
+        
+      - task_id: "13-002"
+        title: "ピーク検出アルゴリズムの改善"
+        description: "ピーク検出ロジックを最適化"
+        file: "src/infrastructure/analysis/pattern_detectors/three_buddhas_detector.py"
+        methods:
+          - "_find_peaks"
+          - "_validate_pattern"
+        changes:
+          - method: "_find_peaks"
+            description: "ピーク検出条件を大幅に緩和"
+          - method: "_validate_pattern"
+            description: "パターン検証条件を緩和"
+        status: "pending"
+        priority: "high"
+        
+      - task_id: "13-003"
+        title: "個別テストの実行"
+        description: "調整後のパターン13の詳細テストを実行"
+        file: "scripts/test/test_pattern13_detailed.py"
+        test_cases:
+          - "標準三尊天井"
+          - "標準逆三尊"
+          - "短い三尊"
+          - "完璧な三尊"
+        expected_results:
+          - "全テストケースで検出成功"
+          - "信頼度0.8以上"
+        status: "pending"
+        priority: "medium"
+        
+      - task_id: "13-004"
+        title: "検出率の確認"
+        description: "調整後の検出率を測定・記録"
+        metrics:
+          - "検出成功率"
+          - "平均信頼度"
+          - "処理時間"
+        target_metrics:
+          detection_rate: "100%"
+          confidence: "0.8以上"
+          processing_time: "5秒以内"
+        status: "pending"
+        priority: "medium"
+
+  day_5:
+    pattern: 11
+    pattern_name: "トリプルトップ/ボトム"
+    tasks:
+      - task_id: "11-001"
+        title: "基準パラメータの1000倍緩和"
+        description: "パラメータを大幅に緩和して検出感度を向上"
+        file: "src/infrastructure/analysis/pattern_detectors/triple_top_bottom_detector.py"
+        method: "__init__"
+        changes:
+          - parameter: "min_peak_distance"
+            current_value: 8
+            target_value: 2
+            description: "最小ピーク距離を2に緩和"
+          - parameter: "peak_tolerance"
+            current_value: 0.015
+            target_value: 0.08
+            description: "ピーク許容範囲を5倍に拡大"
+          - parameter: "min_pattern_height"
+            current_value: 0.03
+            target_value: 0.005
+            description: "最小パターン高さを6倍に緩和"
+        status: "pending"
+        priority: "high"
+        
+      - task_id: "11-002"
+        title: "3点検出ロジックの改善"
+        description: "3点パターン検出ロジックを最適化"
+        file: "src/infrastructure/analysis/pattern_detectors/triple_top_bottom_detector.py"
+        methods:
+          - "_find_peaks"
+          - "_validate_triple_pattern"
+        changes:
+          - method: "_find_peaks"
+            description: "ピーク検出条件を大幅に緩和"
+          - method: "_validate_triple_pattern"
+            description: "3点パターン検証条件を緩和"
+        status: "pending"
+        priority: "high"
+        
+      - task_id: "11-003"
+        title: "個別テストの実行"
+        description: "調整後のパターン11の詳細テストを実行"
+        file: "scripts/test/test_pattern11_detailed.py"
+        test_cases:
+          - "標準トリプルトップ"
+          - "標準トリプルボトム"
+          - "短いトリプル"
+          - "完璧なトリプル"
+        expected_results:
+          - "全テストケースで検出成功"
+          - "信頼度0.7以上"
+        status: "pending"
+        priority: "medium"
+        
+      - task_id: "11-004"
+        title: "検出率の確認"
+        description: "調整後の検出率を測定・記録"
+        metrics:
+          - "検出成功率"
+          - "平均信頼度"
+          - "処理時間"
+        target_metrics:
+          detection_rate: "100%"
+          confidence: "0.7以上"
+          processing_time: "5秒以内"
+        status: "pending"
+        priority: "medium"
+
+  day_6_7:
+    pattern: 14
+    pattern_name: "ウェッジパターン"
+    tasks:
+      - task_id: "14-001"
+        title: "基準パラメータの1000倍緩和"
+        description: "パラメータを大幅に緩和して検出感度を向上"
+        file: "src/infrastructure/analysis/pattern_detectors/wedge_pattern_detector.py"
+        method: "__init__"
+        changes:
+          - parameter: "min_wedge_length"
+            current_value: 10
+            target_value: 3
+            description: "最小ウェッジ長を3に緩和"
+          - parameter: "angle_tolerance"
+            current_value: 0.1
+            target_value: 0.5
+            description: "角度許容範囲を5倍に拡大"
+          - parameter: "convergence_threshold"
+            current_value: 0.02
+            target_value: 0.1
+            description: "収束閾値を5倍に緩和"
+        status: "pending"
+        priority: "high"
+        
+      - task_id: "14-002"
+        title: "収束判定アルゴリズムの改善"
+        description: "収束判定ロジックを最適化"
+        file: "src/infrastructure/analysis/pattern_detectors/wedge_pattern_detector.py"
+        methods:
+          - "_calculate_trend_line"
+          - "_validate_wedge_pattern"
+        changes:
+          - method: "_calculate_trend_line"
+            description: "トレンドライン計算条件を緩和"
+          - method: "_validate_wedge_pattern"
+            description: "ウェッジパターン検証条件を緩和"
+        status: "pending"
+        priority: "high"
+        
+      - task_id: "14-003"
+        title: "個別テストの実行"
+        description: "調整後のパターン14の詳細テストを実行"
+        file: "scripts/test/test_pattern14_detailed.py"
+        test_cases:
+          - "標準上昇ウェッジ"
+          - "標準下降ウェッジ"
+          - "短いウェッジ"
+          - "完璧なウェッジ"
+        expected_results:
+          - "全テストケースで検出成功"
+          - "信頼度0.7以上"
+        status: "pending"
+        priority: "medium"
+        
+      - task_id: "14-004"
+        title: "統合テストの実行"
+        description: "Phase 1完了後の統合テストを実行"
+        file: "scripts/test/test_all_patterns_integration.py"
+        test_scope:
+          - "全16パターンの同時検出"
+          - "実際の市場データでの検証"
+        expected_results:
+          - "検出率25%以上（4/16パターン）"
+          - "処理時間30秒以内"
+          - "エラー率5%以下"
+        status: "pending"
+        priority: "high"
+
+success_criteria:
+  detection_rate:
+    target: "25%以上"
+    measurement: "統合テストでの検出パターン数"
+  frequency:
+    target: "月100回以上"
+    measurement: "実際の市場データでの月間検出回数"
+  confidence:
+    target: "0.7以上"
+    measurement: "検出パターンの平均信頼度"
+  performance:
+    processing_time: "30秒以内"
+    error_rate: "5%以下"
+
+deliverables:
+  - "高頻度パターン4個の基準緩和完了"
+  - "個別テスト結果レポート"
+  - "統合テスト結果レポート"
+  - "Phase 1完了報告書"
+
+risks:
+  - risk: "過度な緩和による誤検出の増加"
+    mitigation: "段階的な調整とテスト"
+  - risk: "処理時間の増加"
+    mitigation: "アルゴリズムの最適化"
+  - risk: "他パターンとの干渉"
+    mitigation: "統合テストでの検証"
+
+notes:
+  - "各パターンの調整は段階的に行い、テスト結果を確認しながら進める"
+  - "検出率の向上と精度のバランスを重視する"
+  - "実際の市場データでの検証を必ず行う"

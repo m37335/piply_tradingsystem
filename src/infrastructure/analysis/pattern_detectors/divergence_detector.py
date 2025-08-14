@@ -102,24 +102,33 @@ class DivergenceDetector:
 
         rsi_data = indicators.get("rsi", {})
 
-        # 価格新高値のチェック
-        price_high_condition = False
-        if "series" in rsi_data:
+        # 価格上昇トレンドのチェック（新高値から緩和）
+        price_trend_condition = False
+        if len(price_data) >= 10:
             recent_prices = price_data["Close"].iloc[-10:]  # 直近10期間
-            current_price = recent_prices.iloc[-1]
-            price_high_condition = current_price == recent_prices.max()
+            # 価格が上昇傾向にあるかチェック（直近3期間で上昇）
+            if len(recent_prices) >= 3:
+                price_trend_condition = (
+                    recent_prices.iloc[-1]
+                    > recent_prices.iloc[-2]
+                    > recent_prices.iloc[-3]
+                )
 
-        # RSI 前回高値未達のチェック
-        rsi_high_condition = False
+        # RSI ダイバージェンスのチェック（前回高値未達から緩和）
+        rsi_divergence_condition = False
         if "series" in rsi_data:
             rsi_series = rsi_data["series"]
-            if len(rsi_series) >= 20:
+            if len(rsi_series) >= 10:
                 recent_rsi = rsi_series.iloc[-10:]  # 直近10期間
                 current_rsi = recent_rsi.iloc[-1]
-                # 現在のRSIが過去の高値を超えていないかチェック
-                rsi_high_condition = current_rsi < recent_rsi.max()
 
-        return price_high_condition and rsi_high_condition
+                # RSIが価格の上昇に追いついていないかチェック
+                # 現在のRSIが過去5期間の平均を下回っている場合
+                if len(recent_rsi) >= 5:
+                    rsi_avg = recent_rsi.iloc[-5:].mean()
+                    rsi_divergence_condition = current_rsi < rsi_avg
+
+        return price_trend_condition and rsi_divergence_condition
 
     def _check_h4_conditions(self, h4_data: Dict[str, Any]) -> bool:
         """H4時間軸の条件をチェック"""
@@ -134,21 +143,29 @@ class DivergenceDetector:
 
         rsi_data = indicators.get("rsi", {})
 
-        # 価格上昇のチェック
-        price_up_condition = False
+        # 価格上昇トレンドのチェック（3期間で上昇）
+        price_trend_condition = False
         if len(price_data) >= 5:
             recent_prices = price_data["Close"].iloc[-5:]
-            price_up_condition = recent_prices.iloc[-1] > recent_prices.iloc[-2]
+            if len(recent_prices) >= 3:
+                price_trend_condition = (
+                    recent_prices.iloc[-1]
+                    > recent_prices.iloc[-2]
+                    > recent_prices.iloc[-3]
+                )
 
-        # RSI 下降のチェック
-        rsi_down_condition = False
+        # RSI ダイバージェンスのチェック（3期間で下降）
+        rsi_divergence_condition = False
         if "series" in rsi_data:
             rsi_series = rsi_data["series"]
             if len(rsi_series) >= 5:
                 recent_rsi = rsi_series.iloc[-5:]
-                rsi_down_condition = recent_rsi.iloc[-1] < recent_rsi.iloc[-2]
+                if len(recent_rsi) >= 3:
+                    rsi_divergence_condition = (
+                        recent_rsi.iloc[-1] < recent_rsi.iloc[-2] < recent_rsi.iloc[-3]
+                    )
 
-        return price_up_condition and rsi_down_condition
+        return price_trend_condition and rsi_divergence_condition
 
     def _check_h1_conditions(self, h1_data: Dict[str, Any]) -> bool:
         """H1時間軸の条件をチェック"""
@@ -163,21 +180,29 @@ class DivergenceDetector:
 
         rsi_data = indicators.get("rsi", {})
 
-        # 価格上昇のチェック
-        price_up_condition = False
+        # 価格上昇トレンドのチェック（3期間で上昇）
+        price_trend_condition = False
         if len(price_data) >= 5:
             recent_prices = price_data["Close"].iloc[-5:]
-            price_up_condition = recent_prices.iloc[-1] > recent_prices.iloc[-2]
+            if len(recent_prices) >= 3:
+                price_trend_condition = (
+                    recent_prices.iloc[-1]
+                    > recent_prices.iloc[-2]
+                    > recent_prices.iloc[-3]
+                )
 
-        # RSI 下降のチェック
-        rsi_down_condition = False
+        # RSI ダイバージェンスのチェック（3期間で下降）
+        rsi_divergence_condition = False
         if "series" in rsi_data:
             rsi_series = rsi_data["series"]
             if len(rsi_series) >= 5:
                 recent_rsi = rsi_series.iloc[-5:]
-                rsi_down_condition = recent_rsi.iloc[-1] < recent_rsi.iloc[-2]
+                if len(recent_rsi) >= 3:
+                    rsi_divergence_condition = (
+                        recent_rsi.iloc[-1] < recent_rsi.iloc[-2] < recent_rsi.iloc[-3]
+                    )
 
-        return price_up_condition and rsi_down_condition
+        return price_trend_condition and rsi_divergence_condition
 
     def _check_m5_conditions(self, m5_data: Dict[str, Any]) -> bool:
         """M5時間軸の条件をチェック"""
@@ -192,21 +217,29 @@ class DivergenceDetector:
 
         rsi_data = indicators.get("rsi", {})
 
-        # 価格上昇のチェック
-        price_up_condition = False
+        # 価格上昇トレンドのチェック（3期間で上昇）
+        price_trend_condition = False
         if len(price_data) >= 5:
             recent_prices = price_data["Close"].iloc[-5:]
-            price_up_condition = recent_prices.iloc[-1] > recent_prices.iloc[-2]
+            if len(recent_prices) >= 3:
+                price_trend_condition = (
+                    recent_prices.iloc[-1]
+                    > recent_prices.iloc[-2]
+                    > recent_prices.iloc[-3]
+                )
 
-        # RSI 下降のチェック
-        rsi_down_condition = False
+        # RSI ダイバージェンスのチェック（3期間で下降）
+        rsi_divergence_condition = False
         if "series" in rsi_data:
             rsi_series = rsi_data["series"]
             if len(rsi_series) >= 5:
                 recent_rsi = rsi_series.iloc[-5:]
-                rsi_down_condition = recent_rsi.iloc[-1] < recent_rsi.iloc[-2]
+                if len(recent_rsi) >= 3:
+                    rsi_divergence_condition = (
+                        recent_rsi.iloc[-1] < recent_rsi.iloc[-2] < recent_rsi.iloc[-3]
+                    )
 
-        return price_up_condition and rsi_down_condition
+        return price_trend_condition and rsi_divergence_condition
 
     def detect_divergence_pattern(
         self, multi_timeframe_data: Dict[str, Any]

@@ -45,8 +45,11 @@ class TechnicalIndicatorsCalculator:
     async def initialize(self):
         """初期化"""
         try:
-            # SQLite環境を強制設定
-            os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///data/test_app.db"
+            # 環境変数からDATABASE_URLを取得、なければデフォルト値を使用
+            database_url = os.environ.get(
+                "DATABASE_URL", "sqlite+aiosqlite:///data/exchange_analytics.db"
+            )
+            os.environ["DATABASE_URL"] = database_url
 
             self.session = await get_async_session()
             self.price_repo = PriceDataRepositoryImpl(self.session)

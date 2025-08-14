@@ -18,8 +18,8 @@ class EngulfingPatternDetector:
     def __init__(self):
         self.pattern = NotificationPattern.create_pattern_7()
         self.utils = PatternUtils()
-        self.min_body_ratio = 0.6  # 実体比率の最小値
-        self.min_engulfing_ratio = 1.1  # 包み込み比率の最小値
+        self.min_body_ratio = 0.4  # 実体比率の最小値（0.6から緩和）
+        self.min_engulfing_ratio = 1.05  # 包み込み比率の最小値（1.1から緩和）
 
     def detect(self, multi_timeframe_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
@@ -194,24 +194,26 @@ class EngulfingPatternDetector:
             previous_body_high = max(previous_candle["open"], previous_candle["close"])
             previous_body_low = min(previous_candle["open"], previous_candle["close"])
 
-            # 包み込み条件をチェック
+            # 実体比率をチェック
+            current_body_size = abs(current_candle["close"] - current_candle["open"])
+            previous_body_size = abs(previous_candle["close"] - previous_candle["open"])
+
+            current_body_ratio = current_body_size / (
+                current_candle["high"] - current_candle["low"]
+            )
+            engulfing_ratio = current_body_size / previous_body_size
+
+            # 包み込み条件をチェック（緩和）
+            # 完全包み込みまたは部分的な包み込みを許容
             if (
                 current_body_high >= previous_body_high
                 and current_body_low <= previous_body_low
+            ) or (
+                # 部分的な包み込みも許容（実体の80%以上を包み込む）
+                current_body_high >= previous_body_high * 0.95
+                and current_body_low <= previous_body_low * 1.05
+                and current_body_size >= previous_body_size * 0.8
             ):
-                # 実体比率をチェック
-                current_body_size = abs(
-                    current_candle["close"] - current_candle["open"]
-                )
-                previous_body_size = abs(
-                    previous_candle["close"] - previous_candle["open"]
-                )
-
-                current_body_ratio = current_body_size / (
-                    current_candle["high"] - current_candle["low"]
-                )
-                engulfing_ratio = current_body_size / previous_body_size
-
                 if (
                     current_body_ratio >= self.min_body_ratio
                     and engulfing_ratio >= self.min_engulfing_ratio
@@ -244,24 +246,26 @@ class EngulfingPatternDetector:
             previous_body_high = max(previous_candle["open"], previous_candle["close"])
             previous_body_low = min(previous_candle["open"], previous_candle["close"])
 
-            # 包み込み条件をチェック
+            # 実体比率をチェック
+            current_body_size = abs(current_candle["close"] - current_candle["open"])
+            previous_body_size = abs(previous_candle["close"] - previous_candle["open"])
+
+            current_body_ratio = current_body_size / (
+                current_candle["high"] - current_candle["low"]
+            )
+            engulfing_ratio = current_body_size / previous_body_size
+
+            # 包み込み条件をチェック（緩和）
+            # 完全包み込みまたは部分的な包み込みを許容
             if (
                 current_body_high >= previous_body_high
                 and current_body_low <= previous_body_low
+            ) or (
+                # 部分的な包み込みも許容（実体の80%以上を包み込む）
+                current_body_high >= previous_body_high * 0.95
+                and current_body_low <= previous_body_low * 1.05
+                and current_body_size >= previous_body_size * 0.8
             ):
-                # 実体比率をチェック
-                current_body_size = abs(
-                    current_candle["close"] - current_candle["open"]
-                )
-                previous_body_size = abs(
-                    previous_candle["close"] - previous_candle["open"]
-                )
-
-                current_body_ratio = current_body_size / (
-                    current_candle["high"] - current_candle["low"]
-                )
-                engulfing_ratio = current_body_size / previous_body_size
-
                 if (
                     current_body_ratio >= self.min_body_ratio
                     and engulfing_ratio >= self.min_engulfing_ratio

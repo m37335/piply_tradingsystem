@@ -50,31 +50,31 @@ class UnifiedInitializer:
         self.indicator_repo = None
         self.technical_analyzer = TechnicalIndicatorsAnalyzer()
 
-        # タイムフレーム設定（期間延長版）
+        # タイムフレーム設定（移動平均線200期間に基づく最適化）
         self.timeframes = {
             "M5": {
-                "period": "30d",
+                "period": "7d",
                 "interval": "5m",
                 "description": "5分足",
-                "days": 30,
-            },  # 7d → 30d
+                "days": 7,
+            },  # 7日分（200期間×5分=1000分+安全マージン）
             "H1": {
-                "period": "90d",
+                "period": "30d",
                 "interval": "1h",
                 "description": "1時間足",
-                "days": 90,  # 30d → 90d
+                "days": 30,  # 30日分（200期間×1時間=200時間+安全マージン）
             },
             "H4": {
-                "period": "180d",
+                "period": "60d",
                 "interval": "4h",
                 "description": "4時間足",
-                "days": 180,  # 60d → 180d
+                "days": 60,  # 60日分（200期間×4時間=800時間+安全マージン）
             },
             "D1": {
-                "period": "730d",
+                "period": "365d",
                 "interval": "1d",
                 "description": "日足",
-                "days": 730,  # 365d → 730d（2年分）
+                "days": 365,  # 365日分（200期間×1日=200日+安全マージン）
             },
         }
 
@@ -215,60 +215,52 @@ class UnifiedInitializer:
             return 0
 
     async def calculate_technical_indicators(self):
-        """AI分析レポート方式のテクニカル指標計算"""
+        """TA-Lib統合テクニカル指標計算"""
         try:
-            logger.info("=== AI分析レポート方式でテクニカル指標計算開始 ===")
+            logger.info("=== TA-Lib統合テクニカル指標計算開始 ===")
 
-            total_indicators = 0
+            # TA-Libテクニカル指標計算スクリプトを実行
+            import subprocess
+            import sys
+            from pathlib import Path
 
-            for timeframe, config in self.timeframes.items():
-                logger.info(f"📊 {config['description']}テクニカル指標計算中...")
+            script_path = (
+                Path(__file__).parent / "talib_technical_indicators_calculator.py"
+            )
 
-                # 期間設定
-                end_date = datetime.now()
-                start_date = end_date - timedelta(days=config["days"])
-
-                # 価格データを取得
-                price_data = await self.price_repo.find_by_date_range(
-                    start_date, end_date, self.currency_pair, 10000
+            try:
+                result = subprocess.run(
+                    [sys.executable, str(script_path), "all"],
+                    capture_output=True,
+                    text=True,
+                    cwd="/app",
                 )
 
-                if len(price_data) < 20:  # 最小データ数チェック
-                    logger.warning(f"  ⚠️ {timeframe}データ不足: {len(price_data)}件")
-                    continue
+                if result.returncode == 0:
+                    logger.info("✅ TA-Libテクニカル指標計算完了")
+                    # 計算された指標数を取得
+                    import sqlite3
 
-                # DataFrameに変換
-                df = self._convert_to_dataframe(price_data)
-                if df.empty:
-                    logger.warning(f"  ⚠️ {timeframe}DataFrame変換失敗")
-                    continue
+                    conn = sqlite3.connect("/app/data/exchange_analytics.db")
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT COUNT(*) FROM technical_indicators")
+                    total_indicators = cursor.fetchone()[0]
+                    conn.close()
 
-                logger.info(f"  ✅ {timeframe}データ取得: {len(df)}件")
+                    logger.info(
+                        f"🎉 TA-Lib統合テクニカル指標計算完了: 合計{total_indicators}件"
+                    )
+                    return total_indicators
+                else:
+                    logger.error(f"❌ TA-Libテクニカル指標計算エラー: {result.stderr}")
+                    return 0
 
-                # 各指標を計算
-                timeframe_indicators = 0
-
-                # RSI計算
-                rsi_count = await self._calculate_and_save_rsi(df, timeframe)
-                timeframe_indicators += rsi_count
-
-                # MACD計算（十分なデータがある場合）
-                if len(df) >= 40:
-                    macd_count = await self._calculate_and_save_macd(df, timeframe)
-                    timeframe_indicators += macd_count
-
-                # ボリンジャーバンド計算
-                bb_count = await self._calculate_and_save_bollinger_bands(df, timeframe)
-                timeframe_indicators += bb_count
-
-                total_indicators += timeframe_indicators
-                logger.info(f"  ✅ {timeframe}完了: {timeframe_indicators}件の指標計算")
-
-            logger.info(f"🎉 全テクニカル指標計算完了: 合計{total_indicators}件")
-            return total_indicators
+            except Exception as e:
+                logger.error(f"❌ TA-Libスクリプト実行エラー: {e}")
+                return 0
 
         except Exception as e:
-            logger.error(f"❌ テクニカル指標計算エラー: {e}")
+            logger.error(f"❌ TA-Lib統合テクニカル指標計算エラー: {e}")
             return 0
 
     def _convert_to_dataframe(self, price_data):

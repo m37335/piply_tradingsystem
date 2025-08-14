@@ -18,8 +18,8 @@ class MarubozuDetector:
     def __init__(self):
         self.pattern = NotificationPattern.create_pattern_9()
         self.utils = PatternUtils()
-        self.max_wick_ratio = 0.1  # ヒゲ比率の最大値
-        self.min_body_ratio = 0.8  # 実体比率の最小値
+        self.max_wick_ratio = 0.2  # ヒゲ比率の最大値（0.1から緩和）
+        self.min_body_ratio = 0.6  # 実体比率の最小値（0.8から緩和）
 
     def detect(self, multi_timeframe_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
@@ -180,7 +180,7 @@ class MarubozuDetector:
             大陽線引け坊主が検出された場合はTrue
         """
         # 陽線であることを確認
-        if candle["close"] <= candle["open"]:
+        if candle["Close"] <= candle["Open"]:
             return False
 
         # ヒゲの欠如をチェック
@@ -188,8 +188,8 @@ class MarubozuDetector:
             return False
 
         # 実体比率をチェック
-        body_size = abs(candle["close"] - candle["open"])
-        total_range = candle["high"] - candle["low"]
+        body_size = abs(candle["Close"] - candle["Open"])
+        total_range = candle["High"] - candle["Low"]
 
         if total_range == 0:
             return False
@@ -211,7 +211,7 @@ class MarubozuDetector:
             大陰線引け坊主が検出された場合はTrue
         """
         # 陰線であることを確認
-        if candle["close"] >= candle["open"]:
+        if candle["Close"] >= candle["Open"]:
             return False
 
         # ヒゲの欠如をチェック
@@ -219,8 +219,8 @@ class MarubozuDetector:
             return False
 
         # 実体比率をチェック
-        body_size = abs(candle["close"] - candle["open"])
-        total_range = candle["high"] - candle["low"]
+        body_size = abs(candle["Close"] - candle["Open"])
+        total_range = candle["High"] - candle["Low"]
 
         if total_range == 0:
             return False
@@ -241,10 +241,10 @@ class MarubozuDetector:
         Returns:
             ヒゲが欠如している場合はTrue
         """
-        open_price = candle["open"]
-        close_price = candle["close"]
-        high = candle["high"]
-        low = candle["low"]
+        open_price = candle["Open"]
+        close_price = candle["Close"]
+        high = candle["High"]
+        low = candle["Low"]
 
         # 上ヒゲの計算
         upper_wick = high - max(open_price, close_price)
@@ -262,10 +262,14 @@ class MarubozuDetector:
         upper_wick_ratio = upper_wick / total_range
         lower_wick_ratio = lower_wick / total_range
 
-        # 両方のヒゲが最大比率以下であることを確認
+        # ヒゲの条件を緩和（両方のヒゲが最大比率以下、または片方のヒゲが非常に小さい）
         if (
             upper_wick_ratio <= self.max_wick_ratio
             and lower_wick_ratio <= self.max_wick_ratio
+        ) or (
+            # 片方のヒゲが非常に小さい場合（5%以下）
+            (upper_wick_ratio <= 0.05 and lower_wick_ratio <= self.max_wick_ratio * 1.5)
+            or (lower_wick_ratio <= 0.05 and upper_wick_ratio <= self.max_wick_ratio * 1.5)
         ):
             return True
 

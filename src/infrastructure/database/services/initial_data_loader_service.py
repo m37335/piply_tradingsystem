@@ -18,14 +18,15 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.infrastructure.database.services.efficient_pattern_detection_service import (
-    EfficientPatternDetectionService,
-)
 from src.infrastructure.database.models.price_data_model import PriceDataModel
 from src.infrastructure.database.repositories.price_data_repository_impl import (
     PriceDataRepositoryImpl,
+)
+from src.infrastructure.database.services.efficient_pattern_detection_service import (
+    EfficientPatternDetectionService,
 )
 from src.infrastructure.database.services.multi_timeframe_technical_indicator_service import (
     MultiTimeframeTechnicalIndicatorService,
@@ -53,12 +54,28 @@ class InitialDataLoaderService:
         self.indicator_service = MultiTimeframeTechnicalIndicatorService(session)
         self.pattern_service = EfficientPatternDetectionService(session)
 
-        # 初回取得設定（期間延長）
+        # 初回取得設定（移動平均線200期間に基づく最適化）
         self.initial_load_config = {
-            "5m": {"period": "30d", "interval": "5m", "description": "5分足"},      # 7d → 30d
-            "1h": {"period": "90d", "interval": "1h", "description": "1時間足"},   # 30d → 90d
-            "4h": {"period": "180d", "interval": "4h", "description": "4時間足"},  # 60d → 180d
-            "1d": {"period": "730d", "interval": "1d", "description": "日足"},     # 365d → 730d（2年分）
+            "5m": {
+                "period": "7d",
+                "interval": "5m",
+                "description": "5分足",
+            },  # 7日分（200期間×5分=1000分+安全マージン）
+            "1h": {
+                "period": "30d",
+                "interval": "1h",
+                "description": "1時間足",
+            },  # 30日分（200期間×1時間=200時間+安全マージン）
+            "4h": {
+                "period": "60d",
+                "interval": "4h",
+                "description": "4時間足",
+            },  # 60日分（200期間×4時間=800時間+安全マージン）
+            "1d": {
+                "period": "365d",
+                "interval": "1d",
+                "description": "日足",
+            },  # 365日分（200期間×1日=200日+安全マージン）
         }
 
         self.currency_pair = "USD/JPY"
@@ -133,21 +150,23 @@ class InitialDataLoaderService:
         try:
             config = self.initial_load_config[timeframe]
 
-            # 既存データチェック（期間延長に対応）
+            # 既存データチェック（移動平均線200期間に基づく最適化）
             # 各時間軸の期間に応じてチェック期間を調整
             if timeframe == "5m":
-                check_days = 30  # 30日分
+                check_days = 7  # 7日分
             elif timeframe == "1h":
-                check_days = 90  # 90日分
+                check_days = 30  # 30日分
             elif timeframe == "4h":
-                check_days = 180  # 180日分
+                check_days = 60  # 60日分
             elif timeframe == "1d":
-                check_days = 730  # 730日分（2年分）
+                check_days = 365  # 365日分
             else:
                 check_days = 30
 
             existing_count = await self.price_repo.count_by_date_range(
-                datetime.now() - timedelta(days=check_days), datetime.now(), self.currency_pair
+                datetime.now() - timedelta(days=check_days),
+                datetime.now(),
+                self.currency_pair,
             )
 
             # 期間に応じた閾値設定
@@ -215,10 +234,12 @@ class InitialDataLoaderService:
                 logger.info(f"  📊 {timeframe}時間軸の指標計算中...")
 
                 # 指標を計算
-                indicators = await self.indicator_service.calculate_timeframe_indicators(
-                    timeframe
+                indicators = (
+                    await self.indicator_service.calculate_timeframe_indicators(
+                        timeframe
+                    )
                 )
-                
+
                 # データベースに保存
                 if indicators:
                     saved = await self.indicator_service.save_timeframe_indicators(
@@ -226,7 +247,9 @@ class InitialDataLoaderService:
                     )
                     if saved:
                         indicator_counts[timeframe] = len(indicators)
-                        logger.info(f"  ✅ {timeframe}指標計算完了: {len(indicators)}件")
+                        logger.info(
+                            f"  ✅ {timeframe}指標計算完了: {len(indicators)}件"
+                        )
                     else:
                         logger.warning(f"  ⚠️ {timeframe}指標保存失敗")
                 else:

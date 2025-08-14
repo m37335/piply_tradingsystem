@@ -254,7 +254,15 @@ class MultiTimeframeTechnicalIndicatorService:
                 "MACD", db_timeframe, limit=1
             )
             if latest_macd:
+                # additional_dataがJSON文字列の場合があるため、パースを試行
                 additional_data = latest_macd[0].additional_data or {}
+                if isinstance(additional_data, str):
+                    try:
+                        import json
+                        additional_data = json.loads(additional_data)
+                    except (json.JSONDecodeError, TypeError):
+                        additional_data = {}
+                
                 latest_indicators["macd"] = {
                     "value": float(latest_macd[0].value),
                     "signal": additional_data.get("signal_line", 0.0),
@@ -267,7 +275,15 @@ class MultiTimeframeTechnicalIndicatorService:
                 "BB", db_timeframe, limit=1
             )
             if latest_bb:
+                # additional_dataがJSON文字列の場合があるため、パースを試行
                 additional_data = latest_bb[0].additional_data or {}
+                if isinstance(additional_data, str):
+                    try:
+                        import json
+                        additional_data = json.loads(additional_data)
+                    except (json.JSONDecodeError, TypeError):
+                        additional_data = {}
+                
                 latest_indicators["bb"] = {
                     "value": float(latest_bb[0].value),
                     "upper": additional_data.get("upper_band", 0.0),

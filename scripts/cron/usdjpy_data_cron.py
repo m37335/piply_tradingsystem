@@ -20,7 +20,9 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
+from typing import List
 
+import pandas as pd
 from dotenv import load_dotenv
 
 # .envファイルを読み込み
@@ -151,21 +153,45 @@ class USDJPYDataCron:
                 f"Starting USD/JPY data processing run #{self.stats['total_runs']}"
             )
 
-            # 1. データ取得
-            logger.info("Step 1: Fetching current price data...")
+            # 1. データ取得（実際の5分足データ）
+            logger.info("Step 1: Fetching real 5m price data...")
             data_fetcher = self.services["data_fetcher"]
-            price_data = await data_fetcher.fetch_current_price_data()
+            price_data = await data_fetcher.fetch_real_5m_data()
 
             if not price_data:
-                raise Exception("No price data fetched")
+                raise Exception("No real 5m price data fetched")
 
-            logger.info(f"Fetched price data: {price_data}")
+            logger.info(f"Fetched real 5m price data: {price_data}")
 
-            # 2. テクニカル指標計算（簡易版）
+            # 2. テクニカル指標計算（実際に計算）
             logger.info("Step 2: Calculating technical indicators...")
-            # 現在はデータベースに既に計算済みのテクニカル指標があるため、
-            # パターン検出に必要な最小限の処理のみ実行
-            logger.info("Technical indicators already calculated in database")
+            technical_analyzer = self.services["technical_analyzer"]
+
+            # 最新の価格データを取得して指標計算
+            latest_data = await data_fetcher.get_latest_price_data(limit=100)
+            if latest_data:
+                # DataFrameに変換
+                df = self._convert_to_dataframe(latest_data)
+
+                # RSI計算
+                rsi_result = technical_analyzer.calculate_rsi(df, "5m")
+
+                # MACD計算
+                macd_result = technical_analyzer.calculate_macd(df, "5m")
+
+                # ボリンジャーバンド計算
+                bb_result = technical_analyzer.calculate_bollinger_bands(df, "5m")
+
+                logger.info(
+                    f"Calculated technical indicators: "
+                    f"RSI={rsi_result.get('current_value', 'N/A')}, "
+                    f"MACD={macd_result.get('current_value', 'N/A')}, "
+                    f"BB={bb_result.get('current_value', 'N/A')}"
+                )
+            else:
+                logger.warning(
+                    "No recent data available for technical indicator calculation"
+                )
 
             # 3. パターン検出
             logger.info("Step 3: Detecting patterns...")
@@ -182,9 +208,7 @@ class USDJPYDataCron:
             # 最新のパターンを取得して通知
             latest_patterns = await pattern_service.get_latest_patterns(limit=5)
             if latest_patterns:
-                notification_results = await notification_service.send_notifications(
-                    latest_patterns
-                )
+                await notification_service.send_notifications(latest_patterns)
                 logger.info(f"Sent notifications for {len(latest_patterns)} patterns")
             else:
                 logger.info("No patterns to notify")
@@ -326,6 +350,45 @@ class USDJPYDataCron:
         secs = int(seconds % 60)
 
         return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+
+    def _convert_to_dataframe(self, price_data_list: List) -> pd.DataFrame:
+        """
+        価格データリストをDataFrameに変換
+
+        Args:
+            price_data_list: 価格データリスト
+
+        Returns:
+            pd.DataFrame: 変換されたDataFrame
+        """
+        try:
+            if not price_data_list:
+                return pd.DataFrame()
+
+            # データを辞書のリストに変換
+            data = []
+            for price_data in price_data_list:
+                data.append(
+                    {
+                        "timestamp": price_data.timestamp,
+                        "Open": price_data.open_price,
+                        "High": price_data.high_price,
+                        "Low": price_data.low_price,
+                        "Close": price_data.close_price,
+                        "Volume": price_data.volume,
+                    }
+                )
+
+            # DataFrameを作成
+            df = pd.DataFrame(data)
+            df.set_index("timestamp", inplace=True)
+            df.sort_index(inplace=True)
+
+            return df
+
+        except Exception as e:
+            logger.error(f"Error converting to DataFrame: {e}")
+            return pd.DataFrame()
 
     async def cleanup(self):
         """

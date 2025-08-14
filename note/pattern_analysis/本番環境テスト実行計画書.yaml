@@ -1,0 +1,397 @@
+# 本番環境テスト実行計画書 - パターン検出システム
+# 作成日: 2025年8月12日
+# 作成者: AI Assistant
+# ステータス: 計画中
+
+test_overview:
+  title: "本番環境テスト実行計画書 - パターン検出システム"
+  version: "1.0.0"
+  created_date: "2025-08-12"
+  author: "AI Assistant"
+  status: "planning"
+
+objectives:
+  main_purpose:
+    - "16個のパターン検出器の本番環境での動作確認"
+    - "検出精度と信頼度の実証"
+    - "パターン検出できない場合の基準調整"
+    - "システム全体の安定性確認"
+  
+  importance: "本番環境でのテストは、実装したパターン検出システムの実用性を証明する重要な段階です。検出できない場合は、各検出器の基準や閾値を調整する必要があります。"
+
+test_goals:
+  primary_goals:
+    - name: "検出率の確認"
+      description: "各パターンが適切に検出されるか"
+    - name: "精度の検証"
+      description: "検出されたパターンの信頼度が適切か"
+    - name: "システム安定性"
+      description: "長時間動作での安定性"
+    - name: "パフォーマンス"
+      description: "処理速度とリソース使用量"
+
+  success_metrics:
+    detection_rate: "各パターンで最低1回以上の検出"
+    confidence: "80%以上のパターンで信頼度0.7以上"
+    error_rate: "5%以下"
+    processing_time: "1回の検出処理で30秒以内"
+
+test_environment:
+  data_source:
+    api: "Alpha Vantage API"
+    currency_pair: "USD/JPY"
+    period: "過去3ヶ月分のデータ"
+    timeframes:
+      - "5分足"
+      - "1時間足"
+      - "4時間足"
+      - "日足"
+    data_volume: "各時間足で1000件以上"
+
+  test_targets:
+    - "全16個のパターン検出器"
+    - "分析エンジン全体"
+    - "データベース連携"
+    - "通知システム"
+
+test_phases:
+  phase1:
+    name: "データ準備とシステム確認"
+    duration: "2-3日"
+    tasks:
+      data_fetch_test:
+        command: "python scripts/test/test_data_fetch.py --currency-pair USD/JPY --timeframe 5m --period 3months"
+        description: "実際のAPIからデータを取得"
+        priority: "high"
+      
+      system_initialization_test:
+        command: "python scripts/test/test_system_initialization.py"
+        description: "分析エンジンの初期化確認"
+        priority: "high"
+      
+      database_connection_test:
+        command: "python scripts/test/test_database_connection.py"
+        description: "データベース接続とテーブル確認"
+        priority: "high"
+
+  phase2:
+    name: "個別パターン検出テスト"
+    duration: "5-7日"
+    tasks:
+      basic_patterns_test:
+        command: "python scripts/test/test_basic_patterns.py --patterns 1,2,3,4,5,6"
+        description: "基本パターン（1-6）の検出テスト"
+        patterns: [1, 2, 3, 4, 5, 6]
+        priority: "high"
+      
+      candlestick_patterns_test:
+        command: "python scripts/test/test_candlestick_patterns.py --patterns 7,8,9"
+        description: "ローソク足パターン（7-9）の検出テスト"
+        patterns: [7, 8, 9]
+        priority: "medium"
+      
+      chart_patterns_test:
+        command: "python scripts/test/test_chart_patterns.py --patterns 10,11,12"
+        description: "チャートパターン（10-12）の検出テスト"
+        patterns: [10, 11, 12]
+        priority: "medium"
+      
+      advanced_patterns_test:
+        command: "python scripts/test/test_advanced_patterns.py --patterns 13,14"
+        description: "高度パターン（13-14）の検出テスト"
+        patterns: [13, 14]
+        priority: "medium"
+      
+      line_patterns_test:
+        command: "python scripts/test/test_line_patterns.py --patterns 15,16"
+        description: "ライン分析パターン（15-16）の検出テスト"
+        patterns: [15, 16]
+        priority: "medium"
+
+  phase3:
+    name: "統合テスト"
+    duration: "3-4日"
+    tasks:
+      all_patterns_integration_test:
+        command: "python scripts/test/test_all_patterns_integration.py"
+        description: "全16個のパターンを同時に検出"
+        priority: "high"
+      
+      multi_timeframe_test:
+        command: "python scripts/test/test_multi_timeframe_detection.py"
+        description: "複数時間足での同時検出テスト"
+        priority: "high"
+      
+      continuous_operation_test:
+        command: "python scripts/test/test_continuous_operation.py --duration 24h"
+        description: "24時間連続動作テスト"
+        priority: "medium"
+
+  phase4:
+    name: "通知システムテスト"
+    duration: "2-3日"
+    tasks:
+      discord_notification_test:
+        command: "python scripts/test/test_discord_notification.py"
+        description: "Discord通知の送信テスト"
+        priority: "medium"
+      
+      notification_templates_test:
+        command: "python scripts/test/test_notification_templates.py"
+        description: "各パターンの通知テンプレートテスト"
+        priority: "low"
+
+threshold_adjustment_plan:
+  description: "検出できない場合の対応計画"
+  
+  basic_patterns_1_6:
+    rsi_threshold:
+      current: [30, 70]
+      adjustment_options:
+        - [25, 75]
+        - [35, 65]
+    macd_threshold:
+      description: "シグナル線との乖離率調整"
+    bollinger_bands:
+      current: "2σ"
+      adjustment_options:
+        - "1.5σ"
+        - "2.5σ"
+
+  candlestick_patterns_7_9:
+    engulfing_pattern:
+      description: "前日比の閾値調整"
+    red_three_soldiers:
+      description: "連続上昇の閾値調整"
+    marubozu:
+      description: "実体の比率調整"
+
+  chart_patterns_10_12:
+    double_top_bottom:
+      description: "ピーク間距離の調整"
+    triple_top_bottom:
+      description: "3つのピークの許容誤差"
+    flag_pattern:
+      description: "旗の長さと角度の調整"
+
+  advanced_patterns_13_14:
+    three_buddhas:
+      description: "中央ピークの突出率調整"
+    wedge_pattern:
+      description: "収束角度の調整"
+
+  line_patterns_15_16:
+    support_resistance:
+      description: "タッチポイント数の調整"
+    roll_reversal:
+      description: "リバーサル閾値の調整"
+
+  adjustment_procedure:
+    steps:
+      - "検出結果分析: どのパターンが検出されていないか確認"
+      - "基準値確認: 現在の基準値と実際の市場データを比較"
+      - "段階的調整: 10%ずつ基準値を調整"
+      - "再テスト: 調整後の検出結果を確認"
+      - "最適化: 検出率と精度のバランスを調整"
+
+result_analysis:
+  record_items:
+    - "パターン番号: 1-16"
+    - "検出回数: テスト期間中の検出回数"
+    - "平均信頼度: 検出されたパターンの平均信頼度"
+    - "最高信頼度: 最高信頼度の値"
+    - "最低信頼度: 最低信頼度の値"
+    - "エラー回数: エラーが発生した回数"
+    - "処理時間: 平均処理時間"
+
+  evaluation_criteria:
+    excellent:
+      detection_rate: "80%以上"
+      confidence: "0.8以上"
+    good:
+      detection_rate: "60-79%"
+      confidence: "0.7-0.79"
+    needs_improvement:
+      detection_rate: "40-59%"
+      confidence: "0.6-0.69"
+    needs_adjustment:
+      detection_rate: "40%未満"
+      confidence: "0.6未満"
+
+improvement_plan:
+  short_term:
+    duration: "1週間以内"
+    tasks:
+      - "検出されないパターンの基準調整"
+      - "エラーが発生するパターンの修正"
+      - "処理時間の最適化"
+  
+  medium_term:
+    duration: "1ヶ月以内"
+    tasks:
+      - "機械学習による精度向上"
+      - "新しいパターンの追加検討"
+      - "ユーザーインターフェースの開発"
+  
+  long_term:
+    duration: "3ヶ月以内"
+    tasks:
+      - "他通貨ペアへの拡張"
+      - "モバイルアプリの開発"
+      - "機関投資家向け機能の開発"
+
+execution_schedule:
+  week1:
+    name: "準備と基本テスト"
+    days:
+      day1_2: "データ準備とシステム確認"
+      day3_4: "基本パターン（1-6）テスト"
+      day5: "結果分析と基準調整"
+  
+  week2:
+    name: "高度パターンテスト"
+    days:
+      day1_2: "ローソク足・チャートパターン（7-12）テスト"
+      day3_4: "高度・ライン分析パターン（13-16）テスト"
+      day5: "統合テストと結果分析"
+  
+  week3:
+    name: "統合と最適化"
+    days:
+      day1_2: "全パターン統合テスト"
+      day3_4: "通知システムテスト"
+      day5: "最終調整とドキュメント作成"
+
+test_scripts:
+  required_scripts:
+    - file: "scripts/test/test_data_fetch.py"
+      description: "データ取得テスト"
+      priority: "high"
+    - file: "scripts/test/test_system_initialization.py"
+      description: "システム初期化テスト"
+      priority: "high"
+    - file: "scripts/test/test_database_connection.py"
+      description: "データベース接続テスト"
+      priority: "high"
+    - file: "scripts/test/test_basic_patterns.py"
+      description: "基本パターンテスト"
+      priority: "high"
+    - file: "scripts/test/test_candlestick_patterns.py"
+      description: "ローソク足パターンテスト"
+      priority: "medium"
+    - file: "scripts/test/test_chart_patterns.py"
+      description: "チャートパターンテスト"
+      priority: "medium"
+    - file: "scripts/test/test_advanced_patterns.py"
+      description: "高度パターンテスト"
+      priority: "medium"
+    - file: "scripts/test/test_line_patterns.py"
+      description: "ライン分析パターンテスト"
+      priority: "medium"
+    - file: "scripts/test/test_all_patterns_integration.py"
+      description: "全パターン統合テスト"
+      priority: "high"
+    - file: "scripts/test/test_multi_timeframe_detection.py"
+      description: "マルチタイムフレームテスト"
+      priority: "high"
+    - file: "scripts/test/test_continuous_operation.py"
+      description: "長時間動作テスト"
+      priority: "low"
+    - file: "scripts/test/test_discord_notification.py"
+      description: "Discord通知テスト"
+      priority: "low"
+    - file: "scripts/test/test_notification_templates.py"
+      description: "通知テンプレートテスト"
+      priority: "low"
+
+success_definition:
+  technical_success:
+    - "全16個のパターンが正常に動作"
+    - "エラー率5%以下"
+    - "処理時間30秒以内"
+    - "メモリ使用量適正範囲内"
+  
+  business_success:
+    - "検出率60%以上"
+    - "平均信頼度0.7以上"
+    - "24時間連続動作可能"
+    - "通知システム正常動作"
+  
+  quality_success:
+    - "コードカバレッジ90%以上"
+    - "ドキュメント完成度100%"
+    - "ユーザーフィードバック良好"
+    - "運用準備完了"
+
+emergency_response:
+  error_occurrence:
+    steps:
+      - "即座のログ確認: エラーの詳細を記録"
+      - "影響範囲の特定: どのパターンに影響があるか確認"
+      - "一時的な無効化: 問題のあるパターンを一時無効化"
+      - "修正と再テスト: 修正後、該当パターンのみ再テスト"
+  
+  low_detection_rate:
+    steps:
+      - "基準値の段階的調整: 10%ずつ調整"
+      - "市場データの再分析: 現在の市場状況に合わせた調整"
+      - "アルゴリズムの見直し: 必要に応じてアルゴリズムを改善"
+
+patterns_list:
+  all_patterns:
+    - number: 1
+      name: "トレンド転換検出"
+      type: "basic"
+    - number: 2
+      name: "プルバック検出"
+      type: "basic"
+    - number: 3
+      name: "ダイバージェンス検出"
+      type: "basic"
+    - number: 4
+      name: "ブレイクアウト検出"
+      type: "basic"
+    - number: 5
+      name: "RSI戦い検出"
+      type: "basic"
+    - number: 6
+      name: "複合シグナル検出"
+      type: "basic"
+    - number: 7
+      name: "つつみ足検出"
+      type: "candlestick"
+    - number: 8
+      name: "赤三兵検出"
+      type: "candlestick"
+    - number: 9
+      name: "大陽線/大陰線引け坊主"
+      type: "candlestick"
+    - number: 10
+      name: "ダブルトップ/ボトム"
+      type: "chart"
+    - number: 11
+      name: "トリプルトップ/ボトム"
+      type: "chart"
+    - number: 12
+      name: "フラッグパターン"
+      type: "chart"
+    - number: 13
+      name: "三尊天井/逆三尊"
+      type: "advanced"
+    - number: 14
+      name: "ウェッジパターン"
+      type: "advanced"
+    - number: 15
+      name: "レジスタンス/サポートライン"
+      type: "line_analysis"
+    - number: 16
+      name: "ロールリバーサル"
+      type: "line_analysis"
+
+conclusion:
+  summary: "この計画書に基づいて、段階的に本番環境テストを実行し、必要に応じて基準調整を行います。"
+  next_steps:
+    - "Phase 1のテストスクリプト作成"
+    - "データ取得テストの実行"
+    - "システム初期化確認"
+    - "個別パターンテストの開始"

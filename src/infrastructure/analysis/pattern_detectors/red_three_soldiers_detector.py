@@ -18,8 +18,8 @@ class RedThreeSoldiersDetector:
     def __init__(self):
         self.pattern = NotificationPattern.create_pattern_8()
         self.utils = PatternUtils()
-        self.min_body_ratio = 0.5  # 実体比率の最小値
-        self.min_close_increase = 0.001  # 終値上昇の最小値
+        self.min_body_ratio = 0.3  # 実体比率の最小値（0.5から緩和）
+        self.min_close_increase = 0.0005  # 終値上昇の最小値（0.001から緩和）
 
     def detect(self, multi_timeframe_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
@@ -184,13 +184,13 @@ class RedThreeSoldiersDetector:
             3本連続陽線の場合はTrue
         """
         for _, candle in candles.iterrows():
-            if candle["close"] <= candle["open"]:
+            if candle["Close"] <= candle["Open"]:
                 return False
         return True
 
     def _check_higher_closes(self, candles: pd.DataFrame) -> bool:
         """
-        終値の高値更新をチェック
+        終値の高値更新をチェック（緩和）
 
         Args:
             candles: 3本のローソク足データ
@@ -198,10 +198,12 @@ class RedThreeSoldiersDetector:
         Returns:
             終値が高値更新されている場合はTrue
         """
-        closes = candles["close"].values
+        closes = candles["Close"].values
 
         for i in range(1, len(closes)):
-            if closes[i] <= closes[i - 1]:
+            # 終値上昇の条件を緩和（前日比0.05%以上または単純上昇）
+            price_change = (closes[i] - closes[i - 1]) / closes[i - 1]
+            if closes[i] <= closes[i - 1] and price_change < self.min_close_increase:
                 return False
 
         return True
@@ -219,8 +221,8 @@ class RedThreeSoldiersDetector:
         body_sizes = []
 
         for _, candle in candles.iterrows():
-            body_size = abs(candle["close"] - candle["open"])
-            total_range = candle["high"] - candle["low"]
+            body_size = abs(candle["Close"] - candle["Open"])
+            total_range = candle["High"] - candle["Low"]
 
             if total_range == 0:
                 return False
@@ -231,8 +233,8 @@ class RedThreeSoldiersDetector:
             if body_ratio < self.min_body_ratio:
                 return False
 
-        # 実体サイズの一貫性をチェック（最大値と最小値の差が50%以内）
-        if max(body_sizes) - min(body_sizes) > 0.5:
+        # 実体サイズの一貫性をチェック（最大値と最小値の差が70%以内に緩和）
+        if max(body_sizes) - min(body_sizes) > 0.7:
             return False
 
         return True

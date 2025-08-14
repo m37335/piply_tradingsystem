@@ -58,15 +58,13 @@ class PriceDataRepositoryImpl(BaseRepositoryImpl, PriceDataRepository):
             if not price_data.validate():
                 raise ValueError("Invalid price data")
 
-            # 重複チェック
-            existing = await self.find_by_timestamp(
-                price_data.timestamp, price_data.currency_pair
+            # 重複チェック（タイムスタンプ、通貨ペア、データソースで判定）
+            existing = await self.find_by_timestamp_and_source(
+                price_data.timestamp, price_data.currency_pair, price_data.data_source
             )
             if existing:
-                logger.warning(
-                    f"Price data already exists for {price_data.currency_pair} "
-                    f"at {price_data.timestamp}"
-                )
+                # 重複の場合は静かに既存データを返す
+                # WARNINGログは出さない
                 return existing
 
             # 保存
@@ -80,7 +78,42 @@ class PriceDataRepositoryImpl(BaseRepositoryImpl, PriceDataRepository):
             return price_data
 
         except Exception as e:
-            logger.error(f"Error saving price data: {e}")
+            # エラーメッセージを簡潔に表示
+            error_msg = str(e)
+            if "Background on this error" in error_msg:
+                # SQLAlchemyの詳細エラー情報を除去
+                error_msg = error_msg.split("(Background on this error")[0].strip()
+            logger.error(f"Error saving price data: {error_msg}")
+            raise
+
+    async def delete(self, id: int) -> bool:
+        """
+        価格データを削除
+
+        Args:
+            id: 削除する価格データのID
+
+        Returns:
+            bool: 削除成功フラグ
+        """
+        try:
+            # データを取得
+            query = select(PriceDataModel).where(PriceDataModel.id == id)
+            result = await self.session.execute(query)
+            price_data = result.scalar_one_or_none()
+
+            if not price_data:
+                logger.warning(f"Price data with id {id} not found")
+                return False
+
+            # 削除
+            await self.session.delete(price_data)
+            await self.session.commit()
+            logger.info(f"Deleted price data with id {id}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error deleting price data: {e}")
             raise
 
     async def save_batch(
@@ -169,6 +202,35 @@ class PriceDataRepositoryImpl(BaseRepositoryImpl, PriceDataRepository):
             logger.error(f"Error finding price data by timestamp: {e}")
             raise
 
+    async def find_by_timestamp_and_source(
+        self, timestamp: datetime, currency_pair: str, data_source: str
+    ) -> Optional[PriceDataModel]:
+        """
+        タイムスタンプとデータソースで価格データを取得
+
+        Args:
+            timestamp: タイムスタンプ
+            currency_pair: 通貨ペア
+            data_source: データソース
+
+        Returns:
+            Optional[PriceDataModel]: 価格データ（存在しない場合はNone）
+        """
+        try:
+            query = select(PriceDataModel).where(
+                and_(
+                    PriceDataModel.timestamp == timestamp,
+                    PriceDataModel.currency_pair == currency_pair,
+                    PriceDataModel.data_source == data_source,
+                )
+            )
+            result = await self.session.execute(query)
+            return result.scalar_one_or_none()
+
+        except Exception as e:
+            logger.error(f"Error finding price data by timestamp and source: {e}")
+            raise
+
     async def find_latest(
         self, currency_pair: str = "USD/JPY", limit: int = 1
     ) -> List[PriceDataModel]:
@@ -217,8 +279,10 @@ class PriceDataRepositoryImpl(BaseRepositoryImpl, PriceDataRepository):
         """
         try:
             # デバッグ用ログ
-            logger.info(f"Finding price data: {start_date} to {end_date} for {currency_pair}")
-            
+            logger.info(
+                f"Finding price data: {start_date} to {end_date} for {currency_pair}"
+            )
+
             query = (
                 select(PriceDataModel)
                 .where(
@@ -236,12 +300,14 @@ class PriceDataRepositoryImpl(BaseRepositoryImpl, PriceDataRepository):
 
             result = await self.session.execute(query)
             price_data_list = result.scalars().all()
-            
+
             # デバッグ用ログ
             logger.info(f"Found {len(price_data_list)} price data records")
             if price_data_list:
-                logger.info(f"Range: {price_data_list[0].timestamp} to {price_data_list[-1].timestamp}")
-            
+                logger.info(
+                    f"Range: {price_data_list[0].timestamp} to {price_data_list[-1].timestamp}"
+                )
+
             return list(price_data_list)
 
         except Exception as e:

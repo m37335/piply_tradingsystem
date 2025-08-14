@@ -24,14 +24,14 @@ from src.infrastructure.database.models.price_data_model import PriceDataModel
 from src.infrastructure.database.services.efficient_pattern_detection_service import (
     EfficientPatternDetectionService,
 )
-from src.infrastructure.database.services.multi_timeframe_technical_indicator_service import (
-    MultiTimeframeTechnicalIndicatorService,
+from src.infrastructure.database.services.notification_integration_service import (
+    NotificationIntegrationService,
+)
+from src.infrastructure.database.services.talib_technical_indicator_service import (
+    TALibTechnicalIndicatorService,
 )
 from src.infrastructure.database.services.timeframe_aggregator_service import (
     TimeframeAggregatorService,
-)
-from src.infrastructure.database.services.notification_integration_service import (
-    NotificationIntegrationService,
 )
 
 logger = logging.getLogger(__name__)
@@ -52,16 +52,19 @@ class ContinuousProcessingService:
         # 依存サービス初期化
         self.session = session
         self.timeframe_aggregator = TimeframeAggregatorService(session)
-        self.technical_indicator_service = MultiTimeframeTechnicalIndicatorService(
-            session
-        )
+        self.technical_indicator_service = TALibTechnicalIndicatorService(session)
         self.pattern_detection_service = EfficientPatternDetectionService(session)
         # 通知サービス初期化
         self.notification_service = NotificationIntegrationService(session)
 
         # 設定
         self.currency_pair = "USD/JPY"
-        self.timeframes = ["5m", "1h", "4h"]
+        self.timeframes = [
+            "M5",
+            "H1", 
+            "H4",
+            "D1",
+        ]  # TALibTechnicalIndicatorServiceの形式に合わせる
         self.retry_attempts = 3
         self.retry_delay = 30  # 秒
 
@@ -99,9 +102,9 @@ class ContinuousProcessingService:
                 "status": "success",
             }
 
-            # 1. 5分足データを保存
-            logger.info("💾 5分足データ保存中...")
-            saved_data = await self._save_5m_data(price_data)
+            # 1. 5分足データは既にDataFetcherServiceで保存済み
+            logger.info("💾 5分足データは既に保存済み（DataFetcherService経由）")
+            saved_data = price_data  # 既に保存されたデータを使用
             results["saved_5m_data"] = saved_data
 
             # 2. 時間軸集計を実行
@@ -167,8 +170,12 @@ class ContinuousProcessingService:
             h4_data = await self.timeframe_aggregator.aggregate_4h_data()
             results["4h"] = len(h4_data)
 
+            # 日足集計
+            d1_data = await self.timeframe_aggregator.aggregate_1d_data()
+            results["1d"] = len(d1_data)
+
             logger.info(
-                f"✅ 時間軸集計完了: 1h={results['1h']}件, 4h={results['4h']}件"
+                f"✅ 時間軸集計完了: 1h={results['1h']}件, 4h={results['4h']}件, 1d={results['1d']}件"
             )
             return results
 
@@ -188,12 +195,16 @@ class ContinuousProcessingService:
 
             results = {}
 
-            # 各時間軸のテクニカル指標を計算
+            # 各時間軸のテクニカル指標を計算（TA-Lib使用）
             for timeframe in self.timeframes:
-                indicator_count = await self.technical_indicator_service.calculate_indicators_for_timeframe(
+                indicator_count = await self.technical_indicator_service.calculate_and_save_all_indicators(
                     timeframe
                 )
-                results[timeframe] = indicator_count
+                results[timeframe] = (
+                    sum(indicator_count.values())
+                    if isinstance(indicator_count, dict)
+                    else indicator_count
+                )
 
             logger.info(f"✅ テクニカル指標計算完了: {results}")
             return results
@@ -283,6 +294,14 @@ class ContinuousProcessingService:
             PriceDataModel: 保存されたデータ
         """
         try:
+            # デバッグログ: 保存前のデータ内容
+            logger.info(
+                f"💾 保存前のデータ内容: "
+                f"O={price_data.open_price}, H={price_data.high_price}, "
+                f"L={price_data.low_price}, C={price_data.close_price}, "
+                f"V={price_data.volume}, T={price_data.timestamp}"
+            )
+
             # 重複チェック
             existing = await self.timeframe_aggregator.price_repo.find_by_timestamp(
                 price_data.timestamp, self.currency_pair
@@ -290,11 +309,38 @@ class ContinuousProcessingService:
 
             if existing:
                 logger.info(f"⚠️ 5分足データ重複: {price_data.timestamp}")
+                logger.info(
+                    f"⚠️ 既存データ内容: "
+                    f"O={existing.open_price}, H={existing.high_price}, "
+                    f"L={existing.low_price}, C={existing.close_price}, "
+                    f"V={existing.volume}"
+                )
+
+                # 既存データの内容をログ出力（削除はしない）
+                if (
+                    existing.open_price
+                    == existing.high_price
+                    == existing.low_price
+                    == existing.close_price
+                ):
+                    logger.warning(
+                        f"⚠️ 既存データが同じOHLC値: {existing.open_price:.4f}"
+                    )
+                else:
+                    logger.info(f"✅ 既存データは正常なOHLC値")
+
+                logger.info(f"✅ 既存データを返します")
                 return existing
 
             # データを保存
             saved_data = await self.timeframe_aggregator.price_repo.save(price_data)
             logger.info(f"💾 5分足データ保存完了: {price_data.timestamp}")
+            logger.info(
+                f"💾 保存後のデータ内容: "
+                f"O={saved_data.open_price}, H={saved_data.high_price}, "
+                f"L={saved_data.low_price}, C={saved_data.close_price}, "
+                f"V={saved_data.volume}"
+            )
             return saved_data
 
         except Exception as e:
@@ -359,19 +405,19 @@ class ContinuousProcessingService:
         try:
             logger.info("🔄 最新データの継続処理開始")
 
-            # 最新の5分足データを取得
-            from src.infrastructure.database.services.multi_timeframe_data_fetcher_service import (
-                MultiTimeframeDataFetcherService,
+            # 実際の5分足データを取得
+            from src.infrastructure.database.services.data_fetcher_service import (
+                DataFetcherService,
             )
 
-            data_fetcher = MultiTimeframeDataFetcherService(self.session)
-            latest_data = await data_fetcher.fetch_timeframe_data("5m")
+            data_fetcher = DataFetcherService(self.session)
+            latest_data = await data_fetcher.fetch_real_5m_data()
 
             if not latest_data:
-                logger.warning("⚠️ 最新の5分足データが見つかりません")
+                logger.warning("⚠️ 実際の5分足データの取得に失敗しました")
                 return {
                     "status": "no_data",
-                    "message": "最新の5分足データが見つかりません",
+                    "message": "実際の5分足データの取得に失敗しました",
                     "processing_time": 0,
                 }
 

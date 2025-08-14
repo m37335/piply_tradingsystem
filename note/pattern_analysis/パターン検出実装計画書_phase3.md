@@ -36,31 +36,31 @@ class ThreeBuddhasDetector:
         self.peak_tolerance = 0.012  # ピークの許容誤差（1.2%）
         self.middle_peak_ratio = 0.02  # 中央ピークの高さ比率（2%）
         self.neckline_tolerance = 0.006  # ネックラインの許容誤差（0.6%）
-    
+
     def detect(self, price_data: pd.DataFrame) -> Optional[Dict[str, Any]]:
         """三尊天井/逆三尊パターン検出"""
         pass
-    
+
     def _detect_three_buddhas_top(self, price_data: pd.DataFrame) -> bool:
         """三尊天井検出"""
         pass
-    
+
     def _detect_inverse_three_buddhas(self, price_data: pd.DataFrame) -> bool:
         """逆三尊検出"""
         pass
-    
+
     def _find_three_peaks_with_middle_higher(self, price_data: pd.DataFrame) -> List[int]:
         """中央が高い3つのピーク検出"""
         pass
-    
+
     def _find_three_peaks_with_middle_lower(self, price_data: pd.DataFrame) -> List[int]:
         """中央が低い3つのピーク検出"""
         pass
-    
+
     def _validate_three_buddhas_pattern(self, price_data: pd.DataFrame, peaks: List[int]) -> bool:
         """三尊パターン検証"""
         pass
-    
+
     def _calculate_three_buddhas_confidence(self, pattern_data: Dict) -> float:
         """三尊パターン信頼度計算"""
         pass
@@ -102,31 +102,31 @@ class WedgePatternDetector:
         self.max_wedge_length = 50  # ウェッジの最大長さ
         self.angle_tolerance = 15  # 角度の許容誤差（度）
         self.convergence_threshold = 0.8  # 収束判定閾値
-    
+
     def detect(self, price_data: pd.DataFrame) -> Optional[Dict[str, Any]]:
         """ウェッジパターン検出"""
         pass
-    
+
     def _detect_rising_wedge(self, price_data: pd.DataFrame) -> bool:
         """上昇ウェッジ検出"""
         pass
-    
+
     def _detect_falling_wedge(self, price_data: pd.DataFrame) -> bool:
         """下降ウェッジ検出"""
         pass
-    
+
     def _identify_wedge_lines(self, price_data: pd.DataFrame) -> Dict[str, Any]:
         """ウェッジライン識別"""
         pass
-    
+
     def _calculate_wedge_angle(self, line1: List[float], line2: List[float]) -> float:
         """ウェッジ角度計算"""
         pass
-    
+
     def _validate_wedge_breakout(self, price_data: pd.DataFrame, wedge_data: Dict) -> bool:
         """ウェッジブレイクアウト検証"""
         pass
-    
+
     def _calculate_wedge_confidence(self, pattern_data: Dict) -> float:
         """ウェッジパターン信頼度計算"""
         pass
@@ -215,16 +215,16 @@ def __init__(self):
     # 既存の検出器
     self.detectors = {
         # ... 既存の検出器 ...
-        
+
         # Phase 3 新規検出器
         "ThreeBuddhasDetector": ThreeBuddhasDetector(),
         "WedgePatternDetector": WedgePatternDetector(),
     }
-    
+
     # パターン定義
     self.patterns = {
         # ... 既存のパターン ...
-        
+
         # Phase 3 新規パターン
         13: NotificationPattern.create_pattern_13(),
         14: NotificationPattern.create_pattern_14(),
@@ -248,12 +248,12 @@ from .wedge_pattern_detector import WedgePatternDetector
 __all__ = [
     # 既存の検出器
     "EngulfingPatternDetector",
-    "RedThreeSoldiersDetector", 
+    "RedThreeSoldiersDetector",
     "MarubozuDetector",
     "DoubleTopBottomDetector",
     "TripleTopBottomDetector",
     "FlagPatternDetector",
-    
+
     # Phase 3 新規検出器
     "ThreeBuddhasDetector",
     "WedgePatternDetector",
@@ -391,6 +391,6 @@ def run_phase3():
 
 ---
 
-**作成日**: 2025年8月11日  
-**作成者**: AI Assistant  
+**作成日**: 2025年8月11日
+**作成者**: AI Assistant
 **ステータス**: 📋 **計画中**

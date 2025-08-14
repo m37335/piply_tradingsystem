@@ -58,7 +58,7 @@ class TestFlagPatternDetector:
     def test_detect_bull_flag_success(self):
         """ブルフラッグ検出成功テスト"""
         price_data = self._create_bull_flag_test_data()
-        
+
         result = self.detector._detect_bull_flag(price_data)
         assert result
 

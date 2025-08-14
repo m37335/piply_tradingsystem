@@ -7,6 +7,5 @@ CLIパッケージ
 - エントリーポイントの提供
 """
 
-from .main import cli_main
-
-__all__ = ["cli_main"]
+# 循環インポートを避けるため、インポートを削除
+__all__ = []
