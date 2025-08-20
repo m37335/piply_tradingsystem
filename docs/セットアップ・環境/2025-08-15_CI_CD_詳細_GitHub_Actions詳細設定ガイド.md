@@ -1,3 +1,5 @@
+**旧ファイル名**: `GITHUB_ACTIONS_DETAILED_SETUP.md`  
+
 # 🔧 GitHub Actions 詳細設定ガイド
 
 ## 📋 設定手順詳細

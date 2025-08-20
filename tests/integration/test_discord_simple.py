@@ -1,64 +1,88 @@
 #!/usr/bin/env python3
 """
-Discord Webhook Sender 直接テスト
+Discord通知の簡単なテスト
 """
 
 import asyncio
 import os
+from dotenv import load_dotenv
 
-from src.infrastructure.discord_webhook_sender import DiscordWebhookSender
+load_dotenv()
 
-
-async def test_discord():
-    """Discord Webhook Sender を直接テスト"""
-
-    # .envファイルからWebhook URLを取得
-    webhook_url = "https://canary.discord.com/api/webhooks/1403643478361116672/nf6aIMHvPjNVX4x10i_ARpbTa9V5_XAtGUenrbkauV1ibdDZbT9l5U7EoTreZ5LiwwKZ"
-
-    print(f"Testing Discord Webhook: {webhook_url}")
-
-    # DiscordWebhookSenderを初期化
-    sender = DiscordWebhookSender(webhook_url)
-
+async def test_discord_simple():
+    """Discord通知の簡単なテスト"""
+    print("🔍 Discord通知の簡単なテスト")
+    print("=" * 50)
+    
+    webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
+    print(f"Webhook URL: {webhook_url[:50]}..." if webhook_url else "Webhook URL: 未設定")
+    
+    if not webhook_url:
+        print("❌ DISCORD_WEBHOOK_URLが設定されていません")
+        return
+    
     try:
-        # コンテキストマネージャーを使用
-        async with sender:
-            print("✅ Session created successfully")
+        # DiscordNotificationServiceをインポート
+        from src.domain.services.notification.discord_notification_service import DiscordNotificationService
+        
+        print("📤 Discordにテストメッセージを送信中...")
+        
+        async with DiscordNotificationService(webhook_url) as notification_service:
+            # 簡単なテストメッセージ
+            test_message = """
+🧪 **Discord通知テスト**
 
-            # シンプルメッセージを送信
-            print("📝 Sending simple message...")
-            success = await sender.send_simple_message("🧪 直接テスト - シンプルメッセージ")
+✅ このメッセージが表示されれば、Discord通知は正常に動作しています！
 
-            if success:
-                print("✅ Simple message sent successfully")
-            else:
-                print("❌ Simple message failed")
+📊 **テスト内容**
+- アラートシステムのDiscord通知機能
+- 最適化された戦略の配信
+- プロトレーダー向けアラート
 
-            # Embedメッセージを送信
-            print("📝 Sending embed message...")
-            test_embed = {
-                "title": "🧪 直接テスト",
-                "description": "DiscordWebhookSenderの直接テストです",
-                "color": 0x00FF00,
-                "fields": [
-                    {
-                        "name": "テスト結果",
-                        "value": "✅ 正常に動作しています",
-                        "inline": True,
-                    }
-                ],
-            }
+🚀 システムは正常に稼働中です！
+            """
+            
+            await notification_service._send_message(test_message)
+            print("✅ Discord通知テスト成功！")
+            
+            # 買いシグナルのテスト
+            buy_message = """
+🚨 **最適化アラートシステム**
 
-            success = await sender.send_embed(test_embed)
+🟢 **買いエントリー**
+📈 **上昇トレンドシグナル検出**
 
-            if success:
-                print("✅ Embed message sent successfully")
-            else:
-                print("❌ Embed message failed")
+📊 **シグナル詳細**
+- 時刻: 2025-01-14 00:00:00
+- エントリー方向: 🟢 買いエントリー
+- RSI: 37.3
+- 現在価格: 146.959
 
+🎯 **エントリー戦略**
+- エントリー価格: 147.289
+- 利確目標: 147.289
+- 損切り: 147.289
+
+💰 **期待値**
+- 期待利益: 66.1pips
+- 期待リスク: 106.2pips
+- リスク/リワード比: 0.62
+
+📈 **戦略**
+- 戦略名: EMA_12_Optimized
+- 信頼度: HIGH
+
+---
+*最適化された移動平均線戦略による自動アラート*
+            """
+            
+            await notification_service._send_message(buy_message)
+            print("✅ 買いシグナルテスト成功！")
+            
     except Exception as e:
-        print(f"❌ Error: {e}")
-
+        print(f"❌ Discord通知エラー: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
-    asyncio.run(test_discord())
+    asyncio.run(test_discord_simple())

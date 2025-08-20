@@ -5,13 +5,14 @@ Support Resistance Detector Test
 """
 
 import unittest
-import pandas as pd
-import numpy as np
 
-from src.infrastructure.analysis.pattern_detectors.support_resistance_detector import (
-    SupportResistanceDetector
-)
+import numpy as np
+import pandas as pd
+
 from src.domain.value_objects.pattern_priority import PatternPriority
+from src.infrastructure.analysis.pattern_detectors.support_resistance_detector import (
+    SupportResistanceDetector,
+)
 
 
 class TestSupportResistanceDetector(unittest.TestCase):
@@ -25,9 +26,9 @@ class TestSupportResistanceDetector(unittest.TestCase):
     def _create_sample_data(self) -> pd.DataFrame:
         """サンプルデータ作成"""
         # レジスタンスラインのサンプルデータ
-        dates = pd.date_range(start='2024-01-01', periods=50, freq='H')
+        dates = pd.date_range(start="2024-01-01", periods=50, freq="H")
         data = []
-        
+
         for i in range(50):
             # レジスタンスライン: 150.0付近で価格が止まる
             if i in [10, 25, 40]:  # タッチポイント
@@ -36,17 +37,19 @@ class TestSupportResistanceDetector(unittest.TestCase):
             else:
                 high = 149.5 + np.random.normal(0, 0.1)
                 low = 149.0 + np.random.normal(0, 0.1)
-            
+
             close = (high + low) / 2 + np.random.normal(0, 0.05)
-            data.append({
-                'timestamp': dates[i],
-                'open': close + np.random.normal(0, 0.05),
-                'high': high,
-                'low': low,
-                'close': close,
-                'volume': 1000 + np.random.randint(0, 1000)
-            })
-        
+            data.append(
+                {
+                    "timestamp": dates[i],
+                    "open": close + np.random.normal(0, 0.05),
+                    "high": high,
+                    "low": low,
+                    "close": close,
+                    "volume": 1000 + np.random.randint(0, 1000),
+                }
+            )
+
         return pd.DataFrame(data)
 
     def test_detector_initialization(self):
@@ -62,7 +65,7 @@ class TestSupportResistanceDetector(unittest.TestCase):
 
     def test_detect_with_insufficient_data(self):
         """不十分なデータでの検出テスト"""
-        short_data = pd.DataFrame({'high': [150.0], 'low': [149.5], 'close': [149.8]})
+        short_data = pd.DataFrame({"high": [150.0], "low": [149.5], "close": [149.8]})
         result = self.detector.detect(short_data)
         self.assertIsNone(result)
 
@@ -84,23 +87,19 @@ class TestSupportResistanceDetector(unittest.TestCase):
         line_data = self.detector._calculate_line_equation(
             touch_points, self.sample_data, "high"
         )
-        
+
         if line_data is not None:
-            self.assertIn('slope', line_data)
-            self.assertIn('intercept', line_data)
-            self.assertIn('touch_points', line_data)
-            self.assertIn('prices', line_data)
-            self.assertIsInstance(line_data['slope'], float)
-            self.assertIsInstance(line_data['intercept'], float)
+            self.assertIn("slope", line_data)
+            self.assertIn("intercept", line_data)
+            self.assertIn("touch_points", line_data)
+            self.assertIn("prices", line_data)
+            self.assertIsInstance(line_data["slope"], float)
+            self.assertIsInstance(line_data["intercept"], float)
 
     def test_validate_line_strength(self):
         """ライン強度検証テスト"""
         touch_points = [10, 25, 40]
-        line_data = {
-            "slope": 0.0,
-            "intercept": 150.0,
-            "prices": [150.0, 150.1, 149.9]
-        }
+        line_data = {"slope": 0.0, "intercept": 150.0, "prices": [150.0, 150.1, 149.9]}
         strength = self.detector._validate_line_strength(touch_points, line_data)
         self.assertIsInstance(strength, float)
         self.assertGreaterEqual(strength, 0.0)
@@ -108,10 +107,7 @@ class TestSupportResistanceDetector(unittest.TestCase):
 
     def test_detect_breakout(self):
         """ブレイクアウト検出テスト"""
-        line_data = {
-            "slope": 0.0,
-            "intercept": 150.0
-        }
+        line_data = {"slope": 0.0, "intercept": 150.0}
         result = self.detector._detect_breakout(
             self.sample_data, line_data, "resistance"
         )
@@ -120,10 +116,7 @@ class TestSupportResistanceDetector(unittest.TestCase):
 
     def test_confirm_breakout(self):
         """ブレイクアウト確認テスト"""
-        line_data = {
-            "slope": 0.0,
-            "intercept": 150.0
-        }
+        line_data = {"slope": 0.0, "intercept": 150.0}
         result = self.detector._confirm_breakout(
             self.sample_data, line_data, "resistance", "bullish"
         )
@@ -135,11 +128,11 @@ class TestSupportResistanceDetector(unittest.TestCase):
             "line_type": "resistance",
             "strength": 0.85,
             "touch_points": [10, 25, 40],
-            "breakout": {
-                "strength": 0.015
-            }
+            "breakout": {"strength": 0.015},
         }
-        confidence = self.detector._calculate_support_resistance_confidence(pattern_data)
+        confidence = self.detector._calculate_support_resistance_confidence(
+            pattern_data
+        )
         self.assertIsInstance(confidence, float)
         self.assertGreaterEqual(confidence, 0.0)
         self.assertLessEqual(confidence, 1.0)
@@ -152,12 +145,12 @@ class TestSupportResistanceDetector(unittest.TestCase):
             "line_data": {},
             "strength": 0.85,
             "breakout": {},
-            "direction": "SELL"
+            "direction": "SELL",
         }
         result = self.detector._create_detection_result(
             self.sample_data, "resistance_line", pattern_data
         )
-        
+
         self.assertIsNotNone(result)
         self.assertEqual(result["pattern_number"], 15)
         self.assertEqual(result["priority"], PatternPriority.HIGH)
@@ -185,12 +178,14 @@ class TestSupportResistanceDetector(unittest.TestCase):
     def test_error_handling(self):
         """エラーハンドリングテスト"""
         # 不正なデータでテスト
-        invalid_data = pd.DataFrame({
-            'high': ['invalid', 'invalid', 'invalid'],
-            'low': ['invalid', 'invalid', 'invalid'],
-            'close': ['invalid', 'invalid', 'invalid']
-        })
-        
+        invalid_data = pd.DataFrame(
+            {
+                "high": ["invalid", "invalid", "invalid"],
+                "low": ["invalid", "invalid", "invalid"],
+                "close": ["invalid", "invalid", "invalid"],
+            }
+        )
+
         result = self.detector.detect(invalid_data)
         self.assertIsNone(result)
 
@@ -224,9 +219,9 @@ class TestSupportResistanceDetector(unittest.TestCase):
 
     def _create_resistance_line_data(self) -> pd.DataFrame:
         """レジスタンスラインデータ作成"""
-        dates = pd.date_range(start='2024-01-01', periods=40, freq='H')
+        dates = pd.date_range(start="2024-01-01", periods=40, freq="H")
         data = []
-        
+
         for i in range(40):
             # レジスタンスライン: 151.0付近で価格が止まる
             if i in [8, 20, 32]:  # タッチポイント
@@ -235,24 +230,26 @@ class TestSupportResistanceDetector(unittest.TestCase):
             else:
                 high = 150.8 + np.random.normal(0, 0.1)
                 low = 150.2 + np.random.normal(0, 0.1)
-            
+
             close = (high + low) / 2 + np.random.normal(0, 0.03)
-            data.append({
-                'timestamp': dates[i],
-                'open': close + np.random.normal(0, 0.03),
-                'high': high,
-                'low': low,
-                'close': close,
-                'volume': 1000 + np.random.randint(0, 1000)
-            })
-        
+            data.append(
+                {
+                    "timestamp": dates[i],
+                    "open": close + np.random.normal(0, 0.03),
+                    "high": high,
+                    "low": low,
+                    "close": close,
+                    "volume": 1000 + np.random.randint(0, 1000),
+                }
+            )
+
         return pd.DataFrame(data)
 
     def _create_support_line_data(self) -> pd.DataFrame:
         """サポートラインデータ作成"""
-        dates = pd.date_range(start='2024-01-01', periods=40, freq='H')
+        dates = pd.date_range(start="2024-01-01", periods=40, freq="H")
         data = []
-        
+
         for i in range(40):
             # サポートライン: 149.0付近で価格が止まる
             if i in [8, 20, 32]:  # タッチポイント
@@ -261,17 +258,19 @@ class TestSupportResistanceDetector(unittest.TestCase):
             else:
                 high = 149.8 + np.random.normal(0, 0.1)
                 low = 149.2 + np.random.normal(0, 0.1)
-            
+
             close = (high + low) / 2 + np.random.normal(0, 0.03)
-            data.append({
-                'timestamp': dates[i],
-                'open': close + np.random.normal(0, 0.03),
-                'high': high,
-                'low': low,
-                'close': close,
-                'volume': 1000 + np.random.randint(0, 1000)
-            })
-        
+            data.append(
+                {
+                    "timestamp": dates[i],
+                    "open": close + np.random.normal(0, 0.03),
+                    "high": high,
+                    "low": low,
+                    "close": close,
+                    "volume": 1000 + np.random.randint(0, 1000),
+                }
+            )
+
         return pd.DataFrame(data)
 
 

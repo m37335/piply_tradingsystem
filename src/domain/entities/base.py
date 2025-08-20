@@ -9,7 +9,6 @@ Domain-Driven Design (DDD) に基づいたエンティティの基底クラス
 全てのドメインエンティティはこのクラスを継承する
 """
 
-import uuid
 from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -36,7 +35,7 @@ class BaseEntity(ABC):
     """
 
     id: Optional[int] = None
-    uuid: str = field(default_factory=lambda: str(uuid.uuid4()))
+    uuid: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     version: int = 1
@@ -50,7 +49,7 @@ class BaseEntity(ABC):
             self.created_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
 
-        logger.debug(f"Created {self.__class__.__name__} entity with UUID: {self.uuid}")
+        logger.debug(f"Created {self.__class__.__name__} entity with ID: {self.id}")
 
     def update_version(self) -> None:
         """
@@ -98,6 +97,10 @@ class BaseEntity(ABC):
         if "updated_at" in data and data["updated_at"]:
             data["updated_at"] = datetime.fromisoformat(data["updated_at"])
 
+        # uuidフィールドが存在しない場合はNoneを設定
+        if "uuid" not in data:
+            data["uuid"] = None
+
         return cls(**data)
 
     def is_new(self) -> bool:
@@ -112,7 +115,7 @@ class BaseEntity(ABC):
     def __eq__(self, other: object) -> bool:
         """
         エンティティの等価性判定
-        UUIDで比較
+        IDで比較
 
         Args:
             other: 比較対象
@@ -122,26 +125,17 @@ class BaseEntity(ABC):
         """
         if not isinstance(other, BaseEntity):
             return False
-        return self.uuid == other.uuid
+        return self.id == other.id
 
     def __hash__(self) -> int:
         """
         ハッシュ値の計算
-        UUIDベース
+        IDベース
 
         Returns:
             int: ハッシュ値
         """
-        return hash(self.uuid)
-
-    def __repr__(self) -> str:
-        """
-        文字列表現
-
-        Returns:
-            str: エンティティの文字列表現
-        """
-        return f"{self.__class__.__name__}(id={self.id}, uuid={self.uuid})"
+        return hash(self.id) if self.id is not None else hash(id(self))
 
 
 @dataclass

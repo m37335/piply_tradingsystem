@@ -5,13 +5,14 @@ Three Buddhas Detector Test
 """
 
 import unittest
-import pandas as pd
-import numpy as np
 
-from src.infrastructure.analysis.pattern_detectors.three_buddhas_detector import (
-    ThreeBuddhasDetector
-)
+import numpy as np
+import pandas as pd
+
 from src.domain.value_objects.pattern_priority import PatternPriority
+from src.infrastructure.analysis.pattern_detectors.three_buddhas_detector import (
+    ThreeBuddhasDetector,
+)
 
 
 class TestThreeBuddhasDetector(unittest.TestCase):
@@ -25,9 +26,9 @@ class TestThreeBuddhasDetector(unittest.TestCase):
     def _create_sample_data(self) -> pd.DataFrame:
         """サンプルデータ作成"""
         # 三尊天井パターンのサンプルデータ
-        dates = pd.date_range(start='2024-01-01', periods=50, freq='H')
+        dates = pd.date_range(start="2024-01-01", periods=50, freq="H")
         data = []
-        
+
         for i in range(50):
             if i < 10:
                 # 最初のピーク
@@ -45,17 +46,19 @@ class TestThreeBuddhasDetector(unittest.TestCase):
                 # その他
                 high = 150.0 + np.random.normal(0, 0.1)
                 low = 149.5 + np.random.normal(0, 0.1)
-            
+
             close = (high + low) / 2 + np.random.normal(0, 0.05)
-            data.append({
-                'timestamp': dates[i],
-                'open': close + np.random.normal(0, 0.05),
-                'high': high,
-                'low': low,
-                'close': close,
-                'volume': 1000 + np.random.randint(0, 1000)
-            })
-        
+            data.append(
+                {
+                    "timestamp": dates[i],
+                    "open": close + np.random.normal(0, 0.05),
+                    "high": high,
+                    "low": low,
+                    "close": close,
+                    "volume": 1000 + np.random.randint(0, 1000),
+                }
+            )
+
         return pd.DataFrame(data)
 
     def test_detector_initialization(self):
@@ -71,20 +74,20 @@ class TestThreeBuddhasDetector(unittest.TestCase):
 
     def test_detect_with_insufficient_data(self):
         """不十分なデータでの検出テスト"""
-        short_data = pd.DataFrame({'high': [150.0], 'low': [149.5], 'close': [149.8]})
+        short_data = pd.DataFrame({"high": [150.0], "low": [149.5], "close": [149.8]})
         result = self.detector.detect(short_data)
         self.assertIsNone(result)
 
     def test_find_peaks_high(self):
         """高値ピーク検出テスト"""
-        peaks = self.detector._find_peaks(self.sample_data, 'high')
+        peaks = self.detector._find_peaks(self.sample_data, "high")
         self.assertIsInstance(peaks, list)
         # ピークが検出されることを確認
         self.assertGreater(len(peaks), 0)
 
     def test_find_peaks_low(self):
         """安値ピーク検出テスト"""
-        peaks = self.detector._find_peaks(self.sample_data, 'low')
+        peaks = self.detector._find_peaks(self.sample_data, "low")
         self.assertIsInstance(peaks, list)
         # ピークが検出されることを確認
         self.assertGreater(len(peaks), 0)
@@ -107,10 +110,10 @@ class TestThreeBuddhasDetector(unittest.TestCase):
         peaks = [5, 15, 25]
         # サンプルデータを修正して中央を最も高くする
         test_data = self.sample_data.copy()
-        test_data.iloc[5, test_data.columns.get_loc('high')] = 150.0
-        test_data.iloc[15, test_data.columns.get_loc('high')] = 151.0
-        test_data.iloc[25, test_data.columns.get_loc('high')] = 150.2
-        
+        test_data.iloc[5, test_data.columns.get_loc("high")] = 150.0
+        test_data.iloc[15, test_data.columns.get_loc("high")] = 151.0
+        test_data.iloc[25, test_data.columns.get_loc("high")] = 150.2
+
         result = self.detector._is_middle_highest(test_data, peaks)
         self.assertTrue(result)
 
@@ -120,10 +123,10 @@ class TestThreeBuddhasDetector(unittest.TestCase):
         peaks = [5, 15, 25]
         # サンプルデータを修正して中央を最も低くする
         test_data = self.sample_data.copy()
-        test_data.iloc[5, test_data.columns.get_loc('low')] = 149.8
-        test_data.iloc[15, test_data.columns.get_loc('low')] = 149.5
-        test_data.iloc[25, test_data.columns.get_loc('low')] = 149.9
-        
+        test_data.iloc[5, test_data.columns.get_loc("low")] = 149.8
+        test_data.iloc[15, test_data.columns.get_loc("low")] = 149.5
+        test_data.iloc[25, test_data.columns.get_loc("low")] = 149.9
+
         result = self.detector._is_middle_lowest(test_data, peaks)
         self.assertTrue(result)
 
@@ -144,7 +147,7 @@ class TestThreeBuddhasDetector(unittest.TestCase):
         pattern_data = {
             "pattern_type": "three_buddhas_top",
             "peaks": [5, 15, 25],
-            "neckline": 150.0
+            "neckline": 150.0,
         }
         confidence = self.detector._calculate_three_buddhas_confidence(pattern_data)
         self.assertIsInstance(confidence, float)
@@ -157,12 +160,12 @@ class TestThreeBuddhasDetector(unittest.TestCase):
             "pattern_type": "three_buddhas_top",
             "peaks": [5, 15, 25],
             "neckline": 150.0,
-            "direction": "SELL"
+            "direction": "SELL",
         }
         result = self.detector._create_detection_result(
             self.sample_data, "three_buddhas_top", pattern_data
         )
-        
+
         self.assertIsNotNone(result)
         self.assertEqual(result["pattern_number"], 13)
         self.assertEqual(result["priority"], PatternPriority.HIGH)
@@ -190,12 +193,14 @@ class TestThreeBuddhasDetector(unittest.TestCase):
     def test_error_handling(self):
         """エラーハンドリングテスト"""
         # 不正なデータでテスト
-        invalid_data = pd.DataFrame({
-            'high': ['invalid', 'invalid', 'invalid'],
-            'low': ['invalid', 'invalid', 'invalid'],
-            'close': ['invalid', 'invalid', 'invalid']
-        })
-        
+        invalid_data = pd.DataFrame(
+            {
+                "high": ["invalid", "invalid", "invalid"],
+                "low": ["invalid", "invalid", "invalid"],
+                "close": ["invalid", "invalid", "invalid"],
+            }
+        )
+
         result = self.detector.detect(invalid_data)
         self.assertIsNone(result)
 
