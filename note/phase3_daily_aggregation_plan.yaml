@@ -1,0 +1,206 @@
+# Phase 3: 日足集計実装計画書
+# Exchange Analytics System - 時間足集計システム
+
+project:
+  name: "Exchange Analytics System - 時間足集計システム"
+  phase: "Phase 3: 日足集計"
+  version: "1.0.0"
+  created_date: "2025-08-15"
+  priority: "中"
+  estimated_duration: "1-2日"
+
+overview:
+  description: "5分足データから日足を自動集計・保存するシステムの実装"
+  objective: "毎日00:05に前日の5分足データを集計し、PostgreSQLに保存"
+  success_criteria:
+    - "日足データが正常に集計・保存される"
+    - "処理時間が20秒以内"
+    - "重複データが適切に回避される"
+    - "Phase 1、2の機能を活用して効率的に実装"
+
+dependencies:
+  existing_files:
+    - "src/infrastructure/database/connection.py"
+    - "src/infrastructure/database/models/price_data_model.py"
+    - "src/infrastructure/database/repositories/price_data_repository_impl.py"
+    - "src/utils/logging_config.py"
+    - "scripts/cron/hourly_aggregator.py (参考)"
+    - "scripts/cron/four_hour_aggregator.py (参考)"
+  new_files:
+    - "scripts/cron/daily_aggregator.py"
+    - "logs/daily_aggregator.log"
+
+tasks:
+  task_1:
+    id: "TASK-301"
+    name: "DailyAggregatorクラス作成"
+    description: "日足集計専用のクラスを実装"
+    priority: "高"
+    estimated_hours: 4
+    dependencies: []
+    deliverables:
+      - "DailyAggregatorクラスの実装"
+      - "日足集計期間計算ロジック"
+      - "OHLCV計算ロジック（Phase 1、2を活用）"
+    acceptance_criteria:
+      - "前日の期間が正しく計算される"
+      - "OHLCVが正確に計算される"
+      - "日本時間での処理が正常に動作する"
+
+  task_2:
+    id: "TASK-302"
+    name: "日足集計ロジック実装"
+    description: "日足特有の集計ロジックを実装"
+    priority: "高"
+    estimated_hours: 4
+    dependencies: ["TASK-301"]
+    deliverables:
+      - "日足集計アルゴリズム"
+      - "大量データ処理最適化"
+      - "データ検証機能"
+    acceptance_criteria:
+      - "288件の5分足から1件の日足が生成される"
+      - "データの整合性が保たれる"
+      - "パフォーマンスが良好である"
+
+  task_3:
+    id: "TASK-303"
+    name: "メインスクリプト作成"
+    description: "daily_aggregator.pyのメインスクリプトを実装"
+    priority: "高"
+    estimated_hours: 2
+    dependencies: ["TASK-302"]
+    deliverables:
+      - "メインスクリプト"
+      - "コマンドライン引数処理"
+      - "実行フロー制御"
+    acceptance_criteria:
+      - "スクリプトが正常に実行される"
+      - "コマンドライン引数が処理される"
+      - "適切な終了コードが返される"
+
+  task_4:
+    id: "TASK-304"
+    name: "単体テスト作成"
+    description: "日足集計の単体テストを実装"
+    priority: "高"
+    estimated_hours: 4
+    dependencies: ["TASK-303"]
+    deliverables:
+      - "DailyAggregatorテスト"
+      - "日足集計ロジックテスト"
+      - "期間計算テスト"
+    acceptance_criteria:
+      - "全テストが通過する"
+      - "テストカバレッジが80%以上"
+      - "エッジケースがテストされる"
+
+  task_5:
+    id: "TASK-305"
+    name: "統合テスト作成"
+    description: "日足集計の統合テストを実装"
+    priority: "高"
+    estimated_hours: 3
+    dependencies: ["TASK-304"]
+    deliverables:
+      - "統合テスト"
+      - "パフォーマンステスト"
+      - "エラーシナリオテスト"
+    acceptance_criteria:
+      - "完全なワークフローがテストされる"
+      - "パフォーマンス目標が達成される"
+      - "エラーシナリオが適切に処理される"
+
+  task_6:
+    id: "TASK-306"
+    name: "crontab設定追加"
+    description: "日足集計のcrontab設定を追加"
+    priority: "中"
+    estimated_hours: 1
+    dependencies: ["TASK-305"]
+    deliverables:
+      - "crontab設定更新"
+      - "ログファイル設定"
+      - "実行権限設定"
+    acceptance_criteria:
+      - "crontabが正しく設定される"
+      - "ログファイルが作成される"
+      - "実行権限が適切に設定される"
+
+  task_7:
+    id: "TASK-307"
+    name: "本番テスト実行"
+    description: "実際のデータでの動作確認を実行"
+    priority: "高"
+    estimated_hours: 2
+    dependencies: ["TASK-306"]
+    deliverables:
+      - "本番環境テスト"
+      - "データ整合性確認"
+      - "パフォーマンス測定"
+    acceptance_criteria:
+      - "実際のデータで正常に動作する"
+      - "データ整合性が保たれる"
+      - "パフォーマンス目標が達成される"
+
+milestones:
+  milestone_1:
+    name: "日足集計実装完了"
+    date: "2025-08-23"
+    tasks: ["TASK-301", "TASK-302", "TASK-303"]
+    description: "DailyAggregatorの基本実装が完了"
+
+  milestone_2:
+    name: "テスト実装完了"
+    date: "2025-08-24"
+    tasks: ["TASK-304", "TASK-305"]
+    description: "単体テストと統合テストが完了"
+
+  milestone_3:
+    name: "本番デプロイ完了"
+    date: "2025-08-25"
+    tasks: ["TASK-306", "TASK-307"]
+    description: "crontab設定と本番テストが完了"
+
+risks:
+  risk_1:
+    description: "Phase 1、2との依存関係問題"
+    probability: "低"
+    impact: "中"
+    mitigation: "Phase 1、2の完了を確認してから開始"
+
+  risk_2:
+    description: "大量データ処理のパフォーマンス問題"
+    probability: "中"
+    impact: "高"
+    mitigation: "バッチ処理とメモリ最適化を実装"
+
+  risk_3:
+    description: "日足特有のロジックエラー"
+    probability: "中"
+    impact: "中"
+    mitigation: "十分なテストと検証を実施"
+
+resources:
+  required_skills:
+    - "Python (asyncio)"
+    - "SQLAlchemy"
+    - "PostgreSQL"
+    - "crontab"
+    - "パフォーマンス最適化"
+  estimated_total_hours: 20
+  team_size: 1
+
+success_metrics:
+  functional:
+    - "日足データが正常に集計・保存される"
+    - "重複データが適切に回避される"
+    - "Phase 1、2の機能を活用して効率的に実装"
+  performance:
+    - "処理時間: 20秒以内"
+    - "メモリ使用量: 100MB以内"
+    - "データベース接続: 安定"
+  quality:
+    - "テストカバレッジ: 80%以上"
+    - "コードレビュー完了"
+    - "Phase 1、2との整合性確認完了"

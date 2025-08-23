@@ -8,7 +8,6 @@ CLI メインアプリケーション
 コマンドライン管理インターフェース
 """
 
-import asyncio
 import sys
 from pathlib import Path
 from typing import Optional
@@ -19,13 +18,9 @@ from rich.panel import Panel
 from rich.table import Table
 
 from ...utils.logging_config import get_presentation_logger, setup_logging_directories
-from .commands import (
-    ai_commands,
-    api_commands,
-    config_commands,
-    data_commands,
-    monitor_commands,
-)
+from .commands import ai_commands, api_commands, config_commands, monitor_commands
+from .commands.alert_config_commands import app as alert_config_app
+from .commands.data import data_app
 
 logger = get_presentation_logger()
 console = Console()
@@ -46,7 +41,7 @@ app.add_typer(
 )
 
 app.add_typer(
-    data_commands.app,
+    data_app,
     name="data",
     help="💱 データ管理・取得",
 )
@@ -69,13 +64,23 @@ app.add_typer(
     help="🤖 AI分析・通知",
 )
 
+app.add_typer(
+    alert_config_app,
+    name="alert-config",
+    help="🚨 アラート設定管理",
+)
+
 
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-    version: Optional[bool] = typer.Option(None, "--version", "-v", help="バージョン情報を表示"),
+    version: Optional[bool] = typer.Option(
+        None, "--version", "-v", help="バージョン情報を表示"
+    ),
     verbose: bool = typer.Option(False, "--verbose", "-V", help="詳細ログを表示"),
-    config_file: Optional[Path] = typer.Option(None, "--config", "-c", help="設定ファイルパス"),
+    config_file: Optional[Path] = typer.Option(
+        None, "--config", "-c", help="設定ファイルパス"
+    ),
 ):
     """
     Exchange Analytics System CLI
@@ -176,7 +181,8 @@ def status():
     console.print(status_table)
 
     console.print(
-        "\n💡 [yellow]Tip:[/yellow] 詳細確認は [cyan]exchange-analytics monitor health[/cyan] を実行"
+        "\n💡 [yellow]Tip:[/yellow] 詳細確認は "
+        "[cyan]exchange-analytics monitor health[/cyan] を実行"
     )
 
 

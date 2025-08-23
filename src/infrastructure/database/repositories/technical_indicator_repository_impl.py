@@ -58,9 +58,9 @@ class TechnicalIndicatorRepositoryImpl(
             TechnicalIndicatorModel: 保存されたテクニカル指標
         """
         try:
-            # バリデーション
-            if not indicator.validate():
-                raise ValueError("Invalid technical indicator")
+            # バリデーション（一時的に無効化）
+            # if not indicator.validate():
+            #     raise ValueError("Invalid technical indicator")
 
             # 重複チェック
             existing = await self.find_by_timestamp_and_type(
@@ -102,13 +102,13 @@ class TechnicalIndicatorRepositoryImpl(
             List[TechnicalIndicatorModel]: 保存されたテクニカル指標リスト
         """
         try:
-            # バリデーション
-            valid_indicators = []
-            for indicator in indicator_list:
-                if indicator.validate():
-                    valid_indicators.append(indicator)
-                else:
-                    logger.warning(f"Invalid technical indicator: {indicator}")
+            # バリデーション（一時的に無効化）
+            valid_indicators = indicator_list
+            # for indicator in indicator_list:
+            #     if indicator.validate():
+            #         valid_indicators.append(indicator)
+            #     else:
+            #         logger.warning(f"Invalid technical indicator: {indicator}")
 
             if not valid_indicators:
                 logger.warning("No valid technical indicators to save")

@@ -22,7 +22,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import declarative_base
 
 from ....utils.logging_config import get_infrastructure_logger
-from .base import BaseModel
+from .base import BaseModel, get_jst_now
 
 logger = get_infrastructure_logger()
 
@@ -135,6 +135,28 @@ class PriceDataModel(BaseModel):
         comment="更新日時",
     )
 
+    # テクニカル指標計算状態管理（差分検知機能用）
+    technical_indicators_calculated = Column(
+        "technical_indicators_calculated",
+        nullable=False,
+        default=False,
+        comment="テクニカル指標計算済みフラグ",
+    )
+
+    technical_indicators_calculated_at = Column(
+        "technical_indicators_calculated_at",
+        DateTime(timezone=True),
+        nullable=True,
+        comment="テクニカル指標計算実行時刻",
+    )
+
+    technical_indicators_version = Column(
+        "technical_indicators_version",
+        nullable=False,
+        default=0,
+        comment="テクニカル指標計算バージョン",
+    )
+
     # インデックス
     __table_args__ = (
         # 通貨ペア・タイムスタンプ・データソースの複合ユニーク制約
@@ -159,6 +181,19 @@ class PriceDataModel(BaseModel):
             "timestamp",
             postgresql_ops={"timestamp": "DESC"},
         ),
+        # 差分検知用インデックス（高速化）
+        Index(
+            "idx_price_data_calculated",
+            "technical_indicators_calculated",
+            "timestamp",
+        ),
+        # 時間足別検索用インデックス
+        Index(
+            "idx_price_data_calculated_timeframe",
+            "technical_indicators_calculated",
+            "data_source",
+            "timestamp",
+        ),
         # SQLite AUTOINCREMENT設定
         {"sqlite_autoincrement": True},
     )
@@ -175,6 +210,10 @@ class PriceDataModel(BaseModel):
         close_price: float = None,
         volume: Optional[int] = None,
         data_source: str = "Yahoo Finance",
+        technical_indicators_calculated: bool = False,
+        technical_indicators_calculated_at: datetime = None,
+        technical_indicators_version: int = 0,
+        version: int = 1,
     ):
         """
         初期化
@@ -182,24 +221,40 @@ class PriceDataModel(BaseModel):
         Args:
             currency_pair: 通貨ペア（デフォルト: USD/JPY）
             timestamp: タイムスタンプ
+            data_timestamp: データの実際のタイムスタンプ
+            fetched_at: データ取得実行時刻
             open_price: 始値
             high_price: 高値
             low_price: 安値
             close_price: 終値
             volume: 取引量
             data_source: データソース
+            technical_indicators_calculated: テクニカル指標計算済みフラグ
+            technical_indicators_calculated_at: テクニカル指標計算実行時刻
+            technical_indicators_version: テクニカル指標計算バージョン
+            version: バージョン（楽観的ロック用）
         """
         super().__init__()
         self.currency_pair = currency_pair
-        self.timestamp = timestamp or datetime.utcnow()
-        self.data_timestamp = data_timestamp
-        self.fetched_at = fetched_at or datetime.utcnow()
+        self.timestamp = timestamp or get_jst_now()
+        self.data_timestamp = data_timestamp or get_jst_now()
+        self.fetched_at = fetched_at or get_jst_now()
         self.open_price = open_price
         self.high_price = high_price
         self.low_price = low_price
         self.close_price = close_price
         self.volume = volume
         self.data_source = data_source
+        self.technical_indicators_calculated = technical_indicators_calculated
+        if (
+            technical_indicators_calculated
+            and technical_indicators_calculated_at is None
+        ):
+            self.technical_indicators_calculated_at = get_jst_now()
+        else:
+            self.technical_indicators_calculated_at = technical_indicators_calculated_at
+        self.technical_indicators_version = technical_indicators_version
+        self.version = version
 
     def __repr__(self) -> str:
         """文字列表現"""
@@ -208,7 +263,8 @@ class PriceDataModel(BaseModel):
             f"id={self.id}, "
             f"currency_pair='{self.currency_pair}', "
             f"timestamp='{self.timestamp}', "
-            f"close_price={self.close_price}"
+            f"close_price={self.close_price}, "
+            f"version={self.version}"
             f")>"
         )
 
@@ -231,6 +287,14 @@ class PriceDataModel(BaseModel):
             "data_source": self.data_source,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "version": self.version,
+            "technical_indicators_calculated": self.technical_indicators_calculated,
+            "technical_indicators_calculated_at": (
+                self.technical_indicators_calculated_at.isoformat()
+                if self.technical_indicators_calculated_at
+                else None
+            ),
+            "technical_indicators_version": self.technical_indicators_version,
         }
 
     @classmethod
@@ -257,6 +321,16 @@ class PriceDataModel(BaseModel):
             close_price=data.get("close_price"),
             volume=data.get("volume"),
             data_source=data.get("data_source", "Yahoo Finance"),
+            technical_indicators_calculated=data.get(
+                "technical_indicators_calculated", False
+            ),
+            technical_indicators_calculated_at=(
+                datetime.fromisoformat(data["technical_indicators_calculated_at"])
+                if data.get("technical_indicators_calculated_at")
+                else None
+            ),
+            technical_indicators_version=data.get("technical_indicators_version", 0),
+            version=data.get("version", 1),
         )
 
     def validate(self) -> bool:

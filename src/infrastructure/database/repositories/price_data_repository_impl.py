@@ -445,6 +445,53 @@ class PriceDataRepositoryImpl(BaseRepositoryImpl, PriceDataRepository):
             logger.error(f"Error counting price data by date range: {e}")
             raise
 
+    async def count_all(self) -> int:
+        """
+        全データ数を取得
+
+        Returns:
+            int: 全データ数
+        """
+        try:
+            query = select(func.count(PriceDataModel.id))
+            result = await self.session.execute(query)
+            return result.scalar() or 0
+
+        except Exception as e:
+            logger.error(f"Error counting all price data: {e}")
+            return 0
+
+    async def count_by_timeframe(
+        self, currency_pair: str = "USD/JPY", timeframe: str = "5m"
+    ) -> int:
+        """
+        時間足別のデータ数を取得
+
+        Args:
+            currency_pair: 通貨ペア（デフォルト: USD/JPY）
+            timeframe: 時間足（デフォルト: 5m）
+
+        Returns:
+            int: データ数
+        """
+        try:
+            # データソース名から時間足を判定
+            # 基盤データのデータソース名: yahoo_finance_5m, yahoo_finance_1h, 
+            # yahoo_finance_4h, yahoo_finance_1d
+            
+            query = select(func.count(PriceDataModel.id)).where(
+                and_(
+                    PriceDataModel.currency_pair == currency_pair,
+                    PriceDataModel.data_source.like(f"%{timeframe}%"),
+                )
+            )
+            result = await self.session.execute(query)
+            return result.scalar() or 0
+
+        except Exception as e:
+            logger.error(f"Error counting price data by timeframe: {e}")
+            return 0
+
     async def get_price_statistics(
         self,
         start_date: datetime,
@@ -702,6 +749,54 @@ class PriceDataRepositoryImpl(BaseRepositoryImpl, PriceDataRepository):
             await self.session.rollback()
             raise
 
+    async def get_latest_by_timeframe(
+        self, currency_pair: str, timeframe: str
+    ) -> Optional[PriceDataModel]:
+        """
+        指定時間足の最新データを取得
+
+        Args:
+            currency_pair: 通貨ペア
+            timeframe: 時間足（"5m", "1h", "4h", "1d"）
+
+        Returns:
+            Optional[PriceDataModel]: 最新の価格データ、存在しない場合None
+        """
+        try:
+            # 時間足に応じてタイムスタンプを調整
+            current_time = datetime.now()
+            adjusted_time = self._adjust_timestamp_for_timeframe(current_time, timeframe)
+
+            # 最新のデータを取得
+            query = (
+                select(PriceDataModel)
+                .where(
+                    and_(
+                        PriceDataModel.currency_pair == currency_pair,
+                        PriceDataModel.timestamp <= adjusted_time,
+                    )
+                )
+                .order_by(PriceDataModel.timestamp.desc())
+                .limit(1)
+            )
+
+            result = await self.session.execute(query)
+            latest_data = result.scalar_one_or_none()
+
+            if latest_data:
+                logger.debug(
+                    f"Found latest {timeframe} data for {currency_pair}: "
+                    f"{latest_data.timestamp}"
+                )
+            else:
+                logger.debug(f"No {timeframe} data found for {currency_pair}")
+
+            return latest_data
+
+        except Exception as e:
+            logger.error(f"Error getting latest {timeframe} data for {currency_pair}: {e}")
+            return None
+
     async def find_by_date_range_and_timeframe(
         self,
         start_date: datetime,
@@ -779,3 +874,51 @@ class PriceDataRepositoryImpl(BaseRepositoryImpl, PriceDataRepository):
             return timestamp.replace(hour=0, minute=0, second=0, microsecond=0)
         else:
             return timestamp
+
+    async def update_batch(self, price_data_list: List[PriceDataModel]) -> bool:
+        """
+        価格データのバッチ更新
+
+        Args:
+            price_data_list: 更新する価格データのリスト
+
+        Returns:
+            bool: 更新成功フラグ
+        """
+        try:
+            if not price_data_list:
+                logger.warning("No price data to update")
+                return True
+
+            # 一括更新を実行
+            from sqlalchemy import update
+
+            # 更新対象のIDリストを取得
+            ids = [price_data.id for price_data in price_data_list]
+            
+            # 現在時刻を取得
+            current_time = datetime.now()
+            
+            # 一括更新クエリを実行
+            update_query = (
+                update(PriceDataModel)
+                .where(PriceDataModel.id.in_(ids))
+                .values(
+                    technical_indicators_calculated=True,
+                    technical_indicators_calculated_at=current_time,
+                    technical_indicators_version=1,
+                    updated_at=current_time
+                )
+            )
+            
+            result = await self.session.execute(update_query)
+            await self.session.commit()
+
+            updated_count = result.rowcount
+            logger.info(f"Updated {updated_count} price data records")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error updating price data batch: {e}")
+            await self.session.rollback()
+            return False

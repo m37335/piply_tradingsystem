@@ -82,7 +82,7 @@ class DatabaseDataVerifier:
                 count_query = text(
                     """
                     SELECT COUNT(*) as total_count
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     """
                 )
@@ -92,10 +92,10 @@ class DatabaseDataVerifier:
                 # 日付範囲
                 date_range_query = text(
                     """
-                    SELECT 
+                    SELECT
                         MIN(timestamp) as earliest_date,
                         MAX(timestamp) as latest_date
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     """
                 )
@@ -108,7 +108,7 @@ class DatabaseDataVerifier:
                 currency_query = text(
                     """
                     SELECT currency_pair, COUNT(*) as count
-                    FROM price_data 
+                    FROM price_data
                     GROUP BY currency_pair
                     ORDER BY count DESC
                     """
@@ -119,7 +119,7 @@ class DatabaseDataVerifier:
                 # 最新の数件のデータ
                 recent_query = text(
                     """
-                    SELECT 
+                    SELECT
                         timestamp,
                         currency_pair,
                         open_price,
@@ -127,7 +127,7 @@ class DatabaseDataVerifier:
                         low_price,
                         close_price,
                         volume
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     ORDER BY timestamp DESC
                     LIMIT 10
@@ -176,14 +176,14 @@ class DatabaseDataVerifier:
                 # 指定期間のデータ取得
                 query = text(
                     """
-                    SELECT 
+                    SELECT
                         timestamp,
                         open_price,
                         high_price,
                         low_price,
                         close_price,
                         volume
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     ORDER BY timestamp DESC
                     LIMIT :days
@@ -418,14 +418,14 @@ class DatabaseDataVerifier:
                 # 異常に大きな価格変動
                 anomaly_query = text(
                     """
-                    SELECT 
+                    SELECT
                         timestamp,
                         open_price,
                         high_price,
                         low_price,
                         close_price,
                         ABS(close_price - LAG(close_price) OVER (ORDER BY timestamp)) as price_change
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     ORDER BY timestamp DESC
                     LIMIT 100
@@ -482,9 +482,7 @@ class DatabaseDataVerifier:
                 score += 10
             else:
                 assessment["issues"].append("データ量が不足しています")
-                assessment["recommendations"].append(
-                    "より多くのデータを収集してください"
-                )
+                assessment["recommendations"].append("より多くのデータを収集してください")
 
             # 日付範囲の評価
             date_range = basic_info.get("date_range", {})
@@ -497,9 +495,7 @@ class DatabaseDataVerifier:
                 score += 10
             else:
                 assessment["issues"].append("データ期間が短すぎます")
-                assessment["recommendations"].append(
-                    "より長期間のデータを収集してください"
-                )
+                assessment["recommendations"].append("より長期間のデータを収集してください")
 
             # 価格変動の評価
             for period_key, verification in period_verifications.items():
@@ -509,9 +505,7 @@ class DatabaseDataVerifier:
                     unique_values = close_stats.get("unique_values", 0)
 
                     if unique_values < 2:
-                        assessment["issues"].append(
-                            f"{period_key}: 価格変動がありません"
-                        )
+                        assessment["issues"].append(f"{period_key}: 価格変動がありません")
                         assessment["recommendations"].append(
                             f"{period_key}: より変動のあるデータが必要です"
                         )
@@ -527,9 +521,7 @@ class DatabaseDataVerifier:
                     if price_logic.get("all_consistent", False):
                         score += 10
                     else:
-                        assessment["issues"].append(
-                            f"{period_key}: 価格データの論理的不整合があります"
-                        )
+                        assessment["issues"].append(f"{period_key}: 価格データの論理的不整合があります")
                         assessment["recommendations"].append(
                             f"{period_key}: データの整合性を確認してください"
                         )
@@ -628,9 +620,7 @@ async def main():
         # 一貫性チェック
         consistency = verification.get("consistency_checks", {})
         price_logic = consistency.get("price_logic", {})
-        print(
-            f"    価格論理: {'✅' if price_logic.get('all_consistent', False) else '❌'}"
-        )
+        print(f"    価格論理: {'✅' if price_logic.get('all_consistent', False) else '❌'}")
 
         zero_values = consistency.get("zero_values", {})
         if any(zero_values.values()):
@@ -645,9 +635,7 @@ async def main():
     if large_changes:
         print(f"  異常変動詳細（上位3件）:")
         for i, change in enumerate(large_changes[:3]):
-            print(
-                f"    {i+1}. {change['timestamp']}: {change['price_change']:.2f}円変動"
-            )
+            print(f"    {i+1}. {change['timestamp']}: {change['price_change']:.2f}円変動")
 
     # データ品質評価
     quality_assessment = results.get("quality_assessment", {})

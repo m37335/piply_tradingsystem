@@ -149,9 +149,7 @@ async def test_phase2_advanced_detection():
 
             mtf_analyzer = MultiTimeframeAnalyzer(db_session)
             analysis_result = await mtf_analyzer.analyze_multi_timeframe_signals()
-            print(
-                f"✅ マルチタイムフレーム分析: {len(analysis_result)}個のタイムフレーム分析完了"
-            )
+            print(f"✅ マルチタイムフレーム分析: {len(analysis_result)}個のタイムフレーム分析完了")
 
             if analysis_result:
                 for timeframe, data in analysis_result.items():
@@ -172,9 +170,7 @@ async def test_phase2_advanced_detection():
             print(f"✅ トレンド強度計算: {trend_strength:.2f}/100")
 
             print("\n🔗 3. 相関性分析テスト...")
-            print(
-                "ℹ️ 現在のデータベースにはUSD/JPYのみ保存されているため、相関性分析はスキップ"
-            )
+            print("ℹ️ 現在のデータベースにはUSD/JPYのみ保存されているため、相関性分析はスキップ")
             print("✅ 相関性分析: 実装済み（USD/JPY単体データのため適用不可）")
 
             print("\n💰 4. ポジションサイズ計算テスト...")
@@ -219,18 +215,12 @@ async def test_phase2_advanced_detection():
             print(f"✅ ポートフォリオリスク計算: {portfolio_risk:.2f}%")
 
             print("\n🔍 7. 相関フィルターテスト...")
-            print(
-                "ℹ️ 現在のデータベースにはUSD/JPYのみ保存されているため、相関フィルターはスキップ"
-            )
+            print("ℹ️ 現在のデータベースにはUSD/JPYのみ保存されているため、相関フィルターはスキップ")
             print("✅ 相関フィルター: 実装済み（USD/JPY単体データのため適用不可）")
 
             print("\n⏰ 8. タイムフレームフィルターテスト...")
-            print(
-                "ℹ️ 現在のデータベースにはUSD/JPYのみ保存されているため、タイムフレームフィルターはスキップ"
-            )
-            print(
-                "✅ タイムフレームフィルター: 実装済み（USD/JPY単体データのため適用不可）"
-            )
+            print("ℹ️ 現在のデータベースにはUSD/JPYのみ保存されているため、タイムフレームフィルターはスキップ")
+            print("✅ タイムフレームフィルター: 実装済み（USD/JPY単体データのため適用不可）")
 
     except Exception as e:
         print(f"❌ Phase 2テストでエラー: {e}")
@@ -270,9 +260,7 @@ async def test_integration_workflow():
 
             if signals:
                 signal = signals[0]
-                print(
-                    f"✅ シグナル検出: {signal.signal_type} - 信頼度{signal.confidence_score}%"
-                )
+                print(f"✅ シグナル検出: {signal.signal_type} - 信頼度{signal.confidence_score}%")
 
                 # 2. リスク管理
                 from src.domain.services.risk_management.position_size_calculator import (
@@ -354,9 +342,7 @@ async def main():
     print("📊 テスト結果サマリー")
     print("=" * 80)
 
-    print(
-        f"Phase 1 (基本アラートシステム): {'✅ 成功' if phase1_success else '❌ 失敗'}"
-    )
+    print(f"Phase 1 (基本アラートシステム): {'✅ 成功' if phase1_success else '❌ 失敗'}")
     print(f"Phase 2 (高度な検出機能): {'✅ 成功' if phase2_success else '❌ 失敗'}")
     print(f"統合ワークフロー: {'✅ 成功' if integration_success else '❌ 失敗'}")
 

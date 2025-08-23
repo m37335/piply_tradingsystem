@@ -21,6 +21,16 @@ HOME=/app
     timeout 180 python scripts/cron/weekly_report.py >> \
     /app/logs/weekly_cron.log 2>&1
 
+# 📅 週次経済指標配信（毎週日曜日 9:00 JST）
+0 9 * * 0 cd /app && export $(cat .env | grep -v '^#' | xargs) && export PYTHONPATH=/app && \
+    timeout 300 python scripts/cron/weekly_economic_indicators_discord.py >> \
+    /app/logs/weekly_economic_indicators_cron.log 2>&1
+
+# 🗑️ 経済指標キャッシュクリーンアップ（毎日 3:00 JST）
+0 3 * * * cd /app && export $(cat .env | grep -v '^#' | xargs) && export PYTHONPATH=/app && \
+    timeout 60 python scripts/cron/economic_calendar_cache_manager.py --cleanup >> \
+    /app/logs/economic_calendar_cache_cleanup.log 2>&1
+
 # 🔍 システムヘルスチェック（30分間隔）
 */30 * * * * cd /app && export $(cat .env | grep -v '^#' | xargs) && \
     timeout 10 python scripts/monitoring/realtime_monitor.py --interval 1 --no-alerts >> \

@@ -243,9 +243,7 @@ class TechnicalIndicatorsAnalyzer:
             zero_line_position = (
                 "above"
                 if current_macd > 0
-                else "below"
-                if current_macd < 0
-                else "neutral"
+                else "below" if current_macd < 0 else "neutral"
             )
 
             result = {

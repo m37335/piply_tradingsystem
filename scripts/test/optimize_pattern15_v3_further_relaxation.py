@@ -37,7 +37,7 @@ class Pattern15V3FurtherRelaxationTester:
             {"name": "6ヶ月", "days": 180},
             {"name": "1年", "days": 365},
         ]
-        
+
         # さらなる緩和設定パターン
         self.relaxation_patterns = [
             {
@@ -159,7 +159,7 @@ class Pattern15V3FurtherRelaxationTester:
 
             # データベース情報取得
             db_info = await self._get_database_info()
-            
+
             # 各緩和設定でのテスト
             relaxation_results = await self._test_all_relaxation_patterns()
 
@@ -185,7 +185,7 @@ class Pattern15V3FurtherRelaxationTester:
                 count_query = text(
                     """
                     SELECT COUNT(*) as total_records
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     """
                 )
@@ -195,10 +195,10 @@ class Pattern15V3FurtherRelaxationTester:
                 # データ期間
                 period_query = text(
                     """
-                    SELECT 
+                    SELECT
                         MIN(timestamp) as start_date,
                         MAX(timestamp) as end_date
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     """
                 )
@@ -241,7 +241,9 @@ class Pattern15V3FurtherRelaxationTester:
                         timeframe_results[period["name"]] = result
 
                     # 時間足別統計
-                    timeframe_stats = self._analyze_timeframe_statistics(timeframe_results)
+                    timeframe_stats = self._analyze_timeframe_statistics(
+                        timeframe_results
+                    )
                     timeframe_results["statistics"] = timeframe_stats
 
                     pattern_results[timeframe] = timeframe_results
@@ -301,21 +303,28 @@ class Pattern15V3FurtherRelaxationTester:
             logger.error(f"緩和設定テストエラー: {e}")
             return {"error": str(e)}
 
-    def _create_relaxed_detector(self, timeframe: str, settings: Dict) -> SupportResistanceDetectorV3:
+    def _create_relaxed_detector(
+        self, timeframe: str, settings: Dict
+    ) -> SupportResistanceDetectorV3:
         """緩和されたデテクター作成"""
         detector = SupportResistanceDetectorV3(timeframe)
-        
+
         # 緩和設定を適用
         detector.min_peaks = settings["min_peaks"]
         detector.buffer_percentile = settings["buffer_percentile"]
         detector.min_line_strength = settings["min_line_strength"]
         detector.max_angle = settings["max_angle"]
         detector.price_tolerance = settings["price_tolerance"]
-        
+
         return detector
 
     def _analyze_detection_with_details(
-        self, detection: Dict, data: pd.DataFrame, timeframe: str, period: Dict, settings: Dict
+        self,
+        detection: Dict,
+        data: pd.DataFrame,
+        timeframe: str,
+        period: Dict,
+        settings: Dict,
     ) -> Dict:
         """検出詳細分析"""
         try:
@@ -338,7 +347,7 @@ class Pattern15V3FurtherRelaxationTester:
             # 数学的パラメータ
             slope = equation.get("slope", 0)
             angle = equation.get("angle", 0)
-            
+
             analysis["mathematical"] = {
                 "slope": slope,
                 "intercept": equation.get("intercept"),
@@ -384,19 +393,24 @@ class Pattern15V3FurtherRelaxationTester:
                 "high_buffer_points": int(high_buffer_points),
                 "low_buffer_points": int(low_buffer_points),
                 "total_buffer_points": int(high_buffer_points + low_buffer_points),
-                "buffer_coverage": float((high_buffer_points + low_buffer_points) / len(high_prices)),
+                "buffer_coverage": float(
+                    (high_buffer_points + low_buffer_points) / len(high_prices)
+                ),
             }
 
             # 検出品質
             peaks = pattern_data.get("peaks", [])
             troughs = pattern_data.get("troughs", [])
-            
+
             analysis["detection_metrics"] = {
                 "peak_count": len(peaks),
                 "trough_count": len(troughs),
                 "total_extremums": len(peaks) + len(troughs),
                 "buffer_efficiency": (
-                    float((len(peaks) + len(troughs)) / (high_buffer_points + low_buffer_points))
+                    float(
+                        (len(peaks) + len(troughs))
+                        / (high_buffer_points + low_buffer_points)
+                    )
                     if (high_buffer_points + low_buffer_points) > 0
                     else 0
                 ),
@@ -542,7 +556,9 @@ class Pattern15V3FurtherRelaxationTester:
 
                 # 傾きとバッファ効率の収集
                 slope_by_period = timeframe_stats.get("slope_by_period", {})
-                buffer_efficiency_by_period = timeframe_stats.get("buffer_efficiency_by_period", {})
+                buffer_efficiency_by_period = timeframe_stats.get(
+                    "buffer_efficiency_by_period", {}
+                )
 
                 for period_name, slopes in slope_by_period.items():
                     all_slopes.extend(slopes)
@@ -562,7 +578,9 @@ class Pattern15V3FurtherRelaxationTester:
 
             # 全体検出率
             if total_periods > 0:
-                stats["overall_detection_rate"] = stats["total_detections"] / total_periods
+                stats["overall_detection_rate"] = (
+                    stats["total_detections"] / total_periods
+                )
 
             # 最高パフォーマンス時間足
             if timeframe_performance:
@@ -618,14 +636,14 @@ class Pattern15V3FurtherRelaxationTester:
             async with db_manager.get_session() as session:
                 query = text(
                     """
-                    SELECT 
+                    SELECT
                         timestamp as Date,
                         open_price as Open,
                         high_price as High,
                         low_price as Low,
                         close_price as Close,
                         volume as Volume
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     ORDER BY timestamp DESC
                     LIMIT :days
@@ -654,28 +672,30 @@ async def main():
     """メイン関数"""
     tester = Pattern15V3FurtherRelaxationTester()
     results = await tester.test_further_relaxation()
-    
+
     if "error" in results:
         print(f"\n❌ テストエラー: {results['error']}")
         return
-    
+
     print("\n=== パターン15 V3 さらなる基準緩和テスト結果 ===")
-    
+
     # データベース情報
     db_info = results.get("database_info", {})
     if "error" not in db_info:
         print(f"\n📊 データベース情報:")
         print(f"  総レコード数: {db_info.get('total_records', 0):,}件")
-        print(f"  データ期間: {db_info.get('start_date', 'N/A')} - {db_info.get('end_date', 'N/A')}")
+        print(
+            f"  データ期間: {db_info.get('start_date', 'N/A')} - {db_info.get('end_date', 'N/A')}"
+        )
         print(f"  データ期間: {db_info.get('data_span_days', 0)}日")
-    
+
     # 緩和結果
     relaxation_results = results.get("relaxation_results", {})
     print(f"\n🔧 緩和設定比較結果:")
-    
+
     for pattern_name, pattern_results in relaxation_results.items():
         print(f"\n  {pattern_name}:")
-        
+
         pattern_stats = pattern_results.get("statistics", {})
         print(f"    総検出件数: {pattern_stats.get('total_detections', 0)}")
         print(f"    全体検出率: {pattern_stats.get('overall_detection_rate', 0):.1%}")
@@ -683,29 +703,37 @@ async def main():
         print(f"    平均傾き: {pattern_stats.get('average_slope', 0):.6f}")
         print(f"    平均バッファ効率: {pattern_stats.get('average_buffer_efficiency', 0):.3f}")
         print(f"    総バッファポイント: {pattern_stats.get('total_buffer_points', 0)}")
-        
+
         # 時間足別結果
         for timeframe, timeframe_data in pattern_results.items():
             if timeframe == "statistics":
                 continue
-                
+
             tf_stats = timeframe_data.get("statistics", {})
-            print(f"      {timeframe}: {tf_stats.get('detection_count', 0)}件 ({tf_stats.get('detection_rate', 0):.1%})")
-            
+            print(
+                f"      {timeframe}: {tf_stats.get('detection_count', 0)}件 ({tf_stats.get('detection_rate', 0):.1%})"
+            )
+
             # 詳細結果
             for period_name, result in timeframe_data.items():
                 if period_name == "statistics":
                     continue
-                    
+
                 if result.get("detected", False):
                     analysis = result.get("analysis", {})
                     detection_quality = analysis.get("detection_quality", {})
-                    
+
                     print(f"        {period_name}:")
-                    print(f"          傾き: {analysis['mathematical']['slope']:.6f} ({analysis['mathematical']['slope_description']})")
+                    print(
+                        f"          傾き: {analysis['mathematical']['slope']:.6f} ({analysis['mathematical']['slope_description']})"
+                    )
                     print(f"          角度: {analysis['mathematical']['angle']:.2f}度")
-                    print(f"          バッファ効率: {detection_quality.get('detection_metrics', {}).get('buffer_efficiency', 0):.3f}")
-                    print(f"          バッファカバレッジ: {detection_quality.get('buffer_effectiveness', {}).get('buffer_coverage', 0):.1%}")
+                    print(
+                        f"          バッファ効率: {detection_quality.get('detection_metrics', {}).get('buffer_efficiency', 0):.3f}"
+                    )
+                    print(
+                        f"          バッファカバレッジ: {detection_quality.get('buffer_effectiveness', {}).get('buffer_coverage', 0):.1%}"
+                    )
 
 
 if __name__ == "__main__":

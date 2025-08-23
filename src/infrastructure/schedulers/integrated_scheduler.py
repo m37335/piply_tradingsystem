@@ -86,7 +86,7 @@ class IntegratedScheduler:
             # Discord送信者を初期化
             import os
 
-            webhook_url = os.getenv("DISCORD_WEBHOOK_URL", "")
+            webhook_url = os.getenv("DISCORD_ECONOMICINDICATORS_WEBHOOK_URL", "")
             self.discord_sender = DiscordWebhookSender(webhook_url)
 
             self.logger.info("統合スケジューラーの初期化が完了しました")

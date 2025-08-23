@@ -70,7 +70,7 @@ class DataFetcherService:
 
     async def fetch_real_5m_data(self) -> Optional[PriceDataModel]:
         """
-        実際の5分足データを取得（最新数件を処理）
+        実際の5分足データを取得（最新1件のみ）
 
         Returns:
             Optional[PriceDataModel]: 取得された価格データ
@@ -78,11 +78,11 @@ class DataFetcherService:
         start_time = datetime.now()
 
         try:
-            logger.info("📈 USD/JPY 履歴データ取得中...")
+            logger.info("📈 USD/JPY 最新データ取得中...")
 
-            # 1. Yahoo Financeからデータ取得
+            # 1. Yahoo Financeからデータ取得（最新数件のみ）
             data = await self.yahoo_client.get_historical_data(
-                "USDJPY=X", period="1d", interval="5m"
+                "USDJPY=X", period="1h", interval="5m"
             )
 
             if data is None or data.empty:

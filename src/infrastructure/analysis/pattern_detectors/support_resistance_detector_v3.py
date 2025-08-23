@@ -33,7 +33,7 @@ class SupportResistanceDetectorV3:
         self.pattern = NotificationPattern.create_pattern_15()
         self.utils = PatternUtils()
         self.timeframe = timeframe
-        
+
         # 時間足別パラメータ設定
         self._set_timeframe_parameters()
 
@@ -106,7 +106,9 @@ class SupportResistanceDetectorV3:
             logger.error(f"角度付きサポート/レジスタンスライン検出エラー: {e}")
             return None
 
-    def _detect_resistance_line_v3(self, price_data: pd.DataFrame) -> Optional[Dict[str, Any]]:
+    def _detect_resistance_line_v3(
+        self, price_data: pd.DataFrame
+    ) -> Optional[Dict[str, Any]]:
         """レジスタンスライン検出 V3（バッファ付き極値ベース）"""
         try:
             # バッファ付き極大値検出
@@ -124,12 +126,16 @@ class SupportResistanceDetectorV3:
                 return None
 
             # ライン強度を計算
-            strength = self._calculate_line_strength_v3(peaks, best_line, price_data, "High")
+            strength = self._calculate_line_strength_v3(
+                peaks, best_line, price_data, "High"
+            )
             if strength < self.min_line_strength:
                 return None
 
             # 現在価格との関係を分析
-            current_analysis = self._analyze_current_price_relation_v3(price_data, best_line, "resistance")
+            current_analysis = self._analyze_current_price_relation_v3(
+                price_data, best_line, "resistance"
+            )
 
             return {
                 "line_type": "resistance",
@@ -145,7 +151,9 @@ class SupportResistanceDetectorV3:
             logger.error(f"レジスタンスライン検出V3エラー: {e}")
             return None
 
-    def _detect_support_line_v3(self, price_data: pd.DataFrame) -> Optional[Dict[str, Any]]:
+    def _detect_support_line_v3(
+        self, price_data: pd.DataFrame
+    ) -> Optional[Dict[str, Any]]:
         """サポートライン検出 V3（バッファ付き極値ベース）"""
         try:
             # バッファ付き極小値検出
@@ -163,12 +171,16 @@ class SupportResistanceDetectorV3:
                 return None
 
             # ライン強度を計算
-            strength = self._calculate_line_strength_v3(troughs, best_line, price_data, "Low")
+            strength = self._calculate_line_strength_v3(
+                troughs, best_line, price_data, "Low"
+            )
             if strength < self.min_line_strength:
                 return None
 
             # 現在価格との関係を分析
-            current_analysis = self._analyze_current_price_relation_v3(price_data, best_line, "support")
+            current_analysis = self._analyze_current_price_relation_v3(
+                price_data, best_line, "support"
+            )
 
             return {
                 "line_type": "support",
@@ -191,20 +203,20 @@ class SupportResistanceDetectorV3:
                 # 上位N%の価格帯をバッファとして定義
                 threshold = np.percentile(prices, 100 - self.buffer_percentile)
                 peaks, _ = find_peaks(prices, height=threshold, distance=1)
-                
+
                 # もし極値が見つからない場合は、上位の価格ポイントを使用
                 if len(peaks) == 0:
                     sorted_indices = np.argsort(prices)[::-1]
-                    peaks = sorted_indices[:self.min_peaks]
+                    peaks = sorted_indices[: self.min_peaks]
             else:
                 # 下位N%の価格帯をバッファとして定義
                 threshold = np.percentile(prices, self.buffer_percentile)
                 peaks, _ = find_peaks(-prices, height=-threshold, distance=1)
-                
+
                 # もし極値が見つからない場合は、下位の価格ポイントを使用
                 if len(peaks) == 0:
                     sorted_indices = np.argsort(prices)
-                    peaks = sorted_indices[:self.min_peaks]
+                    peaks = sorted_indices[: self.min_peaks]
 
             return peaks.tolist()
 
@@ -212,7 +224,9 @@ class SupportResistanceDetectorV3:
             logger.error(f"バッファ付き極値検出エラー: {e}")
             return []
 
-    def _find_best_line_equation_v3(self, peaks: List[int], price_data: pd.DataFrame, column: str) -> Optional[Dict[str, float]]:
+    def _find_best_line_equation_v3(
+        self, peaks: List[int], price_data: pd.DataFrame, column: str
+    ) -> Optional[Dict[str, float]]:
         """最適な1次関数（y = ax + b）を計算 V3"""
         try:
             if len(peaks) < 2:
@@ -236,15 +250,17 @@ class SupportResistanceDetectorV3:
                     b = y1 - a * x1
 
                     # この1次関数のスコアを計算
-                    score = self._evaluate_line_equation_v3(peaks, price_data, column, a, b)
-                    
+                    score = self._evaluate_line_equation_v3(
+                        peaks, price_data, column, a, b
+                    )
+
                     if score > best_score:
                         best_score = score
                         best_line = {
                             "slope": a,
                             "intercept": b,
                             "angle": math.degrees(math.atan(a)),
-                            "score": score
+                            "score": score,
                         }
 
             return best_line if best_score > 0.5 else None
@@ -253,7 +269,14 @@ class SupportResistanceDetectorV3:
             logger.error(f"最適1次関数計算V3エラー: {e}")
             return None
 
-    def _evaluate_line_equation_v3(self, peaks: List[int], price_data: pd.DataFrame, column: str, a: float, b: float) -> float:
+    def _evaluate_line_equation_v3(
+        self,
+        peaks: List[int],
+        price_data: pd.DataFrame,
+        column: str,
+        a: float,
+        b: float,
+    ) -> float:
         """1次関数の評価スコアを計算 V3"""
         try:
             valid_points = 0
@@ -266,10 +289,10 @@ class SupportResistanceDetectorV3:
 
                 # 予測値と実際値の誤差
                 error = abs(actual_y - predicted_y) / actual_y
-                
+
                 if error <= self.price_tolerance:
                     valid_points += 1
-                
+
                 total_error += error
 
             # スコア計算（有効ポイント率 + 誤差の逆数）
@@ -277,13 +300,15 @@ class SupportResistanceDetectorV3:
             avg_error = total_error / len(peaks)
             error_score = 1.0 / (1.0 + avg_error)
 
-            return (valid_ratio * 0.7 + error_score * 0.3)
+            return valid_ratio * 0.7 + error_score * 0.3
 
         except Exception as e:
             logger.error(f"1次関数評価V3エラー: {e}")
             return 0.0
 
-    def _calculate_line_strength_v3(self, peaks: List[int], line_data: Dict, price_data: pd.DataFrame, column: str) -> float:
+    def _calculate_line_strength_v3(
+        self, peaks: List[int], line_data: Dict, price_data: pd.DataFrame, column: str
+    ) -> float:
         """ライン強度計算 V3"""
         try:
             a = line_data["slope"]
@@ -306,7 +331,9 @@ class SupportResistanceDetectorV3:
                 angle_strength = 0.3
 
             # 3. 価格の一貫性
-            consistency = self._evaluate_line_equation_v3(peaks, price_data, column, a, b)
+            consistency = self._evaluate_line_equation_v3(
+                peaks, price_data, column, a, b
+            )
 
             # 4. 時間足別の重み付け
             if self.timeframe == "5m":
@@ -318,9 +345,9 @@ class SupportResistanceDetectorV3:
 
             # 総合強度
             strength = (
-                peak_strength * weights[0] + 
-                angle_strength * weights[1] + 
-                consistency * weights[2]
+                peak_strength * weights[0]
+                + angle_strength * weights[1]
+                + consistency * weights[2]
             )
             return min(strength, 1.0)
 
@@ -328,12 +355,14 @@ class SupportResistanceDetectorV3:
             logger.error(f"ライン強度計算V3エラー: {e}")
             return 0.0
 
-    def _analyze_current_price_relation_v3(self, price_data: pd.DataFrame, line_data: Dict, line_type: str) -> Dict[str, Any]:
+    def _analyze_current_price_relation_v3(
+        self, price_data: pd.DataFrame, line_data: Dict, line_type: str
+    ) -> Dict[str, Any]:
         """現在価格とラインの関係を分析 V3"""
         try:
             current_price = price_data.iloc[-1]["Close"]
             current_index = len(price_data) - 1
-            
+
             a = line_data["slope"]
             b = line_data["intercept"]
             line_price = a * current_index + b
@@ -368,7 +397,7 @@ class SupportResistanceDetectorV3:
                 "strength": strength,
                 "distance": distance,
                 "line_price": line_price,
-                "current_price": current_price
+                "current_price": current_price,
             }
 
         except Exception as e:
@@ -453,7 +482,9 @@ class SupportResistanceDetectorV3:
                 "current_price": current_price,
                 "pattern_type": pattern_type,
                 "pattern_data": pattern_data,
-                "direction": pattern_data.get("direction", "SELL" if pattern_type == "resistance_line" else "BUY"),
+                "direction": pattern_data.get(
+                    "direction", "SELL" if pattern_type == "resistance_line" else "BUY"
+                ),
                 "description": f"{description} - {angle_description}",
                 "timeframe": self.timeframe,
             }

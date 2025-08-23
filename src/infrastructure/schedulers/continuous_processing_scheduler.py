@@ -46,15 +46,19 @@ class ContinuousProcessingScheduler:
 
     async def run_single_cycle(self):
         """
-        単一サイクルの実行（シンプル版）
+        単一サイクルの実行（UnifiedTechnicalCalculator統合版）
         """
         try:
-            logger.info("🔄 継続処理サイクル開始")
+            logger.info("🔄 継続処理サイクル開始（UnifiedTechnicalCalculator統合版）")
 
             # 直接DataFetcherServiceを呼び出し
             result = await self._direct_fetch_data()
 
-            logger.info("✅ 継続処理サイクル完了")
+            # UnifiedTechnicalCalculatorによる処理確認
+            if result and result.get("price_data"):
+                await self.continuous_service.process_5m_data(result["price_data"])
+
+            logger.info("✅ 継続処理サイクル完了（UnifiedTechnicalCalculator統合版）")
             return result
 
         except Exception as e:
@@ -75,9 +79,7 @@ class ContinuousProcessingScheduler:
             price_data = await self.data_fetcher.fetch_real_5m_data()
 
             if not price_data:
-                raise Exception(
-                    "DataFetcherService.fetch_real_5m_data()でデータ取得失敗"
-                )
+                raise Exception("DataFetcherService.fetch_real_5m_data()でデータ取得失敗")
 
             logger.info(
                 f"✅ 直接データ取得完了: "
@@ -152,7 +154,7 @@ class ContinuousProcessingScheduler:
                 "service": "ContinuousProcessingScheduler",
                 "status": "healthy",
                 "timestamp": datetime.now(),
-                "message": "シンプル化されたスケジューラーは正常稼働中",
+                "message": "UnifiedTechnicalCalculator統合版スケジューラーは正常稼働中",
             }
 
             # 基本的な健全性チェック

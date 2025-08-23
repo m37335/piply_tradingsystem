@@ -36,7 +36,7 @@ class Pattern14DetailedTester:
         # 複数のテストケースを試行
         for test_case in range(1, 5):  # 4つのテストケース
             logger.info(f"テストケース {test_case} を試行中...")
-            
+
             # テストデータ作成
             logger.info(f"パターン14用テストデータ作成中...（テストケース {test_case}）")
             test_data = self._create_pattern14_test_data(test_case)
@@ -129,14 +129,15 @@ class Pattern14DetailedTester:
         try:
             # 上昇ウェッジ検出
             rising_wedge_result = self.detector._detect_rising_wedge(test_data)
-            
+
             # 下降ウェッジ検出
             falling_wedge_result = self.detector._detect_falling_wedge(test_data)
-            
+
             return {
                 "rising_wedge": rising_wedge_result is not None,
                 "falling_wedge": falling_wedge_result is not None,
-                "either_pattern": (rising_wedge_result is not None) or (falling_wedge_result is not None)
+                "either_pattern": (rising_wedge_result is not None)
+                or (falling_wedge_result is not None),
             }
         except Exception as e:
             logger.error(f"条件分析エラー: {e}")
@@ -144,7 +145,7 @@ class Pattern14DetailedTester:
                 "rising_wedge": False,
                 "falling_wedge": False,
                 "either_pattern": False,
-                "error": str(e)
+                "error": str(e),
             }
 
 
@@ -152,7 +153,7 @@ async def main():
     """メイン関数"""
     tester = Pattern14DetailedTester()
     result = await tester.test_pattern14_detailed()
-    
+
     if result:
         print("\n✅ パターン14検出成功！")
         print(f"パターンタイプ: {result.get('pattern_type', 'unknown')}")

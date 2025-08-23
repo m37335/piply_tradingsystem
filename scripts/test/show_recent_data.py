@@ -61,7 +61,7 @@ class RecentDataViewer:
             async with db_manager.get_session() as session:
                 query = text(
                     """
-                    SELECT 
+                    SELECT
                         timestamp,
                         currency_pair,
                         open_price,
@@ -69,7 +69,7 @@ class RecentDataViewer:
                         low_price,
                         close_price,
                         volume
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     ORDER BY timestamp DESC
                     LIMIT :limit
@@ -125,18 +125,20 @@ async def main():
 
     if recent_data:
         print(f"  期間: {recent_data[0]['timestamp']} ～ {recent_data[-1]['timestamp']}")
-        
+
         # 価格統計
         closes = [d["close"] for d in recent_data]
         highs = [d["high"] for d in recent_data]
         lows = [d["low"] for d in recent_data]
-        
+
         print(f"  終値範囲: {min(closes):.2f} - {max(closes):.2f}")
         print(f"  高値範囲: {min(highs):.2f} - {max(highs):.2f}")
         print(f"  安値範囲: {min(lows):.2f} - {max(lows):.2f}")
 
     print(f"\n📈 詳細データ:")
-    print(f"{'No.':<3} {'Timestamp':<25} {'Open':<8} {'High':<8} {'Low':<8} {'Close':<8} {'Volume':<10}")
+    print(
+        f"{'No.':<3} {'Timestamp':<25} {'Open':<8} {'High':<8} {'Low':<8} {'Close':<8} {'Volume':<10}"
+    )
     print("-" * 80)
 
     for i, data in enumerate(recent_data, 1):
@@ -144,7 +146,7 @@ async def main():
         # タイムスタンプを短縮表示
         if len(timestamp) > 19:
             timestamp = timestamp[:19]  # YYYY-MM-DD HH:MM:SS まで
-        
+
         print(
             f"{i:<3} {timestamp:<25} "
             f"{data['open']:<8.2f} {data['high']:<8.2f} "
@@ -155,23 +157,23 @@ async def main():
     # 価格変動の分析
     if len(recent_data) > 1:
         print(f"\n📊 価格変動分析:")
-        
+
         # 終値の変動
         close_changes = []
         for i in range(1, len(recent_data)):
-            change = recent_data[i]["close"] - recent_data[i-1]["close"]
+            change = recent_data[i]["close"] - recent_data[i - 1]["close"]
             close_changes.append(change)
-        
+
         if close_changes:
             positive_changes = sum(1 for c in close_changes if c > 0)
             negative_changes = sum(1 for c in close_changes if c < 0)
             zero_changes = sum(1 for c in close_changes if c == 0)
-            
+
             print(f"  終値変動: +{positive_changes} -{negative_changes} ={zero_changes}")
             print(f"  平均変動: {sum(close_changes)/len(close_changes):.4f}")
             print(f"  最大上昇: {max(close_changes):.4f}")
             print(f"  最大下降: {min(close_changes):.4f}")
-        
+
         # 価格範囲の分析
         price_ranges = [d["high"] - d["low"] for d in recent_data]
         if price_ranges:
@@ -181,23 +183,29 @@ async def main():
 
     # データの特徴
     print(f"\n🔍 データ特徴:")
-    
+
     # 重複値の確認
     unique_closes = len(set(closes))
     unique_highs = len(set(highs))
     unique_lows = len(set(lows))
-    
+
     print(f"  終値ユニーク値: {unique_closes}/{total_count}")
     print(f"  高値ユニーク値: {unique_highs}/{total_count}")
     print(f"  安値ユニーク値: {unique_lows}/{total_count}")
-    
+
     # データの一貫性
     consistent_count = sum(
-        1 for d in recent_data 
-        if d["high"] >= d["low"] and d["high"] >= d["open"] and d["high"] >= d["close"]
-        and d["low"] <= d["open"] and d["low"] <= d["close"]
+        1
+        for d in recent_data
+        if d["high"] >= d["low"]
+        and d["high"] >= d["open"]
+        and d["high"] >= d["close"]
+        and d["low"] <= d["open"]
+        and d["low"] <= d["close"]
     )
-    print(f"  価格論理一貫性: {consistent_count}/{total_count} ({consistent_count/total_count*100:.1f}%)")
+    print(
+        f"  価格論理一貫性: {consistent_count}/{total_count} ({consistent_count/total_count*100:.1f}%)"
+    )
 
 
 if __name__ == "__main__":

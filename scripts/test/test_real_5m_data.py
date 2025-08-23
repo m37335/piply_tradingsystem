@@ -34,7 +34,9 @@ class Real5mDataTester:
         """初期化"""
         try:
             # SQLite環境を強制設定
-            os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///data/exchange_analytics.db"
+            os.environ[
+                "DATABASE_URL"
+            ] = "sqlite+aiosqlite:///data/exchange_analytics.db"
 
             self.session = await get_async_session()
             self.data_fetcher = DataFetcherService(self.session)
@@ -52,7 +54,7 @@ class Real5mDataTester:
             # 1. 従来の人工データ取得
             logger.info("1. 従来の人工データ取得テスト...")
             artificial_data = await self.data_fetcher.fetch_current_price_data()
-            
+
             if artificial_data:
                 logger.info(f"  人工データ取得成功:")
                 logger.info(f"    Open: {artificial_data.open_price}")
@@ -68,7 +70,7 @@ class Real5mDataTester:
             logger.info("2. 新しい実際の5分足データ取得テスト...")
             try:
                 real_data = await self.data_fetcher.fetch_real_5m_data()
-                
+
                 if real_data:
                     logger.info(f"  実際の5分足データ取得成功:")
                     logger.info(f"    Open: {real_data.open_price}")
@@ -83,27 +85,38 @@ class Real5mDataTester:
             except Exception as e:
                 logger.error(f"  実際の5分足データ取得エラー: {e}")
                 import traceback
+
                 traceback.print_exc()
 
             # 3. データ比較
             if artificial_data and real_data:
                 logger.info("3. データ比較:")
-                logger.info(f"   終値差: {abs(real_data.close_price - artificial_data.close_price):.4f}")
-                logger.info(f"   高値差: {abs(real_data.high_price - artificial_data.high_price):.4f}")
-                logger.info(f"   安値差: {abs(real_data.low_price - artificial_data.low_price):.4f}")
-                logger.info(f"   オープン差: {abs(real_data.open_price - artificial_data.open_price):.4f}")
-                
+                logger.info(
+                    f"   終値差: {abs(real_data.close_price - artificial_data.close_price):.4f}"
+                )
+                logger.info(
+                    f"   高値差: {abs(real_data.high_price - artificial_data.high_price):.4f}"
+                )
+                logger.info(
+                    f"   安値差: {abs(real_data.low_price - artificial_data.low_price):.4f}"
+                )
+                logger.info(
+                    f"   オープン差: {abs(real_data.open_price - artificial_data.open_price):.4f}"
+                )
+
                 # データ品質評価
                 self._evaluate_data_quality(artificial_data, real_data)
 
             # 4. 最新データの確認
             logger.info("4. 最新データ確認...")
             latest_data = await self.data_fetcher.get_latest_price_data(limit=5)
-            
+
             if latest_data:
                 logger.info(f"  最新5件のデータ:")
                 for i, data in enumerate(latest_data, 1):
-                    logger.info(f"    {i}. {data.timestamp}: O={data.open_price}, H={data.high_price}, L={data.low_price}, C={data.close_price}, V={data.volume}")
+                    logger.info(
+                        f"    {i}. {data.timestamp}: O={data.open_price}, H={data.high_price}, L={data.low_price}, C={data.close_price}, V={data.volume}"
+                    )
             else:
                 logger.warning("  最新データ取得失敗")
 
@@ -112,28 +125,31 @@ class Real5mDataTester:
         except Exception as e:
             logger.error(f"Error testing real 5m data: {e}")
             import traceback
+
             traceback.print_exc()
 
     def _evaluate_data_quality(self, artificial_data, real_data):
         """データ品質を評価"""
         logger.info("  データ品質評価:")
-        
+
         # 価格範囲の合理性
         artificial_range = artificial_data.high_price - artificial_data.low_price
         real_range = real_data.high_price - real_data.low_price
-        
+
         logger.info(f"   人工データ価格範囲: {artificial_range:.4f}")
         logger.info(f"   実際データ価格範囲: {real_range:.4f}")
-        
+
         # ボリュームの合理性
         artificial_volume = artificial_data.volume
         real_volume = real_data.volume
-        
+
         logger.info(f"   人工データボリューム: {artificial_volume:,}")
         logger.info(f"   実際データボリューム: {real_volume:,}")
-        
+
         # データソースの確認
-        logger.info(f"   人工データソース: {getattr(artificial_data, 'data_source', 'Unknown')}")
+        logger.info(
+            f"   人工データソース: {getattr(artificial_data, 'data_source', 'Unknown')}"
+        )
         logger.info(f"   実際データソース: {real_data.data_source}")
 
     async def cleanup(self):
@@ -155,6 +171,7 @@ async def main():
     except Exception as e:
         logger.error(f"Real 5m data test error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
     finally:

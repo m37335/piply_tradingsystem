@@ -27,6 +27,16 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
+# 環境変数を自動設定
+os.environ["DATABASE_URL"] = (
+    "postgresql+asyncpg://exchange_analytics_user:"
+    "exchange_password@localhost:5432/exchange_analytics_production_db"
+)
+
+# プロジェクトルートをパスに追加
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+sys.path.insert(0, project_root)
+
 
 class RealtimeMonitor:
     """リアルタイム監視システム"""
@@ -44,6 +54,10 @@ class RealtimeMonitor:
         self.start_time = datetime.now(pytz.timezone("Asia/Tokyo"))
         self.webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
 
+        # アラートシステム連携
+        self.alert_session = None
+        self.alert_repo = None
+
         # 統計
         self.stats = {
             "total_checks": 0,
@@ -51,6 +65,7 @@ class RealtimeMonitor:
             "degraded_checks": 0,
             "unhealthy_checks": 0,
             "alerts_sent": 0,
+            "db_alerts_saved": 0,
         }
 
     async def start_monitoring(
@@ -98,6 +113,9 @@ class RealtimeMonitor:
                 # 異常検知とアラート
                 if discord_alerts:
                     await self._check_and_send_alerts(health_data, current_status)
+                
+                # アラートシステムとの連携
+                await self._save_alerts_to_database(health_data, current_status)
 
                 self.previous_status = current_status
                 return self._create_monitoring_panel(health_data, detailed)
@@ -105,6 +123,10 @@ class RealtimeMonitor:
                 # API接続失敗
                 if discord_alerts:
                     await self._send_connection_failure_alert()
+                
+                # API接続失敗アラートをデータベースに保存
+                await self._save_connection_failure_alert()
+                
                 return self._create_error_panel("API接続失敗")
 
         except Exception as e:
@@ -361,7 +383,9 @@ class RealtimeMonitor:
 
     async def _send_connection_failure_alert(self):
         """接続失敗アラート"""
-        if not self.webhook_url:
+        # システム系のWebhook URLを使用
+        monitoring_webhook_url = os.getenv("DISCORD_MONITORING_WEBHOOK_URL")
+        if not monitoring_webhook_url:
             return
 
         try:
@@ -396,7 +420,7 @@ class RealtimeMonitor:
             }
 
             async with httpx.AsyncClient(timeout=5.0) as client:
-                await client.post(self.webhook_url, json=alert_data)
+                await client.post(monitoring_webhook_url, json=alert_data)
 
             self.stats["alerts_sent"] += 1
 
@@ -446,6 +470,127 @@ class RealtimeMonitor:
         except Exception:
             pass
 
+    async def _save_alerts_to_database(
+        self, health_data: Dict[str, Any], current_status: str
+    ):
+        """アラートをデータベースに保存"""
+        try:
+            # アラートシステムの初期化
+            if self.alert_session is None:
+                from src.infrastructure.database.connection import get_async_session
+                from src.infrastructure.database.repositories.alert_repository_impl import (
+                    AlertRepositoryImpl,
+                )
+                
+                self.alert_session = await get_async_session()
+                self.alert_repo = AlertRepositoryImpl(self.alert_session)
+
+            # ステータス変更アラート
+            if self.previous_status and self.previous_status != current_status:
+                await self._save_status_change_alert(
+                    self.previous_status, current_status
+                )
+
+            # コンポーネント別アラート
+            if "checks" in health_data:
+                await self._save_component_alerts(health_data["checks"])
+
+        except Exception as e:
+            # アラートシステムエラーはログに記録するが、監視は継続
+            pass
+
+    async def _save_status_change_alert(self, previous: str, current: str):
+        """ステータス変更アラートをデータベースに保存"""
+        if not self.alert_repo:
+            return
+
+        try:
+            severity = "high" if current in ["unhealthy"] else "medium"
+            
+            # API接続失敗の場合はapi_errorタイプに変更
+            alert_type = "api_error" if current == "unhealthy" else "system_resource"
+            
+            await self.alert_repo.create_alert(
+                alert_type=alert_type,
+                severity=severity,
+                message=f"システムステータス変更: {previous.upper()} → {current.upper()}",
+                details={
+                    "previous_status": previous,
+                    "current_status": current,
+                    "check_count": self.check_count,
+                    "monitor_type": "realtime_health_check"
+                }
+            )
+            
+            self.stats["db_alerts_saved"] += 1
+
+        except Exception:
+            pass
+
+    async def _save_component_alerts(self, checks: Dict[str, Any]):
+        """コンポーネントアラートをデータベースに保存"""
+        if not self.alert_repo:
+            return
+
+        for component, check_data in checks.items():
+            status = check_data.get("status", "unknown")
+            
+            # 前回と状態が変わった場合のみ保存
+            previous_comp_status = self.alert_history.get(component)
+
+            if previous_comp_status != status and status in ["degraded", "unhealthy"]:
+                try:
+                    severity = "high" if status == "unhealthy" else "medium"
+                    
+                    await self.alert_repo.create_alert(
+                        alert_type="system_resource",
+                        severity=severity,
+                        message=f"コンポーネント異常: {component.replace('_', ' ').title()} - {status.upper()}",
+                        details={
+                            "component": component,
+                            "status": status,
+                            "error": check_data.get("error", "No specific error"),
+                            "response_time": check_data.get("response_time_ms", 0),
+                            "monitor_type": "realtime_health_check"
+                        }
+                    )
+                    
+                    self.stats["db_alerts_saved"] += 1
+
+                except Exception:
+                    pass
+
+    async def _save_connection_failure_alert(self):
+        """API接続失敗アラートをデータベースに保存"""
+        try:
+            # アラートシステムの初期化
+            if self.alert_session is None:
+                from src.infrastructure.database.connection import get_async_session
+                from src.infrastructure.database.repositories.alert_repository_impl import (
+                    AlertRepositoryImpl,
+                )
+                
+                self.alert_session = await get_async_session()
+                self.alert_repo = AlertRepositoryImpl(self.alert_session)
+
+            if self.alert_repo:
+                await self.alert_repo.create_alert(
+                    alert_type="api_error",
+                    severity="high",
+                    message=f"API接続失敗: {self.api_base}",
+                    details={
+                        "api_endpoint": self.api_base,
+                        "check_count": self.check_count,
+                        "monitor_type": "realtime_health_check",
+                        "error_type": "connection_failure"
+                    }
+                )
+                
+                self.stats["db_alerts_saved"] += 1
+
+        except Exception:
+            pass
+
     def _display_monitoring_summary(self):
         """監視終了時の統計表示"""
         runtime = datetime.now(pytz.timezone("Asia/Tokyo")) - self.start_time
@@ -464,6 +609,7 @@ class RealtimeMonitor:
         stats_table.add_row("Degraded Checks", str(self.stats["degraded_checks"]))
         stats_table.add_row("Unhealthy Checks", str(self.stats["unhealthy_checks"]))
         stats_table.add_row("Alerts Sent", str(self.stats["alerts_sent"]))
+        stats_table.add_row("DB Alerts Saved", str(self.stats["db_alerts_saved"]))
 
         if self.stats["total_checks"] > 0:
             success_rate = (

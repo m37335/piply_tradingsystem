@@ -254,9 +254,7 @@ class EfficientPatternDetectionService:
                 all_patterns
             )
 
-            logger.info(
-                f"✅ {timeframe}時間軸のパターン検出完了: {len(saved_patterns)}件"
-            )
+            logger.info(f"✅ {timeframe}時間軸のパターン検出完了: {len(saved_patterns)}件")
             return saved_patterns
 
         except Exception as e:

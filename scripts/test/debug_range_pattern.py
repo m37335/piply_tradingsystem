@@ -12,7 +12,9 @@ from typing import Dict, List
 import pandas as pd
 from sqlalchemy import text
 
-from src.infrastructure.analysis.pattern_detectors.support_resistance_detector import SupportResistanceDetector
+from src.infrastructure.analysis.pattern_detectors.support_resistance_detector import (
+    SupportResistanceDetector,
+)
 from src.infrastructure.database.connection import db_manager
 
 # ログ設定
@@ -35,7 +37,9 @@ class RangePatternDebugger:
 
         try:
             # データベース接続
-            await db_manager.initialize("sqlite+aiosqlite:///./data/exchange_analytics.db")
+            await db_manager.initialize(
+                "sqlite+aiosqlite:///./data/exchange_analytics.db"
+            )
             logger.info("✅ データベース接続完了")
 
             # 複数の期間でテスト
@@ -75,10 +79,7 @@ class RangePatternDebugger:
             # レンジ相場検出の詳細分析
             debug_info = self._analyze_range_detection(data)
 
-            return {
-                "data_points": len(data),
-                "debug_info": debug_info
-            }
+            return {"data_points": len(data), "debug_info": debug_info}
 
         except Exception as e:
             logger.error(f"期間デバッグエラー: {e}")
@@ -91,7 +92,7 @@ class RangePatternDebugger:
                 "resistance_line_analysis": {},
                 "support_line_analysis": {},
                 "range_pattern_analysis": {},
-                "recommendations": []
+                "recommendations": [],
             }
 
             # 1. レジスタンスライン検出の詳細分析
@@ -126,33 +127,39 @@ class RangePatternDebugger:
             analysis["touch_points"] = {
                 "count": len(touch_points),
                 "indices": touch_points[:10],  # 最初の10個のみ表示
-                "min_required": self.detector.min_touch_points
+                "min_required": self.detector.min_touch_points,
             }
 
             if len(touch_points) >= self.detector.min_touch_points:
                 # ライン方程式計算
-                line_data = self.detector._calculate_line_equation(touch_points, data, "High")
+                line_data = self.detector._calculate_line_equation(
+                    touch_points, data, "High"
+                )
                 analysis["line_equation"] = {
                     "success": line_data is not None,
                     "slope": line_data.get("slope") if line_data else None,
-                    "intercept": line_data.get("intercept") if line_data else None
+                    "intercept": line_data.get("intercept") if line_data else None,
                 }
 
                 if line_data:
                     # ライン強度検証
-                    strength = self.detector._validate_line_strength(touch_points, line_data)
+                    strength = self.detector._validate_line_strength(
+                        touch_points, line_data
+                    )
                     analysis["line_strength"] = {
                         "strength": strength,
                         "min_required": 0.01,
-                        "passed": strength >= 0.01
+                        "passed": strength >= 0.01,
                     }
 
                     # ブレイクアウト検出
-                    breakout = self.detector._detect_breakout(data, line_data, "resistance")
+                    breakout = self.detector._detect_breakout(
+                        data, line_data, "resistance"
+                    )
                     analysis["breakout"] = {
                         "detected": breakout is not None,
                         "type": breakout.get("type") if breakout else None,
-                        "strength": breakout.get("strength") if breakout else None
+                        "strength": breakout.get("strength") if breakout else None,
                     }
 
             return analysis
@@ -171,33 +178,39 @@ class RangePatternDebugger:
             analysis["touch_points"] = {
                 "count": len(touch_points),
                 "indices": touch_points[:10],  # 最初の10個のみ表示
-                "min_required": self.detector.min_touch_points
+                "min_required": self.detector.min_touch_points,
             }
 
             if len(touch_points) >= self.detector.min_touch_points:
                 # ライン方程式計算
-                line_data = self.detector._calculate_line_equation(touch_points, data, "Low")
+                line_data = self.detector._calculate_line_equation(
+                    touch_points, data, "Low"
+                )
                 analysis["line_equation"] = {
                     "success": line_data is not None,
                     "slope": line_data.get("slope") if line_data else None,
-                    "intercept": line_data.get("intercept") if line_data else None
+                    "intercept": line_data.get("intercept") if line_data else None,
                 }
 
                 if line_data:
                     # ライン強度検証
-                    strength = self.detector._validate_line_strength(touch_points, line_data)
+                    strength = self.detector._validate_line_strength(
+                        touch_points, line_data
+                    )
                     analysis["line_strength"] = {
                         "strength": strength,
                         "min_required": 0.01,
-                        "passed": strength >= 0.01
+                        "passed": strength >= 0.01,
                     }
 
                     # ブレイクアウト検出
-                    breakout = self.detector._detect_breakout(data, line_data, "support")
+                    breakout = self.detector._detect_breakout(
+                        data, line_data, "support"
+                    )
                     analysis["breakout"] = {
                         "detected": breakout is not None,
                         "type": breakout.get("type") if breakout else None,
-                        "strength": breakout.get("strength") if breakout else None
+                        "strength": breakout.get("strength") if breakout else None,
                     }
 
             return analysis
@@ -215,7 +228,9 @@ class RangePatternDebugger:
             resistance_line = self.detector._detect_resistance_line_for_range(data)
             support_line = self.detector._detect_support_line_for_range(data)
 
-            analysis["both_lines_detected"] = resistance_line is not None and support_line is not None
+            analysis["both_lines_detected"] = (
+                resistance_line is not None and support_line is not None
+            )
             analysis["resistance_detected"] = resistance_line is not None
             analysis["support_detected"] = support_line is not None
 
@@ -224,11 +239,15 @@ class RangePatternDebugger:
                 analysis["resistance_details"] = {
                     "strength": resistance_line.get("strength", 0.0),
                     "touch_points_count": len(resistance_line.get("touch_points", [])),
-                    "breakout_type": resistance_line.get("breakout", {}).get("type", "unknown")
+                    "breakout_type": resistance_line.get("breakout", {}).get(
+                        "type", "unknown"
+                    ),
                 }
             else:
                 # なぜレジスタンスラインが検出されないかの分析
-                resistance_analysis = self._analyze_why_line_not_detected(data, "resistance")
+                resistance_analysis = self._analyze_why_line_not_detected(
+                    data, "resistance"
+                )
                 analysis["resistance_failure_reason"] = resistance_analysis
 
             # サポートラインの詳細分析
@@ -236,7 +255,9 @@ class RangePatternDebugger:
                 analysis["support_details"] = {
                     "strength": support_line.get("strength", 0.0),
                     "touch_points_count": len(support_line.get("touch_points", [])),
-                    "breakout_type": support_line.get("breakout", {}).get("type", "unknown")
+                    "breakout_type": support_line.get("breakout", {}).get(
+                        "type", "unknown"
+                    ),
                 }
             else:
                 # なぜサポートラインが検出されないかの分析
@@ -255,7 +276,7 @@ class RangePatternDebugger:
                     "range_width": range_width,
                     "min_required": 0.03,
                     "max_allowed": 0.25,
-                    "passed": 0.03 <= range_width <= 0.25
+                    "passed": 0.03 <= range_width <= 0.25,
                 }
 
                 if 0.03 <= range_width <= 0.25:
@@ -270,7 +291,7 @@ class RangePatternDebugger:
                         "crossings": oscillations.get("crossings", 0),
                         "is_valid": oscillations.get("is_valid", False),
                         "min_touches_required": 3,
-                        "min_crossings_required": 2
+                        "min_crossings_required": 2,
                     }
 
                     if oscillations.get("is_valid", False):
@@ -282,7 +303,7 @@ class RangePatternDebugger:
                         analysis["range_strength"] = {
                             "strength": range_strength,
                             "resistance_strength": resistance_line.get("strength", 0.0),
-                            "support_strength": support_line.get("strength", 0.0)
+                            "support_strength": support_line.get("strength", 0.0),
                         }
 
             return analysis
@@ -291,41 +312,44 @@ class RangePatternDebugger:
             logger.error(f"レンジパターンロジックデバッグエラー: {e}")
             return {"error": str(e)}
 
-    def _analyze_why_line_not_detected(self, data: pd.DataFrame, line_type: str) -> Dict:
+    def _analyze_why_line_not_detected(
+        self, data: pd.DataFrame, line_type: str
+    ) -> Dict:
         """ラインが検出されない理由を分析"""
         try:
             analysis = {}
 
             # タッチポイント検出
             touch_points = self.detector._find_touch_points(data, line_type)
-            analysis["touch_points"] = {
-                "count": len(touch_points),
-                "min_required": 1
-            }
+            analysis["touch_points"] = {"count": len(touch_points), "min_required": 1}
 
             if len(touch_points) >= 1:
                 # ライン方程式計算
                 column = "High" if line_type == "resistance" else "Low"
-                line_data = self.detector._calculate_line_equation(touch_points, data, column)
-                analysis["line_equation"] = {
-                    "success": line_data is not None
-                }
+                line_data = self.detector._calculate_line_equation(
+                    touch_points, data, column
+                )
+                analysis["line_equation"] = {"success": line_data is not None}
 
                 if line_data:
                     # ライン強度検証
-                    strength = self.detector._validate_line_strength(touch_points, line_data)
+                    strength = self.detector._validate_line_strength(
+                        touch_points, line_data
+                    )
                     analysis["line_strength"] = {
                         "strength": strength,
                         "min_required": 0.005,
-                        "passed": strength >= 0.005
+                        "passed": strength >= 0.005,
                     }
 
                     if strength >= 0.005:
                         # ブレイクアウト検出
-                        breakout = self.detector._detect_breakout_for_range(data, line_data, line_type)
+                        breakout = self.detector._detect_breakout_for_range(
+                            data, line_data, line_type
+                        )
                         analysis["breakout"] = {
                             "detected": breakout is not None,
-                            "type": breakout.get("type") if breakout else None
+                            "type": breakout.get("type") if breakout else None,
                         }
 
             return analysis
@@ -343,14 +367,18 @@ class RangePatternDebugger:
         if "touch_points" in resistance_analysis:
             touch_count = resistance_analysis["touch_points"]["count"]
             if touch_count < self.detector.min_touch_points:
-                recommendations.append(f"レジスタンスライン: タッチポイント数が不足 ({touch_count}/{self.detector.min_touch_points})")
+                recommendations.append(
+                    f"レジスタンスライン: タッチポイント数が不足 ({touch_count}/{self.detector.min_touch_points})"
+                )
 
         # サポートライン分析
         support_analysis = debug_info.get("support_line_analysis", {})
         if "touch_points" in support_analysis:
             touch_count = support_analysis["touch_points"]["count"]
             if touch_count < self.detector.min_touch_points:
-                recommendations.append(f"サポートライン: タッチポイント数が不足 ({touch_count}/{self.detector.min_touch_points})")
+                recommendations.append(
+                    f"サポートライン: タッチポイント数が不足 ({touch_count}/{self.detector.min_touch_points})"
+                )
 
         # レンジ相場分析
         range_analysis = debug_info.get("range_pattern_analysis", {})
@@ -361,12 +389,16 @@ class RangePatternDebugger:
             range_width_info = range_analysis["range_width"]
             if not range_width_info.get("passed", False):
                 range_width = range_width_info.get("range_width", 0)
-                recommendations.append(f"レンジ相場: レンジ幅が不適切 ({range_width:.3f}, 期待値: 0.05-0.20)")
+                recommendations.append(
+                    f"レンジ相場: レンジ幅が不適切 ({range_width:.3f}, 期待値: 0.05-0.20)"
+                )
 
         if "oscillations" in range_analysis:
             oscillations = range_analysis["oscillations"]
             if not oscillations.get("is_valid", False):
-                recommendations.append(f"レンジ相場: 行き来現象が不十分 (タッチ: {oscillations.get('resistance_touches', 0)}+{oscillations.get('support_touches', 0)}, クロス: {oscillations.get('crossings', 0)})")
+                recommendations.append(
+                    f"レンジ相場: 行き来現象が不十分 (タッチ: {oscillations.get('resistance_touches', 0)}+{oscillations.get('support_touches', 0)}, クロス: {oscillations.get('crossings', 0)})"
+                )
 
         if not recommendations:
             recommendations.append("すべての条件が満たされています。レンジ相場が検出されるはずです。")
@@ -377,30 +409,32 @@ class RangePatternDebugger:
         """市場データ取得"""
         try:
             async with db_manager.get_session() as session:
-                query = text("""
-                    SELECT 
+                query = text(
+                    """
+                    SELECT
                         timestamp as Date,
                         open_price as Open,
                         high_price as High,
                         low_price as Low,
                         close_price as Close,
                         volume as Volume
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     ORDER BY timestamp DESC
                     LIMIT :days
-                """)
-                
+                """
+                )
+
                 result = await session.execute(query, {"days": days})
                 rows = result.fetchall()
-                
+
                 if not rows:
                     return pd.DataFrame()
-                
-                data = pd.DataFrame(rows, columns=[
-                    "Date", "Open", "High", "Low", "Close", "Volume"
-                ])
-                
+
+                data = pd.DataFrame(
+                    rows, columns=["Date", "Open", "High", "Low", "Close", "Volume"]
+                )
+
                 data = data.sort_values("Date").reset_index(drop=True)
                 return data
 
@@ -413,67 +447,75 @@ async def main():
     """メイン関数"""
     debugger = RangePatternDebugger()
     results = await debugger.debug_range_pattern()
-    
+
     if "error" in results:
         print(f"\n❌ デバッグエラー: {results['error']}")
         return
-    
+
     print("\n=== レンジ相場検出デバッグ結果 ===")
-    
+
     for period_name, result in results.items():
         if "error" in result:
             print(f"\n❌ {period_name}: {result['error']}")
             continue
-            
+
         print(f"\n📊 {period_name} ({result['data_points']}件):")
-        
+
         debug_info = result.get("debug_info", {})
-        
+
         # レジスタンスライン分析
         resistance = debug_info.get("resistance_line_analysis", {})
         print(f"  レジスタンスライン:")
         if "touch_points" in resistance:
             tp = resistance["touch_points"]
             print(f"    タッチポイント: {tp['count']}件 (必要: {tp['min_required']}件)")
-        
+
         # サポートライン分析
         support = debug_info.get("support_line_analysis", {})
         print(f"  サポートライン:")
         if "touch_points" in support:
             tp = support["touch_points"]
             print(f"    タッチポイント: {tp['count']}件 (必要: {tp['min_required']}件)")
-        
+
         # レンジ相場分析
         range_analysis = debug_info.get("range_pattern_analysis", {})
         print(f"  レンジ相場:")
         print(f"    両ライン検出: {range_analysis.get('both_lines_detected', False)}")
         print(f"    レジスタンス検出: {range_analysis.get('resistance_detected', False)}")
         print(f"    サポート検出: {range_analysis.get('support_detected', False)}")
-        
+
         # レジスタンスライン詳細
         if "resistance_details" in range_analysis:
             rd = range_analysis["resistance_details"]
-            print(f"    レジスタンス詳細: 強度{rd.get('strength', 0):.3f}, タッチ{rd.get('touch_points_count', 0)}件")
+            print(
+                f"    レジスタンス詳細: 強度{rd.get('strength', 0):.3f}, タッチ{rd.get('touch_points_count', 0)}件"
+            )
         elif "resistance_failure_reason" in range_analysis:
             rfr = range_analysis["resistance_failure_reason"]
             print(f"    レジスタンス失敗理由: {rfr}")
-        
+
         # サポートライン詳細
         if "support_details" in range_analysis:
             sd = range_analysis["support_details"]
-            print(f"    サポート詳細: 強度{sd.get('strength', 0):.3f}, タッチ{sd.get('touch_points_count', 0)}件")
+            print(
+                f"    サポート詳細: 強度{sd.get('strength', 0):.3f}, タッチ{sd.get('touch_points_count', 0)}件"
+            )
         elif "support_failure_reason" in range_analysis:
             sfr = range_analysis["support_failure_reason"]
             print(f"    サポート失敗理由: {sfr}")
-        
+
         if "range_width" in range_analysis:
             rw = range_analysis["range_width"]
-            print(f"    レンジ幅: {rw.get('range_width', 0):.3f} (適正: {rw.get('min_required', 0)}-{rw.get('max_allowed', 0)})")
-        
+            print(
+                f"    レンジ幅: {rw.get('range_width', 0):.3f} (適正: {rw.get('min_required', 0)}-{rw.get('max_allowed', 0)})"
+            )
+
         if "oscillations" in range_analysis:
             osc = range_analysis["oscillations"]
-            print(f"    行き来現象: レジスタンス{osc.get('resistance_touches', 0)}回, サポート{osc.get('support_touches', 0)}回, クロス{osc.get('crossings', 0)}回")
-        
+            print(
+                f"    行き来現象: レジスタンス{osc.get('resistance_touches', 0)}回, サポート{osc.get('support_touches', 0)}回, クロス{osc.get('crossings', 0)}回"
+            )
+
         # 推奨事項
         recommendations = debug_info.get("recommendations", [])
         if recommendations:

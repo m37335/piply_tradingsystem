@@ -1,0 +1,493 @@
+# 旧ファイル名: phase4_todo.yaml
+
+phase: 4
+title: "システム全体の最適化"
+duration: "4週間"
+target_detection_rate: "80% → 90%以上"
+target_frequency: "月100回以上の検出"
+
+overview:
+  description: "システム全体の最適化を行い、検出率を90%以上に向上させ、実用的なシステムを完成させる"
+  priority: "最高"
+  impact: "実用的なシステムの完成"
+
+target_improvements:
+  - category: "パフォーマンス"
+    description: "処理速度とメモリ使用量の最適化"
+    target: "処理時間30秒以内、メモリ使用量最適化"
+  - category: "安定性"
+    description: "エラーハンドリングとシステム安定性の向上"
+    target: "エラー率5%以下、24時間連続動作"
+  - category: "機能拡張"
+    description: "マルチタイムフレーム対応と通知システム改善"
+    target: "複数時間足対応、Discord連携改善"
+  - category: "データ構造"
+    description: "データ構造の統一と標準化"
+    target: "カラム名標準化、データ形式統一"
+
+tasks:
+  week_1:
+    day_1_2:
+      title: "パフォーマンス最適化"
+      tasks:
+        - task_id: "P4-001"
+          title: "処理速度の改善"
+          description: "全パターン検出器の処理速度を最適化"
+          files:
+            - "src/infrastructure/analysis/pattern_detectors/*.py"
+          optimizations:
+            - "アルゴリズムの効率化"
+            - "不要な計算の削減"
+            - "早期終了条件の追加"
+            - "キャッシュ機能の実装"
+          target_metrics:
+            processing_time: "30秒以内"
+            improvement_rate: "50%以上"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "P4-002"
+          title: "メモリ使用量の最適化"
+          description: "メモリ使用量を削減し、効率化"
+          optimizations:
+            - "データ構造の最適化"
+            - "不要なデータの削除"
+            - "メモリリークの修正"
+            - "ガベージコレクションの最適化"
+          target_metrics:
+            memory_usage: "適正範囲内"
+            memory_efficiency: "30%以上改善"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "P4-003"
+          title: "並列処理の導入"
+          description: "並列処理を導入して処理速度を向上"
+          implementations:
+            - "マルチスレッド処理"
+            - "非同期処理"
+            - "バッチ処理"
+            - "分散処理"
+          target_metrics:
+            parallel_efficiency: "80%以上"
+            speedup_factor: "2倍以上"
+          status: "pending"
+          priority: "medium"
+
+    day_3_4:
+      title: "エラーハンドリング強化"
+      tasks:
+        - task_id: "P4-004"
+          title: "例外処理の強化"
+          description: "全パターン検出器の例外処理を強化"
+          files:
+            - "src/infrastructure/analysis/pattern_detectors/*.py"
+          improvements:
+            - "try-catch文の追加"
+            - "適切なエラーメッセージ"
+            - "ログ出力の改善"
+            - "エラー回復機能"
+          target_metrics:
+            error_rate: "5%以下"
+            error_recovery_rate: "90%以上"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "P4-005"
+          title: "データ検証の強化"
+          description: "入力データの検証を強化"
+          validations:
+            - "データ型チェック"
+            - "範囲チェック"
+            - "欠損値処理"
+            - "異常値検出"
+          target_metrics:
+            data_validation_rate: "100%"
+            data_quality_score: "95%以上"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "P4-006"
+          title: "システム安定性の向上"
+          description: "システム全体の安定性を向上"
+          improvements:
+            - "リソース管理の改善"
+            - "タイムアウト処理"
+            - "リトライ機能"
+            - "フォールバック機能"
+          target_metrics:
+            system_uptime: "99%以上"
+            stability_score: "95%以上"
+          status: "pending"
+          priority: "medium"
+
+    day_5_7:
+      title: "データベース接続最適化"
+      tasks:
+        - task_id: "P4-007"
+          title: "データベース接続の最適化"
+          description: "データベース接続とクエリを最適化"
+          file: "src/infrastructure/database/connection.py"
+          optimizations:
+            - "コネクションプールの実装"
+            - "クエリの最適化"
+            - "インデックスの改善"
+            - "キャッシュ機能の追加"
+          target_metrics:
+            query_time: "1秒以内"
+            connection_efficiency: "80%以上"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "P4-008"
+          title: "データ取得の最適化"
+          description: "データ取得処理を最適化"
+          optimizations:
+            - "バッチ取得の実装"
+            - "非同期取得の導入"
+            - "データ圧縮の活用"
+            - "部分取得の実装"
+          target_metrics:
+            data_fetch_time: "5秒以内"
+            data_efficiency: "50%以上改善"
+          status: "pending"
+          priority: "medium"
+
+  week_2:
+    day_1_2:
+      title: "データ構造統一"
+      tasks:
+        - task_id: "P4-009"
+          title: "カラム名の標準化"
+          description: "全ファイルでカラム名を大文字に統一"
+          files:
+            - "src/infrastructure/analysis/pattern_detectors/*.py"
+            - "scripts/test/*.py"
+          standardizations:
+            - "Open, High, Low, Close, Volume"
+            - "Date, Time, Timestamp"
+            - "RSI, MACD, BB_Upper, BB_Lower"
+          target_metrics:
+            consistency_rate: "100%"
+            standardization_complete: "全ファイル"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "P4-010"
+          title: "データ形式の統一"
+          description: "データ形式を統一し、互換性を確保"
+          standardizations:
+            - "日付形式の統一"
+            - "数値形式の統一"
+            - "文字列形式の統一"
+            - "NULL値処理の統一"
+          target_metrics:
+            format_consistency: "100%"
+            compatibility_score: "95%以上"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "P4-011"
+          title: "API仕様の統一"
+          description: "全パターン検出器のAPI仕様を統一"
+          standardizations:
+            - "メソッド名の統一"
+            - "パラメータ名の統一"
+            - "戻り値形式の統一"
+            - "エラーハンドリングの統一"
+          target_metrics:
+            api_consistency: "100%"
+            api_documentation: "完全"
+          status: "pending"
+          priority: "medium"
+
+    day_3_4:
+      title: "互換性確保"
+      tasks:
+        - task_id: "P4-012"
+          title: "後方互換性の確保"
+          description: "既存システムとの互換性を確保"
+          compatibilities:
+            - "既存APIとの互換性"
+            - "既存データとの互換性"
+            - "既存テストとの互換性"
+            - "既存ドキュメントとの互換性"
+          target_metrics:
+            backward_compatibility: "100%"
+            migration_success_rate: "100%"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "P4-013"
+          title: "テスト環境の更新"
+          description: "テスト環境を新しい仕様に更新"
+          updates:
+            - "テストデータの更新"
+            - "テストスクリプトの更新"
+            - "テスト環境の再構築"
+            - "テスト結果の検証"
+          target_metrics:
+            test_coverage: "100%"
+            test_success_rate: "100%"
+          status: "pending"
+          priority: "medium"
+
+    day_5_7:
+      title: "品質保証"
+      tasks:
+        - task_id: "P4-014"
+          title: "包括的テストの実行"
+          description: "全システムの包括的テストを実行"
+          test_files:
+            - "scripts/test/test_all_patterns_integration.py"
+            - "scripts/test/test_database_market_data.py"
+          test_scenarios:
+            - "全パターンの同時検出"
+            - "実際の市場データでの検証"
+            - "パフォーマンステスト"
+            - "ストレステスト"
+            - "互換性テスト"
+          target_metrics:
+            test_success_rate: "100%"
+            performance_targets: "全て達成"
+          status: "pending"
+          priority: "high"
+
+  week_3:
+    day_1_3:
+      title: "マルチタイムフレーム対応"
+      tasks:
+        - task_id: "P4-015"
+          title: "複数時間足対応の実装"
+          description: "5分足、1時間足、4時間足、日足に対応"
+          timeframes:
+            - "5分足"
+            - "1時間足"
+            - "4時間足"
+            - "日足"
+          implementations:
+            - "時間足別パラメータ調整"
+            - "時間足別検出ロジック"
+            - "時間足別テスト"
+            - "時間足別結果集計"
+          target_metrics:
+            timeframe_support: "4時間足対応"
+            accuracy_per_timeframe: "80%以上"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "P4-016"
+          title: "時間足別最適化"
+          description: "各時間足に最適化されたパラメータを設定"
+          optimizations:
+            - "5分足用パラメータ"
+            - "1時間足用パラメータ"
+            - "4時間足用パラメータ"
+            - "日足用パラメータ"
+          target_metrics:
+            optimization_per_timeframe: "各時間足最適化"
+            detection_rate_per_timeframe: "80%以上"
+          status: "pending"
+          priority: "medium"
+
+    day_4_5:
+      title: "通知システム改善"
+      tasks:
+        - task_id: "P4-017"
+          title: "Discord連携の改善"
+          description: "Discord通知システムを改善"
+          improvements:
+            - "通知形式の改善"
+            - "通知頻度の調整"
+            - "エラー通知の追加"
+            - "通知履歴の管理"
+          target_metrics:
+            notification_success_rate: "99%以上"
+            notification_latency: "5秒以内"
+          status: "pending"
+          priority: "medium"
+
+        - task_id: "P4-018"
+          title: "通知内容の充実"
+          description: "通知内容を充実させ、実用性を向上"
+          enhancements:
+            - "詳細な検出情報"
+            - "信頼度の表示"
+            - "推奨アクション"
+            - "リスク評価"
+          target_metrics:
+            notification_quality: "高"
+            user_satisfaction: "90%以上"
+          status: "pending"
+          priority: "medium"
+
+    day_6_7:
+      title: "分析機能拡張"
+      tasks:
+        - task_id: "P4-019"
+          title: "検出結果の詳細分析"
+          description: "検出結果の詳細分析機能を実装"
+          analysis_features:
+            - "パターン別統計"
+            - "時間別統計"
+            - "信頼度別統計"
+            - "トレンド分析"
+          target_metrics:
+            analysis_completeness: "100%"
+            analysis_accuracy: "95%以上"
+          status: "pending"
+          priority: "medium"
+
+  week_4:
+    day_1_3:
+      title: "最終統合テスト"
+      tasks:
+        - task_id: "P4-020"
+          title: "最終統合テストの実行"
+          description: "システム全体の最終統合テストを実行"
+          test_scope:
+            - "全16パターンの同時検出"
+            - "全時間足での検証"
+            - "実際の市場データでの検証"
+            - "パフォーマンステスト"
+            - "ストレステスト"
+            - "互換性テスト"
+          expected_results:
+            - "検出率90%以上（15/16パターン）"
+            - "処理時間30秒以内"
+            - "エラー率5%以下"
+            - "信頼度0.7以上"
+            - "全時間足対応"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "P4-021"
+          title: "性能評価とレポート作成"
+          description: "最終性能評価とレポートを作成"
+          evaluation_metrics:
+            - "検出率"
+            - "信頼度"
+            - "処理時間"
+            - "エラー率"
+            - "メモリ使用量"
+            - "システム安定性"
+          report_components:
+            - "最終性能評価レポート"
+            - "改善点と課題"
+            - "今後の展望"
+            - "運用ガイドライン"
+          status: "pending"
+          priority: "high"
+
+    day_4_5:
+      title: "ドキュメント更新"
+      tasks:
+        - task_id: "P4-022"
+          title: "技術ドキュメントの更新"
+          description: "全技術ドキュメントを最新状態に更新"
+          documents:
+            - "API仕様書"
+            - "実装仕様書"
+            - "テスト仕様書"
+            - "運用マニュアル"
+            - "トラブルシューティングガイド"
+          target_metrics:
+            documentation_completeness: "100%"
+            documentation_accuracy: "100%"
+          status: "pending"
+          priority: "medium"
+
+        - task_id: "P4-023"
+          title: "ユーザーガイドの作成"
+          description: "エンドユーザー向けガイドを作成"
+          guides:
+            - "システム概要"
+            - "使用方法"
+            - "設定方法"
+            - "トラブルシューティング"
+          target_metrics:
+            user_guide_completeness: "100%"
+            user_guide_clarity: "高"
+          status: "pending"
+          priority: "medium"
+
+    day_6_7:
+      title: "Phase 4完了とプロジェクト完了"
+      tasks:
+        - task_id: "P4-024"
+          title: "最終検証とプロジェクト完了"
+          description: "最終検証を行い、プロジェクトを完了"
+          final_verification:
+            - "全要件の達成確認"
+            - "品質基準の達成確認"
+            - "性能目標の達成確認"
+            - "ドキュメントの完成確認"
+          completion_criteria:
+            - "検出率90%以上"
+            - "処理時間30秒以内"
+            - "エラー率5%以下"
+            - "24時間連続動作"
+            - "全ドキュメント完成"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "P4-025"
+          title: "プロジェクト完了報告書作成"
+          description: "プロジェクト全体の完了報告書を作成"
+          report_sections:
+            - "プロジェクト概要"
+            - "目標達成度評価"
+            - "性能評価結果"
+            - "成果物一覧"
+            - "今後の展望"
+            - "運用開始準備"
+          status: "pending"
+          priority: "high"
+
+success_criteria:
+  detection_rate:
+    target: "90%以上"
+    measurement: "統合テストでの検出パターン数"
+  frequency:
+    target: "月100回以上"
+    measurement: "実際の市場データでの月間検出回数"
+  confidence:
+    target: "0.7以上"
+    measurement: "検出パターンの平均信頼度"
+  performance:
+    processing_time: "30秒以内"
+    error_rate: "5%以下"
+    memory_usage: "適正範囲内"
+  stability:
+    system_uptime: "99%以上"
+    continuous_operation: "24時間連続動作"
+  functionality:
+    multi_timeframe: "4時間足対応"
+    notification_system: "Discord連携完成"
+    data_structure: "完全統一"
+
+deliverables:
+  - "システム全体の最適化完了"
+  - "マルチタイムフレーム対応"
+  - "通知システム改善"
+  - "データ構造完全統一"
+  - "包括的テスト結果レポート"
+  - "最終性能評価レポート"
+  - "技術ドキュメント完全版"
+  - "ユーザーガイド"
+  - "プロジェクト完了報告書"
+
+risks:
+  - risk: "大規模変更による不具合"
+    mitigation: "段階的な変更と包括的テスト"
+  - risk: "性能劣化"
+    mitigation: "継続的な性能監視と最適化"
+  - risk: "互換性問題"
+    mitigation: "慎重な変更と互換性テスト"
+
+notes:
+  - "大規模な変更は段階的に行い、各段階でテストを実施する"
+  - "性能と安定性を最優先に考慮する"
+  - "既存システムとの互換性を必ず確保する"
+  - "ドキュメントは常に最新状態に保つ"
+  - "プロジェクト完了後も継続的な改善を検討する"

@@ -45,9 +45,7 @@ async def test_technical_indicators():
         )
         print(f"  取得データ数: {len(price_data)}件")
         if price_data:
-            print(
-                f"  最初のデータ: {price_data[0].timestamp} - {price_data[0].close_price}"
-            )
+            print(f"  最初のデータ: {price_data[0].timestamp} - {price_data[0].close_price}")
             print(
                 f"  最後のデータ: {price_data[-1].timestamp} - {price_data[-1].close_price}"
             )

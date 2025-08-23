@@ -11,7 +11,9 @@ from typing import Dict, List
 import pandas as pd
 from sqlalchemy import text
 
-from src.infrastructure.analysis.pattern_detectors.support_resistance_detector_v2 import SupportResistanceDetectorV2
+from src.infrastructure.analysis.pattern_detectors.support_resistance_detector_v2 import (
+    SupportResistanceDetectorV2,
+)
 from src.infrastructure.database.connection import db_manager
 
 # ログ設定
@@ -34,7 +36,9 @@ class Pattern15V2Debugger:
 
         try:
             # データベース接続
-            await db_manager.initialize("sqlite+aiosqlite:///./data/exchange_analytics.db")
+            await db_manager.initialize(
+                "sqlite+aiosqlite:///./data/exchange_analytics.db"
+            )
             logger.info("✅ データベース接続完了")
 
             # 直近1ヶ月のデータで詳細デバッグ
@@ -63,7 +67,7 @@ class Pattern15V2Debugger:
             analysis = {
                 "resistance_analysis": {},
                 "support_analysis": {},
-                "recommendations": []
+                "recommendations": [],
             }
 
             # レジスタンスライン分析
@@ -94,7 +98,7 @@ class Pattern15V2Debugger:
             analysis["peaks"] = {
                 "count": len(peaks),
                 "min_required": self.detector.min_peaks,
-                "indices": peaks[:10]  # 最初の10個のみ表示
+                "indices": peaks[:10],  # 最初の10個のみ表示
             }
 
             if len(peaks) >= self.detector.min_peaks:
@@ -105,21 +109,27 @@ class Pattern15V2Debugger:
                     "slope": best_line.get("slope") if best_line else None,
                     "intercept": best_line.get("intercept") if best_line else None,
                     "angle": best_line.get("angle") if best_line else None,
-                    "score": best_line.get("score") if best_line else None
+                    "score": best_line.get("score") if best_line else None,
                 }
 
                 if best_line:
                     # ライン強度計算
-                    strength = self.detector._calculate_line_strength_v2(peaks, best_line, data, "High")
+                    strength = self.detector._calculate_line_strength_v2(
+                        peaks, best_line, data, "High"
+                    )
                     analysis["line_strength"] = {
                         "strength": strength,
                         "min_required": self.detector.min_line_strength,
-                        "passed": strength >= self.detector.min_line_strength
+                        "passed": strength >= self.detector.min_line_strength,
                     }
 
                     if strength >= self.detector.min_line_strength:
                         # 現在価格との関係分析
-                        current_analysis = self.detector._analyze_current_price_relation(data, best_line, "resistance")
+                        current_analysis = (
+                            self.detector._analyze_current_price_relation(
+                                data, best_line, "resistance"
+                            )
+                        )
                         analysis["current_relation"] = current_analysis
 
             return analysis
@@ -138,7 +148,7 @@ class Pattern15V2Debugger:
             analysis["troughs"] = {
                 "count": len(troughs),
                 "min_required": self.detector.min_peaks,
-                "indices": troughs[:10]  # 最初の10個のみ表示
+                "indices": troughs[:10],  # 最初の10個のみ表示
             }
 
             if len(troughs) >= self.detector.min_peaks:
@@ -149,21 +159,27 @@ class Pattern15V2Debugger:
                     "slope": best_line.get("slope") if best_line else None,
                     "intercept": best_line.get("intercept") if best_line else None,
                     "angle": best_line.get("angle") if best_line else None,
-                    "score": best_line.get("score") if best_line else None
+                    "score": best_line.get("score") if best_line else None,
                 }
 
                 if best_line:
                     # ライン強度計算
-                    strength = self.detector._calculate_line_strength_v2(troughs, best_line, data, "Low")
+                    strength = self.detector._calculate_line_strength_v2(
+                        troughs, best_line, data, "Low"
+                    )
                     analysis["line_strength"] = {
                         "strength": strength,
                         "min_required": self.detector.min_line_strength,
-                        "passed": strength >= self.detector.min_line_strength
+                        "passed": strength >= self.detector.min_line_strength,
                     }
 
                     if strength >= self.detector.min_line_strength:
                         # 現在価格との関係分析
-                        current_analysis = self.detector._analyze_current_price_relation(data, best_line, "support")
+                        current_analysis = (
+                            self.detector._analyze_current_price_relation(
+                                data, best_line, "support"
+                            )
+                        )
                         analysis["current_relation"] = current_analysis
 
             return analysis
@@ -182,7 +198,9 @@ class Pattern15V2Debugger:
             peak_count = resistance["peaks"]["count"]
             min_required = resistance["peaks"]["min_required"]
             if peak_count < min_required:
-                recommendations.append(f"レジスタンスライン: ピーク数が不足 ({peak_count}/{min_required})")
+                recommendations.append(
+                    f"レジスタンスライン: ピーク数が不足 ({peak_count}/{min_required})"
+                )
 
         if "line_equation" in resistance:
             if not resistance["line_equation"]["success"]:
@@ -192,7 +210,9 @@ class Pattern15V2Debugger:
             strength = resistance["line_strength"]["strength"]
             min_required = resistance["line_strength"]["min_required"]
             if strength < min_required:
-                recommendations.append(f"レジスタンスライン: ライン強度が不足 ({strength:.3f}/{min_required})")
+                recommendations.append(
+                    f"レジスタンスライン: ライン強度が不足 ({strength:.3f}/{min_required})"
+                )
 
         # サポートライン分析
         support = analysis.get("support_analysis", {})
@@ -200,7 +220,9 @@ class Pattern15V2Debugger:
             trough_count = support["troughs"]["count"]
             min_required = support["troughs"]["min_required"]
             if trough_count < min_required:
-                recommendations.append(f"サポートライン: ボトム数が不足 ({trough_count}/{min_required})")
+                recommendations.append(
+                    f"サポートライン: ボトム数が不足 ({trough_count}/{min_required})"
+                )
 
         if "line_equation" in support:
             if not support["line_equation"]["success"]:
@@ -210,7 +232,9 @@ class Pattern15V2Debugger:
             strength = support["line_strength"]["strength"]
             min_required = support["line_strength"]["min_required"]
             if strength < min_required:
-                recommendations.append(f"サポートライン: ライン強度が不足 ({strength:.3f}/{min_required})")
+                recommendations.append(
+                    f"サポートライン: ライン強度が不足 ({strength:.3f}/{min_required})"
+                )
 
         if not recommendations:
             recommendations.append("すべての条件が満たされています。検出されるはずです。")
@@ -221,30 +245,32 @@ class Pattern15V2Debugger:
         """市場データ取得"""
         try:
             async with db_manager.get_session() as session:
-                query = text("""
-                    SELECT 
+                query = text(
+                    """
+                    SELECT
                         timestamp as Date,
                         open_price as Open,
                         high_price as High,
                         low_price as Low,
                         close_price as Close,
                         volume as Volume
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     ORDER BY timestamp DESC
                     LIMIT :days
-                """)
-                
+                """
+                )
+
                 result = await session.execute(query, {"days": days})
                 rows = result.fetchall()
-                
+
                 if not rows:
                     return pd.DataFrame()
-                
-                data = pd.DataFrame(rows, columns=[
-                    "Date", "Open", "High", "Low", "Close", "Volume"
-                ])
-                
+
+                data = pd.DataFrame(
+                    rows, columns=["Date", "Open", "High", "Low", "Close", "Volume"]
+                )
+
                 data = data.sort_values("Date").reset_index(drop=True)
                 return data
 
@@ -257,57 +283,57 @@ async def main():
     """メイン関数"""
     debugger = Pattern15V2Debugger()
     results = await debugger.debug_pattern15_v2()
-    
+
     if "error" in results:
         print(f"\n❌ デバッグエラー: {results['error']}")
         return
-    
+
     print("\n=== パターン15 V2 詳細デバッグ結果 ===")
-    
+
     # レジスタンスライン分析
     print(f"\n📈 レジスタンスライン分析:")
     resistance = results.get("resistance_analysis", {})
-    
+
     if "peaks" in resistance:
         peaks = resistance["peaks"]
         print(f"  ピーク数: {peaks['count']}件 (必要: {peaks['min_required']}件)")
         print(f"  ピークインデックス: {peaks['indices']}")
-    
+
     if "line_equation" in resistance:
         le = resistance["line_equation"]
         print(f"  1次関数: {'成功' if le['success'] else '失敗'}")
-        if le['success']:
+        if le["success"]:
             print(f"    傾き: {le['slope']:.6f}")
             print(f"    角度: {le['angle']:.2f}度")
             print(f"    切片: {le['intercept']:.5f}")
             print(f"    スコア: {le['score']:.3f}")
-    
+
     if "line_strength" in resistance:
         ls = resistance["line_strength"]
         print(f"  ライン強度: {ls['strength']:.3f} (必要: {ls['min_required']})")
-    
+
     # サポートライン分析
     print(f"\n📉 サポートライン分析:")
     support = results.get("support_analysis", {})
-    
+
     if "troughs" in support:
         troughs = support["troughs"]
         print(f"  ボトム数: {troughs['count']}件 (必要: {troughs['min_required']}件)")
         print(f"  ボトムインデックス: {troughs['indices']}")
-    
+
     if "line_equation" in support:
         le = support["line_equation"]
         print(f"  1次関数: {'成功' if le['success'] else '失敗'}")
-        if le['success']:
+        if le["success"]:
             print(f"    傾き: {le['slope']:.6f}")
             print(f"    角度: {le['angle']:.2f}度")
             print(f"    切片: {le['intercept']:.5f}")
             print(f"    スコア: {le['score']:.3f}")
-    
+
     if "line_strength" in support:
         ls = support["line_strength"]
         print(f"  ライン強度: {ls['strength']:.3f} (必要: {ls['min_required']})")
-    
+
     # 推奨事項
     recommendations = results.get("recommendations", [])
     if recommendations:

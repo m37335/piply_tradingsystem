@@ -124,9 +124,9 @@ async def test_alert_system_with_real_db():
             result = await db_session.execute(
                 text(
                     """
-                SELECT table_name, table_type 
-                FROM information_schema.tables 
-                WHERE table_schema = 'public' 
+                SELECT table_name, table_type
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
                 ORDER BY table_name
                 """
                 )

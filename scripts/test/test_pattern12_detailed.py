@@ -35,7 +35,7 @@ class Pattern12DetailedTester:
         # 複数のテストケースを試行
         for test_case in range(1, 5):  # 4つのテストケース
             logger.info(f"テストケース {test_case} を試行中...")
-            
+
             # テストデータ作成
             logger.info(f"パターン12用テストデータ作成中...（テストケース {test_case}）")
             test_data = self._create_pattern12_test_data(test_case)
@@ -364,7 +364,10 @@ class Pattern12DetailedTester:
 
         # 指標データ
         indicators = {
-            "rsi": {"current_value": 65, "values": [50 + i * 0.002 for i in range(11520)]},
+            "rsi": {
+                "current_value": 65,
+                "values": [50 + i * 0.002 for i in range(11520)],
+            },
             "macd": {
                 "macd": pd.Series([0.1 + i * 0.00001 for i in range(11520)]),
                 "signal": pd.Series([0.05 + i * 0.000008 for i in range(11520)]),
@@ -387,17 +390,17 @@ class Pattern12DetailedTester:
         for timeframe in ["D1", "H4", "H1", "M5"]:
             if timeframe in test_data:
                 price_data = test_data[timeframe]["price_data"]
-                
+
                 # ブルフラッグ検出
                 bull_flag_result = self.detector._detect_bull_flag(price_data)
-                
+
                 # ベアフラッグ検出
                 bear_flag_result = self.detector._detect_bear_flag(price_data)
-                
+
                 conditions_analysis[timeframe] = {
                     "bull_flag": bull_flag_result,
                     "bear_flag": bear_flag_result,
-                    "either_pattern": bull_flag_result or bear_flag_result
+                    "either_pattern": bull_flag_result or bear_flag_result,
                 }
 
         return conditions_analysis
@@ -407,7 +410,7 @@ async def main():
     """メイン関数"""
     tester = Pattern12DetailedTester()
     result = await tester.test_pattern12_detailed()
-    
+
     if result:
         print("\n✅ パターン12検出成功！")
         print(f"信頼度: {result['confidence_score']}")

@@ -36,7 +36,7 @@ class Pattern15V3SlopeAnalyzer:
             {"name": "1年", "days": 365},
             {"name": "2年", "days": 730},
         ]
-        
+
         # バッファ縮小1設定（採用）
         self.optimized_settings = {
             "5m": {
@@ -75,10 +75,10 @@ class Pattern15V3SlopeAnalyzer:
 
             # データベース情報取得
             db_info = await self._get_database_info()
-            
+
             # 長期間データでの傾き分析
             slope_analysis = await self._analyze_long_term_slopes()
-            
+
             # 最適化された設定でのテスト
             optimization_results = await self._test_optimized_settings()
 
@@ -105,7 +105,7 @@ class Pattern15V3SlopeAnalyzer:
                 count_query = text(
                     """
                     SELECT COUNT(*) as total_records
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     """
                 )
@@ -115,10 +115,10 @@ class Pattern15V3SlopeAnalyzer:
                 # データ期間
                 period_query = text(
                     """
-                    SELECT 
+                    SELECT
                         MIN(timestamp) as start_date,
                         MAX(timestamp) as end_date
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     """
                 )
@@ -148,7 +148,7 @@ class Pattern15V3SlopeAnalyzer:
             # 最長期間のデータ取得
             max_period = max(self.test_periods, key=lambda x: x["days"])
             data = await self._fetch_market_data(max_period["days"])
-            
+
             if data.empty:
                 return {"error": "データが取得できませんでした"}
 
@@ -240,7 +240,7 @@ class Pattern15V3SlopeAnalyzer:
             # 線形回帰による全体傾き
             x = np.arange(len(close_prices))
             slope, intercept = np.polyfit(x, close_prices, 1)
-            
+
             analysis["overall_trend"] = {
                 "slope": float(slope),
                 "intercept": float(intercept),
@@ -257,17 +257,21 @@ class Pattern15V3SlopeAnalyzer:
             for i in range(4):
                 start_idx = i * segment_size
                 end_idx = (i + 1) * segment_size if i < 3 else len(close_prices)
-                
+
                 segment_prices = close_prices[start_idx:end_idx]
                 segment_x = np.arange(len(segment_prices))
-                
+
                 if len(segment_prices) > 1:
                     seg_slope, seg_intercept = np.polyfit(segment_x, segment_prices, 1)
-                    
+
                     segment_slopes[f"segment_{i+1}"] = {
                         "slope": float(seg_slope),
                         "intercept": float(seg_intercept),
-                        "trend_direction": "上昇" if seg_slope > 0 else "下降" if seg_slope < 0 else "横ばい",
+                        "trend_direction": "上昇"
+                        if seg_slope > 0
+                        else "下降"
+                        if seg_slope < 0
+                        else "横ばい",
                         "data_points": len(segment_prices),
                     }
 
@@ -290,9 +294,7 @@ class Pattern15V3SlopeAnalyzer:
 
                 for period in self.test_periods:
                     logger.info(f"  期間: {period['name']}")
-                    result = await self._test_with_optimized_settings(
-                        timeframe, period
-                    )
+                    result = await self._test_with_optimized_settings(timeframe, period)
                     timeframe_results[period["name"]] = result
 
                 # 時間足別統計
@@ -307,9 +309,7 @@ class Pattern15V3SlopeAnalyzer:
             logger.error(f"最適化設定テストエラー: {e}")
             return {"error": str(e)}
 
-    async def _test_with_optimized_settings(
-        self, timeframe: str, period: Dict
-    ) -> Dict:
+    async def _test_with_optimized_settings(self, timeframe: str, period: Dict) -> Dict:
         """最適化された設定でのテスト"""
         try:
             # データ取得
@@ -353,7 +353,7 @@ class Pattern15V3SlopeAnalyzer:
     def _create_optimized_detector(self, timeframe: str) -> SupportResistanceDetectorV3:
         """最適化されたデテクター作成"""
         detector = SupportResistanceDetectorV3(timeframe)
-        
+
         # バッファ縮小1設定を適用
         settings = self.optimized_settings[timeframe]
         detector.min_peaks = settings["min_peaks"]
@@ -361,7 +361,7 @@ class Pattern15V3SlopeAnalyzer:
         detector.min_line_strength = settings["min_line_strength"]
         detector.max_angle = settings["max_angle"]
         detector.price_tolerance = settings["price_tolerance"]
-        
+
         return detector
 
     def _analyze_detection_with_slope_details(
@@ -388,7 +388,7 @@ class Pattern15V3SlopeAnalyzer:
             # 数学的パラメータ（傾き重視）
             slope = equation.get("slope", 0)
             angle = equation.get("angle", 0)
-            
+
             analysis["mathematical"] = {
                 "slope": slope,
                 "intercept": equation.get("intercept"),
@@ -454,7 +454,7 @@ class Pattern15V3SlopeAnalyzer:
             # 極値の分析
             peaks = pattern_data.get("peaks", [])
             troughs = pattern_data.get("troughs", [])
-            
+
             if peaks:
                 peak_prices = [high_prices[i] for i in peaks]
                 analysis["peak_analysis"] = {
@@ -483,7 +483,8 @@ class Pattern15V3SlopeAnalyzer:
                 "peak_uniformity": len(peaks) > 0
                 and analysis.get("peak_analysis", {}).get("peak_price_std", 1) < 0.001,
                 "trough_uniformity": len(troughs) > 0
-                and analysis.get("trough_analysis", {}).get("trough_price_std", 1) < 0.001,
+                and analysis.get("trough_analysis", {}).get("trough_price_std", 1)
+                < 0.001,
                 "timeframe_effect": timeframe in ["1h", "1d"],
                 "slope_magnitude": abs(slope) < 0.001,  # 傾きが非常に小さい
             }
@@ -526,7 +527,7 @@ class Pattern15V3SlopeAnalyzer:
             # バッファサイズと検出品質の関係
             peaks = pattern_data.get("peaks", [])
             troughs = pattern_data.get("troughs", [])
-            
+
             analysis["detection_quality"] = {
                 "peak_count": len(peaks),
                 "trough_count": len(troughs),
@@ -665,14 +666,14 @@ class Pattern15V3SlopeAnalyzer:
             async with db_manager.get_session() as session:
                 query = text(
                     """
-                    SELECT 
+                    SELECT
                         timestamp as Date,
                         open_price as Open,
                         high_price as High,
                         low_price as Low,
                         close_price as Close,
                         volume as Volume
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     ORDER BY timestamp DESC
                     LIMIT :days
@@ -701,45 +702,49 @@ async def main():
     """メイン関数"""
     analyzer = Pattern15V3SlopeAnalyzer()
     results = await analyzer.analyze_slope_patterns()
-    
+
     if "error" in results:
         print(f"\n❌ 分析エラー: {results['error']}")
         return
-    
+
     print("\n=== パターン15 V3 傾き分析と最適化結果 ===")
-    
+
     # データベース情報
     db_info = results.get("database_info", {})
     if "error" not in db_info:
         print(f"\n📊 データベース情報:")
         print(f"  総レコード数: {db_info.get('total_records', 0):,}件")
-        print(f"  データ期間: {db_info.get('start_date', 'N/A')} - {db_info.get('end_date', 'N/A')}")
+        print(
+            f"  データ期間: {db_info.get('start_date', 'N/A')} - {db_info.get('end_date', 'N/A')}"
+        )
         print(f"  データ期間: {db_info.get('data_span_days', 0)}日")
-    
+
     # 傾き分析結果
     slope_analysis = results.get("slope_analysis", {})
     if "error" not in slope_analysis:
         print(f"\n📈 傾き分析結果:")
-        
+
         # 基本統計
         basic_stats = slope_analysis.get("basic_statistics", {})
         if basic_stats:
             print(f"  基本統計:")
             price_stats = basic_stats.get("price_statistics", {})
             high_stats = price_stats.get("high_prices", {})
-            print(f"    高値範囲: {high_stats.get('min', 0):.5f} - {high_stats.get('max', 0):.5f}")
+            print(
+                f"    高値範囲: {high_stats.get('min', 0):.5f} - {high_stats.get('max', 0):.5f}"
+            )
             print(f"    価格変動係数: {high_stats.get('coefficient_of_variation', 0):.5f}")
-            
+
             change_stats = basic_stats.get("change_statistics", {})
             print(f"    平均変化率: {change_stats.get('mean_change', 0):.6f}")
             print(f"    絶対平均変化率: {change_stats.get('abs_mean_change', 0):.6f}")
             print(f"    上昇率: {change_stats.get('positive_changes_ratio', 0):.1%}")
-        
+
         # 傾きパターン
         slope_patterns = slope_analysis.get("slope_patterns", {})
         if slope_patterns:
             print(f"  傾きパターン:")
-            
+
             # 全体トレンド
             overall_trend = slope_patterns.get("overall_trend", {})
             if overall_trend:
@@ -748,43 +753,51 @@ async def main():
                 print(f"      方向: {overall_trend.get('trend_direction', '')}")
                 print(f"      強度: {overall_trend.get('trend_strength', 0):.3f}")
                 print(f"      日次変化率: {overall_trend.get('slope_percentage', 0):.4f}%")
-            
+
             # セグメント傾き
             segment_slopes = slope_patterns.get("segment_slopes", {})
             for seg_name, seg_data in segment_slopes.items():
                 print(f"    {seg_name}:")
                 print(f"      傾き: {seg_data.get('slope', 0):.6f}")
                 print(f"      方向: {seg_data.get('trend_direction', '')}")
-    
+
     # 最適化結果
     optimization_results = results.get("optimization_results", {})
     print(f"\n🔧 最適化結果（バッファ縮小1採用）:")
-    
+
     for timeframe, timeframe_data in optimization_results.items():
         print(f"\n  {timeframe}:")
-        
+
         tf_stats = timeframe_data.get("statistics", {})
         print(f"    検出件数: {tf_stats.get('detection_count', 0)}")
         print(f"    検出率: {tf_stats.get('detection_rate', 0):.1%}")
-        
+
         # 詳細結果
         for period_name, result in timeframe_data.items():
             if period_name == "statistics":
                 continue
-                
+
             if result.get("detected", False):
                 analysis = result.get("analysis", {})
                 slope_analysis = analysis.get("slope_analysis", {})
                 buffer_analysis = analysis.get("buffer_analysis", {})
-                
+
                 print(f"      {period_name}:")
-                print(f"        傾き: {analysis['mathematical']['slope']:.6f} ({analysis['mathematical']['slope_description']})")
+                print(
+                    f"        傾き: {analysis['mathematical']['slope']:.6f} ({analysis['mathematical']['slope_description']})"
+                )
                 print(f"        角度: {analysis['mathematical']['angle']:.2f}度")
-                print(f"        バッファ効率: {buffer_analysis.get('detection_quality', {}).get('buffer_efficiency', 0):.3f}")
-                
+                print(
+                    f"        バッファ効率: {buffer_analysis.get('detection_quality', {}).get('buffer_efficiency', 0):.3f}"
+                )
+
                 slope_reasons = slope_analysis.get("slope_reasons", {})
-                print(f"        価格安定性: {'✅' if slope_reasons.get('price_stability', False) else '❌'}")
-                print(f"        傾きの大きさ: {'✅' if slope_reasons.get('slope_magnitude', False) else '❌'}")
+                print(
+                    f"        価格安定性: {'✅' if slope_reasons.get('price_stability', False) else '❌'}"
+                )
+                print(
+                    f"        傾きの大きさ: {'✅' if slope_reasons.get('slope_magnitude', False) else '❌'}"
+                )
 
 
 if __name__ == "__main__":

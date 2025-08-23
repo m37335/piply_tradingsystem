@@ -198,9 +198,9 @@ class PerformanceMonitor:
         result = await self.session.execute(
             text(
                 """
-            SELECT COUNT(*) as count, 
+            SELECT COUNT(*) as count,
                    MAX(timestamp) as latest_timestamp
-            FROM price_data 
+            FROM price_data
             WHERE timestamp >= datetime('now', '-1 hour')
         """
             )

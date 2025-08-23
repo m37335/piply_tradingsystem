@@ -8,9 +8,8 @@ Database Connection Management
 SQLAlchemyを使用したデータベース接続とセッション管理
 """
 
-import asyncio
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Optional
+from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
@@ -90,6 +89,8 @@ class DatabaseManager:
                     "max_overflow": max_overflow,
                     "pool_timeout": pool_timeout,
                     "pool_recycle": pool_recycle,
+                    "pool_pre_ping": True,  # 接続の健全性チェック
+                    "echo_pool": False,  # プールのデバッグログを無効化
                     **kwargs,
                 }
 
@@ -156,8 +157,16 @@ class DatabaseManager:
             logger.error(f"Database session rolled back due to error: {str(e)}")
             raise
         finally:
-            await session.close()
-            logger.debug("Database session closed")
+            try:
+                await session.close()
+                logger.debug("Database session closed")
+            except RuntimeError as e:
+                if "Event loop is closed" not in str(e):
+                    logger.error(f"Session close error: {e}")
+                else:
+                    logger.debug("Session closed during event loop shutdown")
+            except Exception as e:
+                logger.error(f"Unexpected session close error: {e}")
 
     async def get_session_factory(self) -> async_sessionmaker:
         """

@@ -95,7 +95,9 @@ class YahooFinanceClient(BaseAPIClient):
                 # レート制限エラーの場合
                 if "429" in error_msg or "too many requests" in error_msg:
                     if attempt < self.max_retries:
-                        wait_time = self.rate_limit_delay * (2**attempt)  # 指数バックオフ
+                        wait_time = self.rate_limit_delay * (
+                            2**attempt
+                        )  # 指数バックオフ
                         logger.warning(
                             f"Rate limit hit, waiting {wait_time}s before retry {attempt + 1}/{self.max_retries}"
                         )
@@ -233,9 +235,12 @@ class YahooFinanceClient(BaseAPIClient):
                 self.console.print(f"❌ {currency_pair}: 履歴データなし")
                 return None
 
-            # データを日本時間に変換
+            # データを日本時間に変換（データベース保存用）
             if hist.index.tz is not None:
                 hist.index = hist.index.tz_convert(self.jst)
+            else:
+                # タイムゾーン情報がない場合は日本時間として扱う
+                hist.index = hist.index.tz_localize(self.jst)
 
             # 基本統計表示
             self.console.print(f"✅ {currency_pair}: {len(hist)}件のデータ取得")

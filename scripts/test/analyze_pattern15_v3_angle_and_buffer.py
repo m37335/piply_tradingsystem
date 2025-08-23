@@ -782,14 +782,14 @@ class Pattern15V3AngleAndBufferAnalyzer:
             async with db_manager.get_session() as session:
                 query = text(
                     """
-                    SELECT 
+                    SELECT
                         timestamp as Date,
                         open_price as Open,
                         high_price as High,
                         low_price as Low,
                         close_price as Close,
                         volume as Volume
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     ORDER BY timestamp DESC
                     LIMIT :days
@@ -839,9 +839,7 @@ async def main():
             print(
                 f"      範囲: {high_stats.get('min', 0):.5f} - {high_stats.get('max', 0):.5f}"
             )
-            print(
-                f"      変動係数: {high_stats.get('coefficient_of_variation', 0):.5f}"
-            )
+            print(f"      変動係数: {high_stats.get('coefficient_of_variation', 0):.5f}")
 
             low_stats = price_stats.get("low_prices", {})
             print(f"    安値:")
@@ -873,9 +871,7 @@ async def main():
             low_troughs = extremum.get("low_troughs", {})
             if low_troughs:
                 print(f"    安値ボトム数: {low_troughs.get('count', 0)}")
-                print(
-                    f"    安値ボトム価格範囲: {low_troughs.get('price_range', 0):.5f}"
-                )
+                print(f"    安値ボトム価格範囲: {low_troughs.get('price_range', 0):.5f}")
 
     # バッファ調整結果
     buffer_results = results.get("buffer_results", {})
@@ -889,9 +885,7 @@ async def main():
         print(f"    全体検出率: {pattern_stats.get('overall_detection_rate', 0):.1%}")
         print(f"    最高信頼度: {pattern_stats.get('highest_confidence', 0):.3f}")
         print(f"    平均角度: {pattern_stats.get('average_angle', 0):.2f}度")
-        print(
-            f"    平均バッファ効率: {pattern_stats.get('average_buffer_efficiency', 0):.3f}"
-        )
+        print(f"    平均バッファ効率: {pattern_stats.get('average_buffer_efficiency', 0):.3f}")
 
         # 時間足別結果
         for timeframe, timeframe_data in pattern_results.items():

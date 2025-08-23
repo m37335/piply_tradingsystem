@@ -1,4 +1,4 @@
-**旧ファイル名**: `GITHUB_ACTIONS_DETAILED_SETUP.md`  
+**旧ファイル名**: `GITHUB_ACTIONS_DETAILED_SETUP.md`
 
 # 🔧 GitHub Actions 詳細設定ガイド
 

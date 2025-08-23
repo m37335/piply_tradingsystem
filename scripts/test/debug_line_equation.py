@@ -197,14 +197,14 @@ class LineEquationDebugger:
             async with db_manager.get_session() as session:
                 query = text(
                     """
-                    SELECT 
+                    SELECT
                         timestamp as Date,
                         open_price as Open,
                         high_price as High,
                         low_price as Low,
                         close_price as Close,
                         volume as Volume
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     ORDER BY timestamp DESC
                     LIMIT :days

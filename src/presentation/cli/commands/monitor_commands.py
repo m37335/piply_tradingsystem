@@ -8,12 +8,12 @@ Monitor Commands
 - ログ監視・分析
 """
 
-import asyncio
 import time
 from datetime import datetime, timedelta
 from typing import Optional
 
 import httpx
+import pytz
 import typer
 from rich.console import Console
 from rich.live import Live
@@ -238,7 +238,9 @@ def _single_metrics_check(host: str, port: int):
 
 def _live_metrics_monitor(host: str, port: int, interval: int):
     """リアルタイムメトリクス監視"""
-    console.print(f"📊 リアルタイムメトリクス監視開始 (間隔: {interval}秒, Ctrl+C で停止)")
+    console.print(
+        f"📊 リアルタイムメトリクス監視開始 (間隔: {interval}秒, Ctrl+C で停止)"
+    )
 
     def generate_metrics_display():
         try:
@@ -290,9 +292,7 @@ def _display_metrics(metrics_data: dict):
     cpu_status = (
         "🟢 Normal"
         if cpu_percent < 80
-        else "🟡 High"
-        if cpu_percent < 90
-        else "🔴 Critical"
+        else "🟡 High" if cpu_percent < 90 else "🔴 Critical"
     )
     system_table.add_row("CPU Usage", f"{cpu_percent:.1f}%", cpu_status)
 
@@ -302,9 +302,7 @@ def _display_metrics(metrics_data: dict):
     memory_status = (
         "🟢 Normal"
         if memory_percent < 80
-        else "🟡 High"
-        if memory_percent < 90
-        else "🔴 Critical"
+        else "🟡 High" if memory_percent < 90 else "🔴 Critical"
     )
     memory_gb = memory.get("used", 0) / (1024**3)
     total_gb = memory.get("total", 0) / (1024**3)
@@ -320,9 +318,7 @@ def _display_metrics(metrics_data: dict):
     disk_status = (
         "🟢 Normal"
         if disk_percent < 80
-        else "🟡 High"
-        if disk_percent < 90
-        else "🔴 Critical"
+        else "🟡 High" if disk_percent < 90 else "🔴 Critical"
     )
     disk_gb = disk.get("used", 0) / (1024**3)
     disk_total_gb = disk.get("total", 0) / (1024**3)
@@ -392,7 +388,9 @@ def _create_metrics_panel(metrics_data: dict) -> Panel:
 def logs(
     lines: int = typer.Option(50, "--lines", "-n", help="表示行数"),
     follow: bool = typer.Option(False, "--follow", "-f", help="リアルタイム監視"),
-    level: Optional[str] = typer.Option(None, "--level", "-l", help="ログレベルフィルタ"),
+    level: Optional[str] = typer.Option(
+        None, "--level", "-l", help="ログレベルフィルタ"
+    ),
     component: Optional[str] = typer.Option(
         None, "--component", "-c", help="コンポーネントフィルタ"
     ),
@@ -406,7 +404,7 @@ def logs(
         exchange-analytics monitor logs --follow --level ERROR
         exchange-analytics monitor logs --component api
     """
-    console.print(f"📝 ログ表示...")
+    console.print("📝 ログ表示...")
 
     if follow:
         console.print("🔄 リアルタイムログ監視 (Ctrl+C で停止)")
@@ -534,7 +532,8 @@ def _simulate_log_follow(level: Optional[str], component: Optional[str]):
             }.get(log_level, "white")
 
             console.print(
-                f"[cyan]{timestamp}[/cyan] [{level_color}]{log_level}[/{level_color}] [yellow]{comp}[/yellow] {message}"
+                f"[cyan]{timestamp}[/cyan] [{level_color}]{log_level}[/{level_color}] "
+                f"[yellow]{comp}[/yellow] {message}"
             )
 
             time.sleep(random.uniform(0.5, 3.0))
@@ -544,92 +543,141 @@ def _simulate_log_follow(level: Optional[str], component: Optional[str]):
 
 
 @app.command()
-def alerts():
+def alerts(
+    limit: int = typer.Option(50, "--limit", "-l", help="表示件数"),
+    severity: Optional[str] = typer.Option(
+        None, "--severity", "-s", help="重要度フィルタ"
+    ),
+    alert_type: Optional[str] = typer.Option(
+        None, "--type", "-t", help="アラートタイプフィルタ"
+    ),
+    active_only: bool = typer.Option(
+        True, "--active-only", "-a", help="アクティブなアラートのみ表示"
+    ),
+):
     """
     アクティブなアラートを表示
+
+    Examples:
+        exchange-analytics monitor alerts
+        exchange-analytics monitor alerts --limit 10
+        exchange-analytics monitor alerts --severity high
+        exchange-analytics monitor alerts --type rate_threshold
     """
     console.print("🚨 アクティブアラート確認中...")
 
-    # ダミーアラートデータ
-    alerts_data = [
-        {
-            "id": "alert_001",
-            "type": "rate_threshold",
-            "currency_pair": "USD/JPY",
-            "severity": "high",
-            "message": "USD/JPY rate exceeded threshold (151.00)",
-            "created": "2024-01-15 10:25:00",
-            "status": "active",
-        },
-        {
-            "id": "alert_002",
-            "type": "api_error",
-            "source": "alpha_vantage",
-            "severity": "medium",
-            "message": "Alpha Vantage API rate limit reached",
-            "created": "2024-01-15 10:20:00",
-            "status": "acknowledged",
-        },
-        {
-            "id": "alert_003",
-            "type": "system_resource",
-            "resource": "memory",
-            "severity": "low",
-            "message": "Memory usage above 80%",
-            "created": "2024-01-15 10:15:00",
-            "status": "resolved",
-        },
-    ]
+    try:
+        # 環境変数を設定
+        import os
 
-    # アラートテーブル
-    alerts_table = Table(title="🚨 Active Alerts")
-    alerts_table.add_column("ID", style="cyan", no_wrap=True)
-    alerts_table.add_column("Type", style="bold")
-    alerts_table.add_column("Severity", style="bold")
-    alerts_table.add_column("Message", style="white")
-    alerts_table.add_column("Created", style="yellow")
-    alerts_table.add_column("Status", style="green")
-
-    for alert in alerts_data:
-        severity = alert["severity"]
-        severity_color = {
-            "low": "blue",
-            "medium": "yellow",
-            "high": "red",
-            "critical": "bright_red",
-        }.get(severity, "white")
-
-        status = alert["status"]
-        status_color = {
-            "active": "red",
-            "acknowledged": "yellow",
-            "resolved": "green",
-        }.get(status, "white")
-
-        alerts_table.add_row(
-            alert["id"],
-            alert["type"],
-            f"[{severity_color}]{severity.upper()}[/{severity_color}]",
-            alert["message"],
-            alert["created"],
-            f"[{status_color}]{status.upper()}[/{status_color}]",
+        os.environ["DATABASE_URL"] = (
+            "postgresql+asyncpg://exchange_analytics_user:"
+            "exchange_password@localhost:5432/exchange_analytics_production_db"
         )
 
-    console.print(alerts_table)
+        # データベース接続
+        import asyncio
 
-    # サマリー
-    active_count = sum(1 for alert in alerts_data if alert["status"] == "active")
-    high_severity = sum(
-        1 for alert in alerts_data if alert["severity"] in ["high", "critical"]
-    )
+        from src.infrastructure.database.connection import get_async_session
+        from src.infrastructure.database.repositories.alert_repository_impl import (
+            AlertRepositoryImpl,
+        )
 
-    summary_text = f"🚨 Active Alerts: {active_count}\n⚠️ High Severity: {high_severity}"
-    summary_color = "red" if active_count > 0 else "green"
+        async def get_alerts_and_stats():
+            session = await get_async_session()
+            alert_repo = AlertRepositoryImpl(session)
 
-    summary_panel = Panel.fit(
-        summary_text,
-        title="📊 Alert Summary",
-        border_style=summary_color,
-    )
+            # アラートデータを取得
+            if active_only:
+                alerts_data = await alert_repo.find_active_alerts(
+                    limit=limit, severity=severity, alert_type=alert_type
+                )
+            else:
+                # 最近のアラートを取得（24時間）
+                alerts_data = await alert_repo.find_recent_alerts(hours=24, limit=limit)
 
-    console.print(summary_panel)
+            # 統計情報を取得
+            stats = await alert_repo.get_alert_statistics()
+
+            await session.close()
+            return alerts_data, stats
+
+        alerts_data, stats = asyncio.run(get_alerts_and_stats())
+
+        # アラートテーブル
+        alerts_table = Table(title="🚨 Active Alerts")
+        alerts_table.add_column("ID", style="cyan", no_wrap=True)
+        alerts_table.add_column("Type", style="bold")
+        alerts_table.add_column("Severity", style="bold")
+        alerts_table.add_column("Message", style="white")
+        alerts_table.add_column("Created", style="yellow")
+        alerts_table.add_column("Status", style="green")
+
+        for alert in alerts_data:
+            severity_level = alert.severity
+            severity_color = {
+                "low": "blue",
+                "medium": "yellow",
+                "high": "red",
+                "critical": "bright_red",
+            }.get(severity_level, "white")
+
+            status = alert.status
+            status_color = {
+                "active": "red",
+                "acknowledged": "yellow",
+                "resolved": "green",
+            }.get(status, "white")
+
+            # タイムスタンプをJSTに変換
+            created_time = alert.created_at
+            if created_time:
+                # タイムゾーン情報がない場合はJSTとして扱う
+                if created_time.tzinfo is None:
+                    jst = pytz.timezone("Asia/Tokyo")
+                    created_time = jst.localize(created_time)
+
+                # JSTに変換して表示
+                jst = pytz.timezone("Asia/Tokyo")
+                jst_time = created_time.astimezone(jst)
+                created_str = jst_time.strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                created_str = "N/A"
+
+            alerts_table.add_row(
+                str(alert.id),
+                alert.alert_type,
+                f"[{severity_color}]{severity_level.upper()}[/{severity_color}]",
+                (
+                    alert.message[:50] + "..."
+                    if len(alert.message) > 50
+                    else alert.message
+                ),
+                created_str,
+                f"[{status_color}]{status.upper()}[/{status_color}]",
+            )
+
+        console.print(alerts_table)
+
+        # サマリー
+        active_count = stats.get("active_alerts", 0)
+        high_severity = stats.get("severity_distribution", {}).get(
+            "high", 0
+        ) + stats.get("severity_distribution", {}).get("critical", 0)
+
+        summary_text = (
+            f"🚨 Active Alerts: {active_count}\n⚠️ High Severity: {high_severity}"
+        )
+        summary_color = "red" if active_count > 0 else "green"
+
+        summary_panel = Panel.fit(
+            summary_text,
+            title="📊 Alert Summary",
+            border_style=summary_color,
+        )
+
+        console.print(summary_panel)
+
+    except Exception as e:
+        console.print(f"❌ アラート取得エラー: {e}")
+        raise typer.Exit(1)

@@ -114,15 +114,15 @@ class DatabaseMarketDataTester:
             start_date = end_date - timedelta(days=90)
 
             query = """
-                SELECT 
+                SELECT
                     timestamp as Date,
                     open_price as Open,
                     high_price as High,
                     low_price as Low,
                     close_price as Close,
                     volume as Volume
-                FROM price_data 
-                WHERE currency_pair = 'USD/JPY' 
+                FROM price_data
+                WHERE currency_pair = 'USD/JPY'
                 AND timestamp BETWEEN :start_date AND :end_date
                 ORDER BY timestamp ASC
             """

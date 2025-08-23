@@ -35,7 +35,7 @@ class Pattern11DetailedTester:
         # 複数のテストケースを試行
         for test_case in range(1, 5):  # 4つのテストケース
             logger.info(f"テストケース {test_case} を試行中...")
-            
+
             # テストデータ作成
             logger.info(f"パターン11用テストデータ作成中...（テストケース {test_case}）")
             test_data = self._create_pattern11_test_data(test_case)
@@ -346,7 +346,10 @@ class Pattern11DetailedTester:
 
         # 指標データ
         indicators = {
-            "rsi": {"current_value": 65, "values": [50 + i * 0.02 for i in range(1440)]},
+            "rsi": {
+                "current_value": 65,
+                "values": [50 + i * 0.02 for i in range(1440)],
+            },
             "macd": {
                 "macd": pd.Series([0.1 + i * 0.0001 for i in range(1440)]),
                 "signal": pd.Series([0.05 + i * 0.00008 for i in range(1440)]),
@@ -444,7 +447,10 @@ class Pattern11DetailedTester:
 
         # 指標データ
         indicators = {
-            "rsi": {"current_value": 65, "values": [50 + i * 0.002 for i in range(17280)]},
+            "rsi": {
+                "current_value": 65,
+                "values": [50 + i * 0.002 for i in range(17280)],
+            },
             "macd": {
                 "macd": pd.Series([0.1 + i * 0.00001 for i in range(17280)]),
                 "signal": pd.Series([0.05 + i * 0.000008 for i in range(17280)]),
@@ -467,17 +473,17 @@ class Pattern11DetailedTester:
         for timeframe in ["D1", "H4", "H1", "M5"]:
             if timeframe in test_data:
                 price_data = test_data[timeframe]["price_data"]
-                
+
                 # トリプルトップ検出
                 triple_top_result = self.detector._detect_triple_top(price_data)
-                
+
                 # トリプルボトム検出
                 triple_bottom_result = self.detector._detect_triple_bottom(price_data)
-                
+
                 conditions_analysis[timeframe] = {
                     "triple_top": triple_top_result,
                     "triple_bottom": triple_bottom_result,
-                    "either_pattern": triple_top_result or triple_bottom_result
+                    "either_pattern": triple_top_result or triple_bottom_result,
                 }
 
         return conditions_analysis
@@ -487,7 +493,7 @@ async def main():
     """メイン関数"""
     tester = Pattern11DetailedTester()
     result = await tester.test_pattern11_detailed()
-    
+
     if result:
         print("\n✅ パターン11検出成功！")
         print(f"信頼度: {result['confidence_score']}")

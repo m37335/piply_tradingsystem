@@ -282,7 +282,7 @@ class ThreeBuddhasDetector:
             # max_side = max(left_value, right_value)
             # depth_ratio = (max_side - middle_value) / max_side
             # return depth_ratio >= self.middle_peak_ratio
-            
+
             # 単純に中央が両側より低いかだけチェック
             return True
 
@@ -469,7 +469,10 @@ class ThreeBuddhasDetector:
                 "current_price": current_price,
                 "pattern_type": pattern_type,
                 "pattern_data": pattern_data,
-                "direction": pattern_data.get("direction", "SELL" if pattern_type == "three_buddhas_top" else "BUY"),
+                "direction": pattern_data.get(
+                    "direction",
+                    "SELL" if pattern_type == "three_buddhas_top" else "BUY",
+                ),
                 "description": f"中央が突出した3つの{'ピーク' if pattern_type == 'three_buddhas_top' else 'ボトム'}で形成される強力なパターン",
             }
 

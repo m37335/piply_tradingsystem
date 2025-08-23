@@ -185,21 +185,21 @@ class RSIBattleDetector:
         recent_prices = (
             close_prices[-3:] if hasattr(close_prices, "iloc") else close_prices[-3:]
         )
-        
+
         if len(recent_prices) >= 3:
             price_list = (
                 recent_prices.tolist()
                 if hasattr(recent_prices, "tolist")
                 else list(recent_prices)
             )
-            
+
             # 価格が変動しているかチェック（単純な条件）
             price_changes = []
             for i in range(1, len(price_list)):
                 if price_list[i - 1] > 0:
                     change = abs(price_list[i] - price_list[i - 1]) / price_list[i - 1]
                     price_changes.append(change)
-            
+
             # 平均変動率が0.1%以上なら変動ありとみなす
             volatility_increased = (
                 sum(price_changes) / len(price_changes) >= 0.001
@@ -212,7 +212,9 @@ class RSIBattleDetector:
         if rsi_in_range and volatility_increased:
             return {
                 "rsi_value": current_rsi,
-                "volatility": sum(price_changes) / len(price_changes) if len(price_changes) > 0 else 0.0,
+                "volatility": sum(price_changes) / len(price_changes)
+                if len(price_changes) > 0
+                else 0.0,
                 "condition_met": True,
             }
 
@@ -239,9 +241,7 @@ class RSIBattleDetector:
             return None
 
         # RSIが50ライン付近で攻防しているかチェック（緩和）
-        recent_rsi = (
-            rsi_series[-5:] if hasattr(rsi_series, "iloc") else rsi_series[-5:]
-        )
+        recent_rsi = rsi_series[-5:] if hasattr(rsi_series, "iloc") else rsi_series[-5:]
 
         # RSIが50の±10の範囲内で変動しているかチェック（±5から拡大）
         rsi_values = (
@@ -291,10 +291,14 @@ class RSIBattleDetector:
             "pattern_name": "RSI50ライン攻防",
             "priority": self.pattern.priority,
             "conditions_met": {
-                "D1": d1_condition is not None and d1_condition.get("condition_met", False),
-                "H4": h4_condition is not None and h4_condition.get("condition_met", False),
-                "H1": h1_condition is not None and h1_condition.get("condition_met", False),
-                "M5": m5_condition is not None and m5_condition.get("condition_met", False),
+                "D1": d1_condition is not None
+                and d1_condition.get("condition_met", False),
+                "H4": h4_condition is not None
+                and h4_condition.get("condition_met", False),
+                "H1": h1_condition is not None
+                and h1_condition.get("condition_met", False),
+                "M5": m5_condition is not None
+                and m5_condition.get("condition_met", False),
             },
             "confidence_score": confidence_score,
             "detection_time": current_time,

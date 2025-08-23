@@ -3,9 +3,7 @@ Base Repository Implementation
 基本リポジトリ実装
 """
 
-import uuid
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from typing import List, Optional, Type, TypeVar
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -84,36 +82,9 @@ class BaseRepositoryImpl:
             logger.error(f"Failed to find entity by id: {str(e)}")
             raise
 
-    async def find_by_uuid(
-        self, entity_class: Type[T], model_class: Type[M], uuid: str
-    ) -> Optional[T]:
-        """
-        UUIDでエンティティを検索
-
-        Args:
-            entity_class: エンティティクラス
-            model_class: モデルクラス
-            uuid: 検索するUUID
-
-        Returns:
-            Optional[T]: 見つかったエンティティ、見つからない場合はNone
-        """
-        try:
-            stmt = select(model_class).where(model_class.uuid == uuid)
-            result = await self.session.execute(stmt)
-            model = result.scalar_one_or_none()
-
-            if model:
-                return entity_class.from_model(model)
-            return None
-
-        except Exception as e:
-            logger.error(f"Failed to find entity by uuid: {str(e)}")
-            raise
-
     async def find_all(self, entity_class: Type[T], model_class: Type[M]) -> List[T]:
         """
-        すべてのエンティティを取得
+        全エンティティを取得
 
         Args:
             entity_class: エンティティクラス
@@ -133,79 +104,46 @@ class BaseRepositoryImpl:
             logger.error(f"Failed to find all entities: {str(e)}")
             raise
 
-    async def exists(self, model_class: Type[M], **filters) -> bool:
+    async def delete(self, entity: T) -> bool:
         """
-        エンティティの存在確認
+        エンティティを削除
 
         Args:
-            model_class: モデルクラス
-            **filters: フィルタ条件
+            entity: 削除するエンティティ
 
         Returns:
-            bool: 存在する場合True
-        """
-        try:
-            stmt = select(model_class)
-            for key, value in filters.items():
-                stmt = stmt.where(getattr(model_class, key) == value)
-
-            result = await self.session.execute(stmt)
-            return result.scalar_one_or_none() is not None
-
-        except Exception as e:
-            logger.error(f"Failed to check entity existence: {str(e)}")
-            raise
-
-    async def delete_by_id(self, model_class: Type[M], id: int) -> bool:
-        """
-        IDでエンティティを削除
-
-        Args:
-            model_class: モデルクラス
-            id: 削除するID
-
-        Returns:
-            bool: 削除成功時True
-        """
-        try:
-            stmt = select(model_class).where(model_class.id == id)
-            result = await self.session.execute(stmt)
-            model = result.scalar_one_or_none()
-
-            if model:
-                await self.session.delete(model)
-                await self.session.commit()
-                return True
-            return False
-
-        except Exception as e:
-            await self.session.rollback()
-            logger.error(f"Failed to delete entity by id: {str(e)}")
-            raise
-
-    async def update(self, entity: T) -> T:
-        """
-        エンティティを更新
-
-        Args:
-            entity: 更新するエンティティ
-
-        Returns:
-            T: 更新されたエンティティ
+            bool: 削除成功の場合True
         """
         try:
             # モデルに変換
             model = entity.to_model()
 
-            # セッションにマージ
-            merged_model = await self.session.merge(model)
+            # セッションから削除
+            await self.session.delete(model)
             await self.session.commit()
-            await self.session.refresh(merged_model)
 
-            # エンティティに変換して返す
-            return entity.__class__.from_model(merged_model)
+            return True
 
         except Exception as e:
             await self.session.rollback()
-            logger.error(f"Failed to update entity: {str(e)}")
+            logger.error(f"Failed to delete entity: {str(e)}")
+            raise
+
+    async def count(self, model_class: Type[M]) -> int:
+        """
+        エンティティの総数を取得
+
+        Args:
+            model_class: モデルクラス
+
+        Returns:
+            int: エンティティの総数
+        """
+        try:
+            stmt = select(model_class)
+            result = await self.session.execute(stmt)
+            return len(result.scalars().all())
+
+        except Exception as e:
+            logger.error(f"Failed to count entities: {str(e)}")
             raise

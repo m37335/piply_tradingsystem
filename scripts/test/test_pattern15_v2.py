@@ -12,7 +12,9 @@ from typing import Dict, List
 import pandas as pd
 from sqlalchemy import text
 
-from src.infrastructure.analysis.pattern_detectors.support_resistance_detector_v2 import SupportResistanceDetectorV2
+from src.infrastructure.analysis.pattern_detectors.support_resistance_detector_v2 import (
+    SupportResistanceDetectorV2,
+)
 from src.infrastructure.database.connection import db_manager
 
 # ログ設定
@@ -35,7 +37,9 @@ class Pattern15V2Tester:
 
         try:
             # データベース接続
-            await db_manager.initialize("sqlite+aiosqlite:///./data/exchange_analytics.db")
+            await db_manager.initialize(
+                "sqlite+aiosqlite:///./data/exchange_analytics.db"
+            )
             logger.info("✅ データベース接続完了")
 
             # 複数の期間でテスト
@@ -82,13 +86,10 @@ class Pattern15V2Tester:
                     "detected": True,
                     "detection": detection,
                     "analysis": detailed_analysis,
-                    "data_points": len(data)
+                    "data_points": len(data),
                 }
             else:
-                return {
-                    "detected": False,
-                    "data_points": len(data)
-                }
+                return {"detected": False, "data_points": len(data)}
 
         except Exception as e:
             logger.error(f"期間テストエラー: {e}")
@@ -108,7 +109,7 @@ class Pattern15V2Tester:
                 "pattern_type": detection.get("pattern_type"),
                 "confidence": detection.get("confidence_score"),
                 "direction": detection.get("direction"),
-                "strategy": detection.get("strategy")
+                "strategy": detection.get("strategy"),
             }
 
             # 数学的パラメータ
@@ -116,13 +117,15 @@ class Pattern15V2Tester:
                 "slope": equation.get("slope"),
                 "intercept": equation.get("intercept"),
                 "angle": equation.get("angle"),
-                "equation_score": equation.get("score")
+                "equation_score": equation.get("score"),
             }
 
             # ライン強度
             analysis["strength"] = {
                 "line_strength": pattern_data.get("strength"),
-                "peak_count": len(pattern_data.get("peaks", [])) if detection.get("pattern_type") == "resistance_line" else len(pattern_data.get("troughs", []))
+                "peak_count": len(pattern_data.get("peaks", []))
+                if detection.get("pattern_type") == "resistance_line"
+                else len(pattern_data.get("troughs", [])),
             }
 
             # 現在価格との関係
@@ -131,7 +134,7 @@ class Pattern15V2Tester:
                 "strength": current_analysis.get("strength"),
                 "distance": current_analysis.get("distance"),
                 "line_price": current_analysis.get("line_price"),
-                "current_price": current_analysis.get("current_price")
+                "current_price": current_analysis.get("current_price"),
             }
 
             return analysis
@@ -144,30 +147,32 @@ class Pattern15V2Tester:
         """市場データ取得"""
         try:
             async with db_manager.get_session() as session:
-                query = text("""
-                    SELECT 
+                query = text(
+                    """
+                    SELECT
                         timestamp as Date,
                         open_price as Open,
                         high_price as High,
                         low_price as Low,
                         close_price as Close,
                         volume as Volume
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     ORDER BY timestamp DESC
                     LIMIT :days
-                """)
-                
+                """
+                )
+
                 result = await session.execute(query, {"days": days})
                 rows = result.fetchall()
-                
+
                 if not rows:
                     return pd.DataFrame()
-                
-                data = pd.DataFrame(rows, columns=[
-                    "Date", "Open", "High", "Low", "Close", "Volume"
-                ])
-                
+
+                data = pd.DataFrame(
+                    rows, columns=["Date", "Open", "High", "Low", "Close", "Volume"]
+                )
+
                 data = data.sort_values("Date").reset_index(drop=True)
                 return data
 
@@ -180,24 +185,24 @@ async def main():
     """メイン関数"""
     tester = Pattern15V2Tester()
     results = await tester.test_pattern15_v2()
-    
+
     if "error" in results:
         print(f"\n❌ テストエラー: {results['error']}")
         return
-    
+
     print("\n=== パターン15 V2 テスト結果 ===")
-    
+
     for period_name, result in results.items():
         if "error" in result:
             print(f"\n❌ {period_name}: {result['error']}")
             continue
-            
+
         print(f"\n📊 {period_name} ({result['data_points']}件):")
-        
+
         if result.get("detected", False):
             detection = result["detection"]
             analysis = result["analysis"]
-            
+
             # 基本情報
             basic = analysis.get("basic_info", {})
             print(f"  ✅ 検出成功!")
@@ -205,7 +210,7 @@ async def main():
             print(f"    信頼度: {basic.get('confidence', 0):.3f}")
             print(f"    方向: {basic.get('direction')}")
             print(f"    戦略: {basic.get('strategy')}")
-            
+
             # 数学的パラメータ
             math_info = analysis.get("mathematical", {})
             print(f"  📐 数学的パラメータ:")
@@ -213,13 +218,13 @@ async def main():
             print(f"    角度: {math_info.get('angle', 0):.2f}度")
             print(f"    切片: {math_info.get('intercept', 0):.5f}")
             print(f"    方程式スコア: {math_info.get('equation_score', 0):.3f}")
-            
+
             # ライン強度
             strength = analysis.get("strength", {})
             print(f"  💪 ライン強度:")
             print(f"    強度: {strength.get('line_strength', 0):.3f}")
             print(f"    ピーク数: {strength.get('peak_count', 0)}件")
-            
+
             # 現在価格との関係
             relation = analysis.get("current_relation", {})
             print(f"  📍 現在価格との関係:")
@@ -228,7 +233,7 @@ async def main():
             print(f"    距離: {relation.get('distance', 0):.3f}")
             print(f"    ライン価格: {relation.get('line_price', 0):.5f}")
             print(f"    現在価格: {relation.get('current_price', 0):.5f}")
-            
+
         else:
             print(f"  ❌ 検出なし")
 

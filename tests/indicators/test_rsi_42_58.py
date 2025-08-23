@@ -38,18 +38,14 @@ async def test_rsi_42_58():
     try:
         async with async_session() as db_session:
             print("\n🔍 1. RSI 42/58条件でのシグナル検出...")
-            print(
-                "   買い条件: RSI < 42 + 価格 > SMA20 + EMA12 > EMA26 + SMA20 > SMA50"
-            )
-            print(
-                "   売り条件: RSI > 58 + 価格 < SMA20 + EMA12 < EMA26 + SMA20 < SMA50"
-            )
+            print("   買い条件: RSI < 42 + 価格 > SMA20 + EMA12 > EMA26 + SMA20 > SMA50")
+            print("   売り条件: RSI > 58 + 価格 < SMA20 + EMA12 < EMA26 + SMA20 < SMA50")
 
             # RSI 42/58条件でシグナルを検出
             result = await db_session.execute(
                 text(
                     """
-                    SELECT 
+                    SELECT
                         ti1.value as rsi_value,
                         ti2.value as sma_20,
                         ti3.value as ema_12,
@@ -60,27 +56,27 @@ async def test_rsi_42_58():
                         ti1.timestamp as signal_time,
                         ti1.timeframe
                     FROM technical_indicators ti1
-                    LEFT JOIN technical_indicators ti2 ON 
-                        ti1.timestamp = ti2.timestamp 
-                        AND ti1.timeframe = ti2.timeframe 
+                    LEFT JOIN technical_indicators ti2 ON
+                        ti1.timestamp = ti2.timestamp
+                        AND ti1.timeframe = ti2.timeframe
                         AND ti2.indicator_type = 'SMA_20'
-                    LEFT JOIN technical_indicators ti3 ON 
-                        ti1.timestamp = ti3.timestamp 
-                        AND ti1.timeframe = ti3.timeframe 
+                    LEFT JOIN technical_indicators ti3 ON
+                        ti1.timestamp = ti3.timestamp
+                        AND ti1.timeframe = ti3.timeframe
                         AND ti3.indicator_type = 'EMA_12'
-                    LEFT JOIN technical_indicators ti4 ON 
-                        ti1.timestamp = ti4.timestamp 
-                        AND ti1.timeframe = ti4.timeframe 
+                    LEFT JOIN technical_indicators ti4 ON
+                        ti1.timestamp = ti4.timestamp
+                        AND ti1.timeframe = ti4.timeframe
                         AND ti4.indicator_type = 'EMA_26'
-                    LEFT JOIN technical_indicators ti5 ON 
-                        ti1.timestamp = ti5.timestamp 
-                        AND ti1.timeframe = ti5.timeframe 
+                    LEFT JOIN technical_indicators ti5 ON
+                        ti1.timestamp = ti5.timestamp
+                        AND ti1.timeframe = ti5.timeframe
                         AND ti5.indicator_type = 'SMA_50'
-                    LEFT JOIN technical_indicators ti6 ON 
-                        ti1.timestamp = ti6.timestamp 
-                        AND ti1.timeframe = ti6.timeframe 
+                    LEFT JOIN technical_indicators ti6 ON
+                        ti1.timestamp = ti6.timestamp
+                        AND ti1.timeframe = ti6.timeframe
                         AND ti6.indicator_type = 'ATR'
-                    LEFT JOIN price_data pd ON 
+                    LEFT JOIN price_data pd ON
                         ti1.timestamp = pd.timestamp
                         AND ti1.currency_pair = pd.currency_pair
                     WHERE ti1.indicator_type = 'RSI'
@@ -286,9 +282,7 @@ async def test_rsi_42_58():
                     / len(all_profits_1h)
                     * 100
                 )
-                print(
-                    f"全体 - 1時間後: 平均{avg_profit_1h:.2f}pips, 勝率{win_rate_1h:.1f}%"
-                )
+                print(f"全体 - 1時間後: 平均{avg_profit_1h:.2f}pips, 勝率{win_rate_1h:.1f}%")
 
             if all_profits_4h:
                 avg_profit_4h = sum(all_profits_4h) / len(all_profits_4h)
@@ -297,9 +291,7 @@ async def test_rsi_42_58():
                     / len(all_profits_4h)
                     * 100
                 )
-                print(
-                    f"全体 - 4時間後: 平均{avg_profit_4h:.2f}pips, 勝率{win_rate_4h:.1f}%"
-                )
+                print(f"全体 - 4時間後: 平均{avg_profit_4h:.2f}pips, 勝率{win_rate_4h:.1f}%")
 
             if all_profits_1d:
                 avg_profit_1d = sum(all_profits_1d) / len(all_profits_1d)
@@ -308,9 +300,7 @@ async def test_rsi_42_58():
                     / len(all_profits_1d)
                     * 100
                 )
-                print(
-                    f"全体 - 1日後: 平均{avg_profit_1d:.2f}pips, 勝率{win_rate_1d:.1f}%"
-                )
+                print(f"全体 - 1日後: 平均{avg_profit_1d:.2f}pips, 勝率{win_rate_1d:.1f}%")
 
             # 買い/売り別統計
             if buy_signals:
@@ -359,9 +349,7 @@ async def test_rsi_42_58():
                         / len(buy_profits_1d)
                         * 100
                     )
-                    print(
-                        f"買い - 1日後: 平均{avg_buy_1d:.2f}pips, 勝率{win_rate_buy_1d:.1f}%"
-                    )
+                    print(f"買い - 1日後: 平均{avg_buy_1d:.2f}pips, 勝率{win_rate_buy_1d:.1f}%")
 
             if sell_signals:
                 sell_profits_1h = [

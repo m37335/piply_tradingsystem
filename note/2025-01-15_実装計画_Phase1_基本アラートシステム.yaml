@@ -1,0 +1,250 @@
+# Phase 1: 基本アラートシステム実装計画
+# 期間: 1-2週間
+# 作成日: 2025-01-15
+# バージョン: 1.0.0
+
+project:
+  name: "プロトレーダー向け為替アラートシステム"
+  phase: "Phase 1"
+  title: "基本アラートシステム"
+  duration: "1-2週間"
+  start_date: "2025-01-20"
+  end_date: "2025-02-03"
+
+objectives:
+  - "データベーススキーマの構築"
+  - "基本的なアラート検出エンジンの実装"
+  - "通知システムの基盤構築"
+  - "システムの動作確認"
+
+dependencies:
+  - "既存のtechnical_indicatorsテーブル"
+  - "PostgreSQLデータベース"
+  - "Discord Webhook設定"
+
+week1:
+  title: "データベース・モデル実装"
+  duration: "5営業日"
+  tasks:
+    - id: "DB-001"
+      title: "アラート設定テーブル作成"
+      description: "alert_settingsテーブルの作成とインデックス設定"
+      priority: "High"
+      estimated_hours: 4
+      assignee: "Backend Developer"
+      acceptance_criteria:
+        - "テーブルが正常に作成される"
+        - "インデックスが適切に設定される"
+        - "制約が正しく設定される"
+      subtasks:
+        - "CREATE TABLE文の作成"
+        - "インデックス作成"
+        - "制約設定"
+        - "テストデータ投入"
+        - "動作確認"
+
+    - id: "DB-002"
+      title: "エントリーシグナルテーブル作成"
+      description: "entry_signalsテーブルの作成とインデックス設定"
+      priority: "High"
+      estimated_hours: 6
+      assignee: "Backend Developer"
+      acceptance_criteria:
+        - "テーブルが正常に作成される"
+        - "外部キー制約が正しく設定される"
+        - "複合インデックスが最適化される"
+      subtasks:
+        - "CREATE TABLE文の作成"
+        - "外部キー制約設定"
+        - "複合インデックス作成"
+        - "パフォーマンステスト"
+        - "ドキュメント作成"
+
+    - id: "DB-003"
+      title: "リスクアラートテーブル作成"
+      description: "risk_alertsテーブルの作成とインデックス設定"
+      priority: "Medium"
+      estimated_hours: 4
+      assignee: "Backend Developer"
+      acceptance_criteria:
+        - "テーブルが正常に作成される"
+        - "JSONBフィールドが適切に設定される"
+        - "重要度別インデックスが作成される"
+      subtasks:
+        - "CREATE TABLE文の作成"
+        - "JSONBフィールド設定"
+        - "重要度別インデックス作成"
+        - "テストデータ作成"
+        - "検索パフォーマンス確認"
+
+    - id: "DB-004"
+      title: "シグナルパフォーマンステーブル作成"
+      description: "signal_performanceテーブルの作成とインデックス設定"
+      priority: "Medium"
+      estimated_hours: 5
+      assignee: "Backend Developer"
+      acceptance_criteria:
+        - "テーブルが正常に作成される"
+        - "統計計算用インデックスが最適化される"
+        - "パフォーマンス追跡機能が動作する"
+      subtasks:
+        - "CREATE TABLE文の作成"
+        - "統計計算用インデックス作成"
+        - "パフォーマンス追跡ロジック実装"
+        - "テストデータ投入"
+        - "統計クエリテスト"
+
+    - id: "MODEL-001"
+      title: "SQLAlchemyモデル実装"
+      description: "4つのテーブルに対応するSQLAlchemyモデルの実装"
+      priority: "High"
+      estimated_hours: 8
+      assignee: "Backend Developer"
+      acceptance_criteria:
+        - "全テーブルのモデルが実装される"
+        - "リレーションが正しく設定される"
+        - "バリデーションが実装される"
+        - "CRUD操作が正常に動作する"
+      subtasks:
+        - "AlertSettingsModel実装"
+        - "EntrySignalModel実装"
+        - "RiskAlertModel実装"
+        - "SignalPerformanceModel実装"
+        - "リレーション設定"
+        - "バリデーション実装"
+        - "CRUD操作テスト"
+        - "ドキュメント作成"
+
+week2:
+  title: "基本検出エンジン実装"
+  duration: "5営業日"
+  tasks:
+    - id: "ENGINE-001"
+      title: "RSIエントリー検出器実装"
+      description: "RSI + 移動平均線の組み合わせによるエントリーシグナル検出"
+      priority: "High"
+      estimated_hours: 10
+      assignee: "Algorithm Developer"
+      acceptance_criteria:
+        - "RSI過買い/過売り条件が正しく検出される"
+        - "移動平均線との組み合わせが動作する"
+        - "信頼度スコアが適切に計算される"
+        - "リスク/リワード比が正しく計算される"
+      subtasks:
+        - "RSIEntryDetectorクラス実装"
+        - "買いシグナル検出ロジック実装"
+        - "売りシグナル検出ロジック実装"
+        - "信頼度スコア計算実装"
+        - "リスク/リワード比計算実装"
+        - "テストケース作成"
+        - "バックテスト実行"
+        - "パフォーマンス最適化"
+
+    - id: "ENGINE-002"
+      title: "ボリンジャーバンドエントリー検出器実装"
+      description: "ボリンジャーバンド + モメンタムによるエントリーシグナル検出"
+      priority: "High"
+      estimated_hours: 8
+      assignee: "Algorithm Developer"
+      acceptance_criteria:
+        - "バンドタッチ条件が正しく検出される"
+        - "出来高条件が適切に組み込まれる"
+        - "RSIとの組み合わせが動作する"
+        - "ストップロス/利益確定レベルが適切に設定される"
+      subtasks:
+        - "BollingerBandsEntryDetectorクラス実装"
+        - "バンドタッチ検出ロジック実装"
+        - "出来高分析機能実装"
+        - "RSI組み合わせ機能実装"
+        - "リスク管理レベル計算実装"
+        - "テストケース作成"
+        - "バックテスト実行"
+        - "パフォーマンス最適化"
+
+    - id: "ENGINE-003"
+      title: "ボラティリティリスク検出器実装"
+      description: "ATRベースのボラティリティ急増検出機能"
+      priority: "Medium"
+      estimated_hours: 6
+      assignee: "Algorithm Developer"
+      acceptance_criteria:
+        - "ATR急増が正しく検出される"
+        - "重要度レベルが適切に判定される"
+        - "推奨アクションが生成される"
+        - "履歴データとの比較が正常に動作する"
+      subtasks:
+        - "VolatilityRiskDetectorクラス実装"
+        - "ATR計算ロジック実装"
+        - "急増判定アルゴリズム実装"
+        - "重要度レベル判定実装"
+        - "推奨アクション生成実装"
+        - "テストケース作成"
+        - "履歴データ分析"
+        - "パフォーマンス最適化"
+
+    - id: "NOTIFY-001"
+      title: "基本通知システム実装"
+      description: "Discord通知の基本機能実装"
+      priority: "High"
+      estimated_hours: 8
+      assignee: "Frontend Developer"
+      acceptance_criteria:
+        - "Discord Webhookが正常に動作する"
+        - "メッセージフォーマットが適切に表示される"
+        - "エラーハンドリングが実装される"
+        - "通知履歴が記録される"
+      subtasks:
+        - "DiscordNotificationServiceクラス実装"
+        - "Webhook設定機能実装"
+        - "メッセージフォーマット実装"
+        - "エラーハンドリング実装"
+        - "通知履歴記録機能実装"
+        - "テスト通知機能実装"
+        - "設定ファイル作成"
+        - "ドキュメント作成"
+
+deliverables:
+  - "データベーススキーマ（SQLファイル）"
+  - "SQLAlchemyモデル（Pythonファイル）"
+  - "アラート検出エンジン（Pythonファイル）"
+  - "通知システム（Pythonファイル）"
+  - "テストケース（Pythonファイル）"
+  - "設定ファイル（YAML/JSON）"
+  - "技術ドキュメント（Markdown）"
+
+risks:
+  - risk: "データベースパフォーマンス問題"
+    impact: "Medium"
+    mitigation: "インデックス最適化とクエリチューニング"
+  - risk: "アルゴリズム精度不足"
+    impact: "High"
+    mitigation: "バックテストとパラメータ調整"
+  - risk: "Discord API制限"
+    impact: "Low"
+    mitigation: "レート制限対応とエラーハンドリング"
+
+success_criteria:
+  - "全テーブルが正常に作成され、データの挿入・取得が可能"
+  - "RSIエントリー検出器が60%以上の精度でシグナルを生成"
+  - "ボリンジャーバンド検出器が適切なリスク/リワード比を計算"
+  - "Discord通知が5秒以内に配信される"
+  - "システム全体のエラー率が1%以下"
+
+testing:
+  unit_tests:
+    - "データベースモデルのCRUD操作テスト"
+    - "アラート検出アルゴリズムの単体テスト"
+    - "通知システムの動作テスト"
+  integration_tests:
+    - "エンドツーエンドのアラート生成・通知テスト"
+    - "データベースとアプリケーションの連携テスト"
+  performance_tests:
+    - "大量データでの検出性能テスト"
+    - "通知配信のレート制限テスト"
+
+documentation:
+  - "データベース設計書"
+  - "API仕様書"
+  - "アルゴリズム説明書"
+  - "設定ガイド"
+  - "トラブルシューティングガイド"

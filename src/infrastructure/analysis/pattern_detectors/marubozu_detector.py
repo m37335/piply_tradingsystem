@@ -269,7 +269,10 @@ class MarubozuDetector:
         ) or (
             # 片方のヒゲが非常に小さい場合（5%以下）
             (upper_wick_ratio <= 0.05 and lower_wick_ratio <= self.max_wick_ratio * 1.5)
-            or (lower_wick_ratio <= 0.05 and upper_wick_ratio <= self.max_wick_ratio * 1.5)
+            or (
+                lower_wick_ratio <= 0.05
+                and upper_wick_ratio <= self.max_wick_ratio * 1.5
+            )
         ):
             return True
 

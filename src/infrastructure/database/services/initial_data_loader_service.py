@@ -247,9 +247,7 @@ class InitialDataLoaderService:
                     )
                     if saved:
                         indicator_counts[timeframe] = len(indicators)
-                        logger.info(
-                            f"  ✅ {timeframe}指標計算完了: {len(indicators)}件"
-                        )
+                        logger.info(f"  ✅ {timeframe}指標計算完了: {len(indicators)}件")
                     else:
                         logger.warning(f"  ⚠️ {timeframe}指標保存失敗")
                 else:
@@ -324,9 +322,7 @@ class InitialDataLoaderService:
             # テクニカル指標の存在確認
             indicator_count = await self.indicator_service.count_latest_indicators()
             if indicator_count < 50:
-                logger.warning(
-                    f"初期化未完了: テクニカル指標不足 ({indicator_count}/50)"
-                )
+                logger.warning(f"初期化未完了: テクニカル指標不足 ({indicator_count}/50)")
                 return False
 
             logger.info("✅ 初期化完了確認済み")

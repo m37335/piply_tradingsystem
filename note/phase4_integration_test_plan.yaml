@@ -1,0 +1,235 @@
+# Phase 4: 統合テスト実装計画書
+# Exchange Analytics System - 時間足集計システム
+
+project:
+  name: "Exchange Analytics System - 時間足集計システム"
+  phase: "Phase 4: 統合テスト"
+  version: "1.0.0"
+  created_date: "2025-08-15"
+  priority: "高"
+  estimated_duration: "1日"
+
+overview:
+  description: "全時間足集計システムの統合テストと本番環境での動作確認"
+  objective: "Phase 1-3で実装した全時間足集計システムの統合テストと本番デプロイ"
+  success_criteria:
+    - "全時間足集計システムが正常に動作する"
+    - "システム全体のパフォーマンスが目標を達成する"
+    - "エラーハンドリングが適切に機能する"
+    - "本番環境での安定動作が確認される"
+
+dependencies:
+  existing_files:
+    - "scripts/cron/hourly_aggregator.py"
+    - "scripts/cron/four_hour_aggregator.py"
+    - "scripts/cron/daily_aggregator.py"
+    - "current_crontab.txt"
+    - "logs/hourly_aggregator.log"
+    - "logs/four_hour_aggregator.log"
+    - "logs/daily_aggregator.log"
+  new_files:
+    - "tests/integration/test_timeframe_aggregation.py"
+    - "tests/performance/test_aggregation_performance.py"
+    - "scripts/monitoring/aggregation_monitor.py"
+
+tasks:
+  task_1:
+    id: "TASK-401"
+    name: "統合テスト作成"
+    description: "全時間足集計システムの統合テストを実装"
+    priority: "高"
+    estimated_hours: 4
+    dependencies: []
+    deliverables:
+      - "統合テストスクリプト"
+      - "エンドツーエンドテスト"
+      - "データ整合性テスト"
+    acceptance_criteria:
+      - "全時間足の集計が正常に動作する"
+      - "データの整合性が保たれる"
+      - "エラーシナリオが適切に処理される"
+
+  task_2:
+    id: "TASK-402"
+    name: "パフォーマンステスト作成"
+    description: "システム全体のパフォーマンステストを実装"
+    priority: "高"
+    estimated_hours: 3
+    dependencies: ["TASK-401"]
+    deliverables:
+      - "パフォーマンステストスクリプト"
+      - "負荷テスト"
+      - "メモリ使用量テスト"
+    acceptance_criteria:
+      - "処理時間が目標を達成する"
+      - "メモリ使用量が目標を達成する"
+      - "データベース負荷が適切である"
+
+  task_3:
+    id: "TASK-403"
+    name: "監視システム作成"
+    description: "時間足集計システムの監視機能を実装"
+    priority: "中"
+    estimated_hours: 3
+    dependencies: ["TASK-402"]
+    deliverables:
+      - "監視スクリプト"
+      - "アラート機能"
+      - "レポート機能"
+    acceptance_criteria:
+      - "システムの状態が監視される"
+      - "異常時にアラートが発生する"
+      - "定期的なレポートが生成される"
+
+  task_4:
+    id: "TASK-404"
+    name: "crontab統合設定"
+    description: "全時間足集計のcrontab設定を統合・最適化"
+    priority: "高"
+    estimated_hours: 2
+    dependencies: ["TASK-403"]
+    deliverables:
+      - "統合crontab設定"
+      - "実行順序の最適化"
+      - "ログ管理の統合"
+    acceptance_criteria:
+      - "全時間足集計が適切な順序で実行される"
+      - "ログが統合管理される"
+      - "実行時間の競合が回避される"
+
+  task_5:
+    id: "TASK-405"
+    name: "本番環境テスト実行"
+    description: "実際の本番環境での包括的なテストを実行"
+    priority: "高"
+    estimated_hours: 4
+    dependencies: ["TASK-404"]
+    deliverables:
+      - "本番環境テスト結果"
+      - "パフォーマンス測定結果"
+      - "データ整合性確認結果"
+    acceptance_criteria:
+      - "本番環境で正常に動作する"
+      - "パフォーマンス目標が達成される"
+      - "データ整合性が保たれる"
+
+  task_6:
+    id: "TASK-406"
+    name: "ドキュメント更新"
+    description: "実装完了に伴うドキュメントの更新"
+    priority: "中"
+    estimated_hours: 2
+    dependencies: ["TASK-405"]
+    deliverables:
+      - "実装完了報告書"
+      - "運用マニュアル更新"
+      - "トラブルシューティングガイド"
+    acceptance_criteria:
+      - "ドキュメントが最新状態に更新される"
+      - "運用マニュアルが完成する"
+      - "トラブルシューティングガイドが作成される"
+
+milestones:
+  milestone_1:
+    name: "統合テスト完了"
+    date: "2025-08-26"
+    tasks: ["TASK-401", "TASK-402"]
+    description: "統合テストとパフォーマンステストが完了"
+
+  milestone_2:
+    name: "本番環境準備完了"
+    date: "2025-08-27"
+    tasks: ["TASK-403", "TASK-404"]
+    description: "監視システムとcrontab統合が完了"
+
+  milestone_3:
+    name: "本番デプロイ完了"
+    date: "2025-08-28"
+    tasks: ["TASK-405", "TASK-406"]
+    description: "本番テストとドキュメント更新が完了"
+
+risks:
+  risk_1:
+    description: "システム全体のパフォーマンス問題"
+    probability: "中"
+    impact: "高"
+    mitigation: "段階的な負荷テストと最適化を実施"
+
+  risk_2:
+    description: "時間足間のデータ整合性問題"
+    probability: "低"
+    impact: "高"
+    mitigation: "厳密なデータ整合性チェックを実装"
+
+  risk_3:
+    description: "crontab実行順序の競合"
+    probability: "中"
+    impact: "中"
+    mitigation: "実行時間の分散と優先度設定を実装"
+
+resources:
+  required_skills:
+    - "Python (asyncio)"
+    - "SQLAlchemy"
+    - "PostgreSQL"
+    - "crontab"
+    - "パフォーマンステスト"
+    - "システム監視"
+  estimated_total_hours: 18
+  team_size: 1
+
+success_metrics:
+  functional:
+    - "全時間足集計システムが正常に動作する"
+    - "データの整合性が保たれる"
+    - "エラーハンドリングが適切に機能する"
+  performance:
+    - "1時間足集計: 10秒以内"
+    - "4時間足集計: 15秒以内"
+    - "日足集計: 20秒以内"
+    - "システム全体: 安定動作"
+  quality:
+    - "統合テストカバレッジ: 90%以上"
+    - "パフォーマンス目標達成"
+    - "本番環境での安定動作確認"
+  operational:
+    - "監視システムが正常に動作する"
+    - "アラート機能が適切に機能する"
+    - "運用マニュアルが完成する"
+
+test_scenarios:
+  scenario_1:
+    name: "正常動作テスト"
+    description: "全時間足集計の正常動作を確認"
+    test_cases:
+      - "1時間足集計の正常動作"
+      - "4時間足集計の正常動作"
+      - "日足集計の正常動作"
+      - "データの整合性確認"
+
+  scenario_2:
+    name: "パフォーマンステスト"
+    description: "システム全体のパフォーマンスを測定"
+    test_cases:
+      - "処理時間の測定"
+      - "メモリ使用量の測定"
+      - "データベース負荷の測定"
+      - "同時実行時の動作確認"
+
+  scenario_3:
+    name: "エラー処理テスト"
+    description: "エラー発生時の処理を確認"
+    test_cases:
+      - "データベース接続エラー"
+      - "データ不足エラー"
+      - "重複データエラー"
+      - "システムリソース不足エラー"
+
+  scenario_4:
+    name: "本番環境テスト"
+    description: "実際の本番環境での動作確認"
+    test_cases:
+      - "実際のデータでの動作確認"
+      - "長時間実行の安定性確認"
+      - "crontab実行の確認"
+      - "ログ出力の確認"

@@ -366,6 +366,6 @@ sudo -u postgres pg_ctl -D /var/lib/postgresql/15/main start -o "--single --user
 
 ---
 
-**最終更新**: 2025-08-20  
-**バージョン**: 1.0  
+**最終更新**: 2025-08-20
+**バージョン**: 1.0
 **作成者**: AI Assistant

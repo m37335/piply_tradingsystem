@@ -145,7 +145,7 @@ class Pattern15V4CoordinateSystemTester:
             # 座標系パラメータ
             slope = equation.get("slope", 0)
             angle = equation.get("angle", 0)
-            
+
             analysis["coordinate_system"] = {
                 "slope": slope,
                 "intercept": equation.get("intercept"),
@@ -168,20 +168,22 @@ class Pattern15V4CoordinateSystemTester:
             logger.error(f"検出詳細分析エラー: {e}")
             return {"error": str(e)}
 
-    def _analyze_detection_quality(self, data: pd.DataFrame, pattern_data: Dict) -> Dict:
+    def _analyze_detection_quality(
+        self, data: pd.DataFrame, pattern_data: Dict
+    ) -> Dict:
         """検出品質分析"""
         try:
             analysis = {}
 
             # ライン強度
             strength = pattern_data.get("strength", 0)
-            
+
             # 決定係数
             r_squared = pattern_data.get("equation", {}).get("r_squared", 0)
-            
+
             # 現在価格関係
             current_analysis = pattern_data.get("current_analysis", {})
-            
+
             analysis["quality_metrics"] = {
                 "line_strength": strength,
                 "r_squared": r_squared,
@@ -193,7 +195,7 @@ class Pattern15V4CoordinateSystemTester:
             # 品質評価
             quality_score = strength * r_squared
             analysis["quality_score"] = quality_score
-            
+
             if quality_score >= 0.8:
                 quality_rating = "Excellent"
             elif quality_score >= 0.6:
@@ -202,7 +204,7 @@ class Pattern15V4CoordinateSystemTester:
                 quality_rating = "Fair"
             else:
                 quality_rating = "Poor"
-            
+
             analysis["quality_rating"] = quality_rating
 
             return analysis
@@ -255,14 +257,18 @@ class Pattern15V4CoordinateSystemTester:
                     stats["angle_by_period"][period_name].append(angle)
 
                     # 品質スコア統計
-                    quality_score = result["analysis"]["detection_quality"]["quality_score"]
+                    quality_score = result["analysis"]["detection_quality"][
+                        "quality_score"
+                    ]
                     if period_name not in stats["quality_score_by_period"]:
                         stats["quality_score_by_period"][period_name] = []
                     stats["quality_score_by_period"][period_name].append(quality_score)
 
                     # ラインタイプ統計
                     line_type = result["detection"]["pattern_type"]
-                    stats["line_types"][line_type] = stats["line_types"].get(line_type, 0) + 1
+                    stats["line_types"][line_type] = (
+                        stats["line_types"].get(line_type, 0) + 1
+                    )
                 else:
                     stats["period_detections"][period_name] = False
 
@@ -337,7 +343,9 @@ class Pattern15V4CoordinateSystemTester:
 
                 # 傾きと品質スコアの収集
                 slope_by_period = timeframe_stats.get("slope_by_period", {})
-                quality_score_by_period = timeframe_stats.get("quality_score_by_period", {})
+                quality_score_by_period = timeframe_stats.get(
+                    "quality_score_by_period", {}
+                )
                 line_types = timeframe_stats.get("line_types", {})
 
                 for period_name, slopes in slope_by_period.items():
@@ -357,7 +365,9 @@ class Pattern15V4CoordinateSystemTester:
 
             # 全体検出率
             if total_periods > 0:
-                stats["overall_detection_rate"] = stats["total_detections"] / total_periods
+                stats["overall_detection_rate"] = (
+                    stats["total_detections"] / total_periods
+                )
 
             # 最高パフォーマンス時間足
             if timeframe_performance:
@@ -419,14 +429,14 @@ class Pattern15V4CoordinateSystemTester:
             async with db_manager.get_session() as session:
                 query = text(
                     """
-                    SELECT 
+                    SELECT
                         timestamp as Date,
                         open_price as Open,
                         high_price as High,
                         low_price as Low,
                         close_price as Close,
                         volume as Volume
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     ORDER BY timestamp DESC
                     LIMIT :days
@@ -455,13 +465,13 @@ async def main():
     """メイン関数"""
     tester = Pattern15V4CoordinateSystemTester()
     results = await tester.test_coordinate_system_detection()
-    
+
     if "error" in results:
         print(f"\n❌ テストエラー: {results['error']}")
         return
-    
+
     print("\n=== パターン15 V4 座標系ベース検出テスト結果 ===")
-    
+
     # 全体統計
     overall_stats = results.get("overall_stats", {})
     print(f"\n📊 全体統計:")
@@ -471,40 +481,44 @@ async def main():
     print(f"  最高信頼度: {overall_stats.get('highest_confidence', 0):.3f}")
     print(f"  平均傾き: {overall_stats.get('average_slope', 0):.6f}")
     print(f"  平均品質スコア: {overall_stats.get('average_quality_score', 0):.3f}")
-    
+
     # ラインタイプ分布
     line_types = overall_stats.get("line_type_distribution", {})
     if line_types:
         print(f"  ラインタイプ分布:")
         for line_type, count in line_types.items():
             print(f"    {line_type}: {count}件")
-    
+
     # 時間足別結果
     results_data = results.get("results", {})
     print(f"\n🔧 時間足別結果:")
-    
+
     for timeframe, timeframe_data in results_data.items():
         tf_stats = timeframe_data.get("statistics", {})
         print(f"\n  {timeframe}:")
         print(f"    検出件数: {tf_stats.get('detection_count', 0)}")
         print(f"    検出率: {tf_stats.get('detection_rate', 0):.1%}")
-        
+
         # 詳細結果
         for period_name, result in timeframe_data.items():
             if period_name == "statistics":
                 continue
-                
+
             if result.get("detected", False):
                 analysis = result.get("analysis", {})
                 coordinate_system = analysis.get("coordinate_system", {})
                 detection_quality = analysis.get("detection_quality", {})
-                
+
                 print(f"      {period_name}:")
                 print(f"        パターン: {result['detection']['pattern_type']}")
-                print(f"        傾き: {coordinate_system['slope']:.6f} ({coordinate_system['slope_description']})")
+                print(
+                    f"        傾き: {coordinate_system['slope']:.6f} ({coordinate_system['slope_description']})"
+                )
                 print(f"        角度: {coordinate_system['angle']:.2f}度")
                 print(f"        決定係数: {coordinate_system['r_squared']:.3f}")
-                print(f"        品質スコア: {detection_quality['quality_score']:.3f} ({detection_quality['quality_rating']})")
+                print(
+                    f"        品質スコア: {detection_quality['quality_score']:.3f} ({detection_quality['quality_rating']})"
+                )
                 print(f"        信頼度: {result['detection']['confidence_score']:.3f}")
                 print(f"        戦略: {result['detection']['strategy']}")
 

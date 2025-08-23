@@ -146,9 +146,7 @@ class IntegratedAIDiscordReporter:
                     await self.analysis_cache.invalidate_analysis(
                         "technical_indicators", currency_pair
                     )
-                    self.console.print(
-                        f"🔄 {currency_pair} キャッシュ無効化、再計算実行"
-                    )
+                    self.console.print(f"🔄 {currency_pair} キャッシュ無効化、再計算実行")
                 except Exception as e:
                     self.console.print(f"⚠️ キャッシュ無効化エラー: {str(e)}")
                     self.console.print(f"🔄 {currency_pair} 強制再計算実行")
@@ -990,9 +988,7 @@ pipsは0.01円=1pipです。
 
         except Exception as e:
             error_details = traceback.format_exc()
-            error_msg = (
-                f"❌ 統合レポート生成・配信エラー: {str(e)}\n詳細: {error_details}"
-            )
+            error_msg = f"❌ 統合レポート生成・配信エラー: {str(e)}\n詳細: {error_details}"
             self.console.print(error_msg)
 
             # エラー通知をDiscordに送信
@@ -1038,12 +1034,8 @@ async def main():
     parser = argparse.ArgumentParser(
         description="Integrated AI Discord Reporter (Optimized)"
     )
-    parser.add_argument(
-        "--test", action="store_true", help="テストモード（Discordに送信しない）"
-    )
-    parser.add_argument(
-        "--no-optimization", action="store_true", help="最適化機能を無効にする"
-    )
+    parser.add_argument("--test", action="store_true", help="テストモード（Discordに送信しない）")
+    parser.add_argument("--no-optimization", action="store_true", help="最適化機能を無効にする")
 
     args = parser.parse_args()
 

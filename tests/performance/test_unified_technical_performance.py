@@ -10,10 +10,11 @@ UnifiedTechnicalCalculator パフォーマンステスト
 
 import asyncio
 import time
+from unittest.mock import AsyncMock
+
+import pandas as pd
 import psutil
 import pytest
-import pandas as pd
-from unittest.mock import AsyncMock
 
 from scripts.cron.unified_technical_calculator import UnifiedTechnicalCalculator
 from src.infrastructure.database.services.unified_technical_indicator_service import (
@@ -46,22 +47,22 @@ class TestUnifiedTechnicalPerformance:
             "Close": [100 + i * 0.1 for i in range(1000)],
             "High": [101 + i * 0.1 for i in range(1000)],
             "Low": [99 + i * 0.1 for i in range(1000)],
-            "Volume": [1000000 for _ in range(1000)]
+            "Volume": [1000000 for _ in range(1000)],
         }
         mock_data = pd.DataFrame(data)
 
         # 計算時間の測定
         start_time = time.time()
-        
+
         # RSI計算
         rsi_result = await unified_calculator.calculate_rsi(mock_data, "M5")
-        
+
         # MACD計算
         macd_result = await unified_calculator.calculate_macd(mock_data, "M5")
-        
+
         # ボリンジャーバンド計算
         bb_result = await unified_calculator.calculate_bollinger_bands(mock_data, "M5")
-        
+
         end_time = time.time()
         calculation_time = end_time - start_time
 
@@ -94,7 +95,7 @@ class TestUnifiedTechnicalPerformance:
 
         # メモリ使用量の増加を確認
         memory_increase = final_memory - initial_memory
-        
+
         # パフォーマンス基準（100MB以内の増加）
         assert memory_increase < 100
 
@@ -107,23 +108,23 @@ class TestUnifiedTechnicalPerformance:
         """並行処理テスト"""
         # 複数の時間足で並行処理
         timeframes = ["M5", "H1", "H4", "D1"]
-        
+
         start_time = time.time()
-        
+
         # 並行実行
         tasks = [
             unified_service.calculate_and_save_all_indicators(timeframe)
             for timeframe in timeframes
         ]
-        
+
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         end_time = time.time()
         concurrent_time = end_time - start_time
 
         # パフォーマンス基準（5秒以内）
         assert concurrent_time < 5.0
-        
+
         # エラーがないことを確認
         for result in results:
             assert not isinstance(result, Exception)
@@ -137,16 +138,16 @@ class TestUnifiedTechnicalPerformance:
             "Close": [100 + i * 0.01 for i in range(10000)],
             "High": [101 + i * 0.01 for i in range(10000)],
             "Low": [99 + i * 0.01 for i in range(10000)],
-            "Volume": [1000000 for _ in range(10000)]
+            "Volume": [1000000 for _ in range(10000)],
         }
 
         start_time = time.time()
-        
+
         # 大規模データでの計算
         rsi_result = await unified_calculator.calculate_rsi(large_data, "M5")
         macd_result = await unified_calculator.calculate_macd(large_data, "M5")
         bb_result = await unified_calculator.calculate_bollinger_bands(large_data, "M5")
-        
+
         end_time = time.time()
         large_data_time = end_time - start_time
 
@@ -161,14 +162,14 @@ class TestUnifiedTechnicalPerformance:
     async def test_health_check_performance(self, unified_service):
         """健全性チェックパフォーマンステスト"""
         await unified_service.initialize()
-        
+
         start_time = time.time()
-        
+
         # 複数回の健全性チェック
         for _ in range(100):
             health = await unified_service.health_check()
             assert health["status"] in ["healthy", "uninitialized"]
-        
+
         end_time = time.time()
         health_check_time = end_time - start_time
 
@@ -180,10 +181,10 @@ class TestUnifiedTechnicalPerformance:
     async def test_initialization_performance(self, unified_service):
         """初期化パフォーマンステスト"""
         start_time = time.time()
-        
+
         # 初期化
         result = await unified_service.initialize()
-        
+
         end_time = time.time()
         init_time = end_time - start_time
 
@@ -196,9 +197,9 @@ class TestUnifiedTechnicalPerformance:
     async def test_error_recovery_performance(self, unified_service):
         """エラー回復パフォーマンステスト"""
         await unified_service.initialize()
-        
+
         start_time = time.time()
-        
+
         # エラーケースでの処理
         for _ in range(10):
             try:
@@ -206,7 +207,7 @@ class TestUnifiedTechnicalPerformance:
                 await unified_service.calculate_rsi({}, "M5")
             except Exception:
                 pass  # エラーは予期される
-        
+
         end_time = time.time()
         error_recovery_time = end_time - start_time
 
@@ -222,18 +223,18 @@ class TestUnifiedTechnicalPerformance:
             "Close": [100 + i * 0.1 for i in range(1000)],
             "High": [101 + i * 0.1 for i in range(1000)],
             "Low": [99 + i * 0.1 for i in range(1000)],
-            "Volume": [1000000 for _ in range(1000)]
+            "Volume": [1000000 for _ in range(1000)],
         }
 
         start_time = time.time()
-        
+
         # 新機能（ストキャスティクス、ATR）の計算
         # 注: 実際の実装では、これらの機能は calculate_timeframe_indicators 内で実行される
         # ここでは基本的な計算性能をテスト
-        
+
         # 健全性チェック
         health = await unified_calculator.health_check()
-        
+
         end_time = time.time()
         new_features_time = end_time - start_time
 

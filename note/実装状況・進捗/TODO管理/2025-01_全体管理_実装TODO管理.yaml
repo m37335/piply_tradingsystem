@@ -1,0 +1,732 @@
+# 旧ファイル名: TODO.yaml
+
+# Exchange Analytics アプリケーション実装TODOリスト
+# 作成日: 2025年8月9日
+# 設計書ベース: /app/note/ 内の詳細設計書に準拠
+
+metadata:
+  project_name: "Exchange Analytics"
+  version: "1.0.0"
+  architecture: "Clean Architecture + DDD + Plugin System"
+  design_docs_path: "/app/note/"
+
+naming_conventions:
+  files:
+    - "Python: snake_case.py"
+    - "Classes: PascalCase"
+    - "Functions/Methods: snake_case"
+    - "Constants: UPPER_SNAKE_CASE"
+    - "Directories: snake_case"
+  database:
+    - "Tables: snake_case (singular)"
+    - "Columns: snake_case"
+    - "Indexes: idx_table_column"
+    - "Foreign Keys: fk_table_referenced_table"
+  api:
+    - "Endpoints: kebab-case (/api/v1/currency-pairs)"
+    - "Parameters: snake_case"
+    - "Response Fields: snake_case"
+
+phases:
+  phase1_foundation:
+    name: "基盤構築 (Foundation)"
+    description: "プロジェクト構造とコア基盤の構築"
+    priority: "CRITICAL"
+    estimated_days: 5
+
+    tasks:
+      - id: "P1-001"
+        title: "プロジェクト構造作成"
+        description: "設計書通りのディレクトリ構造を作成"
+        design_docs:
+          - "フォルダ構成実装ガイド_20250809.md"
+          - "モジュール設計思想_20250809.md"
+        subtasks:
+          - "src/ディレクトリ構造作成 (domain, application, infrastructure, presentation)"
+          - "tests/ディレクトリ構造作成 (unit, integration, e2e)"
+          - "config/設定ファイル構造作成"
+          - "plugins/プラグインディレクトリ作成"
+          - "__init__.py ファイル配置"
+        acceptance_criteria:
+          - "全ディレクトリが設計書通りに作成されている"
+          - "Python パッケージとして認識される"
+          - "import文でモジュールが読み込める"
+        github_actions:
+          - "コミット: feat: プロジェクト構造の初期作成"
+          - "プッシュ: origin/feature/project-structure"
+
+      - id: "P1-002"
+        title: "依存関係・設定管理実装"
+        description: "DIコンテナと設定システムの実装"
+        design_docs:
+          - "アプリケーション層設計_20250809.md"
+          - "インフラ・プラグイン設計_20250809.md"
+        subtasks:
+          - "src/core/container.py - DI Container実装"
+          - "src/config/base.py - 基本設定クラス実装"
+          - "src/config/database.py - DB設定実装"
+          - "src/config/plugins.yaml - プラグイン設定作成"
+          - "requirements.txt 更新 (dependency-injector, pydantic等)"
+        acceptance_criteria:
+          - "DIコンテナが正常に動作する"
+          - "環境変数から設定が読み込める"
+          - "設定のバリデーションが機能する"
+        github_actions:
+          - "コミット: feat: DIコンテナと設定管理システム実装"
+
+      - id: "P1-003"
+        title: "Domain Layer - エンティティ実装"
+        description: "ドメインエンティティと値オブジェクトの実装"
+        design_docs:
+          - "詳細内部設計_20250809.md"
+        subtasks:
+          - "src/domain/entities/base.py - BaseEntity実装"
+          - "src/domain/entities/exchange_rate.py - ExchangeRate実装"
+          - "src/domain/entities/technical_indicator.py - TechnicalIndicator実装"
+          - "src/domain/entities/analysis_report.py - AnalysisReport実装"
+          - "src/domain/value_objects/currency_pair.py - CurrencyPair実装"
+          - "src/domain/value_objects/price.py - Price実装"
+          - "Unit Tests作成 (tests/unit/domain/)"
+        acceptance_criteria:
+          - "全エンティティが設計書通りに実装されている"
+          - "バリデーションが正常に動作する"
+          - "テストカバレッジ 90%以上"
+        github_actions:
+          - "コミット: feat: ドメインエンティティと値オブジェクト実装"
+
+      - id: "P1-004"
+        title: "Domain Layer - リポジトリインターフェース"
+        description: "ドメインリポジトリインターフェースの実装"
+        design_docs:
+          - "詳細内部設計_20250809.md"
+        subtasks:
+          - "src/domain/repositories/base.py - BaseRepository実装"
+          - "src/domain/repositories/exchange_rate_repository.py - Interface実装"
+          - "src/domain/repositories/analysis_report_repository.py - Interface実装"
+          - "src/domain/repositories/technical_indicator_repository.py - Interface実装"
+        acceptance_criteria:
+          - "全インターフェースが抽象メソッドとして定義されている"
+          - "型ヒントが正確に設定されている"
+        github_actions:
+          - "コミット: feat: ドメインリポジトリインターフェース実装"
+
+      - id: "P1-005"
+        title: "Domain Layer - ドメインサービス"
+        description: "ドメインサービスとビジネスロジックの実装"
+        design_docs:
+          - "詳細内部設計_20250809.md"
+          - "補足設計_Application層_20250809.md"
+        subtasks:
+          - "src/domain/services/analysis_service.py - 分析ロジック実装"
+          - "src/domain/services/validation_service.py - バリデーションロジック"
+          - "Unit Tests作成"
+        acceptance_criteria:
+          - "分析ロジックが設計書通りに実装されている"
+          - "複雑なビジネスルールが適切に処理される"
+        github_actions:
+          - "コミット: feat: ドメインサービス実装"
+
+  phase2_application_layer:
+    name: "Application Layer実装"
+    description: "アプリケーションロジックとユースケースの実装"
+    priority: "HIGH"
+    estimated_days: 7
+    depends_on: ["phase1_foundation"]
+
+    tasks:
+      - id: "P2-001"
+        title: "Commands & Queries実装"
+        description: "CQRSパターンのCommandとQuery実装"
+        design_docs:
+          - "アプリケーション層設計_20250809.md"
+        subtasks:
+          - "src/application/commands/base.py - BaseCommand実装"
+          - "src/application/commands/generate_report_command.py - 実装"
+          - "src/application/commands/fetch_rates_command.py - 実装"
+          - "src/application/commands/create_alert_command.py - 実装"
+          - "src/application/queries/base.py - BaseQuery実装"
+          - "src/application/queries/get_rates_query.py - 実装"
+          - "src/application/queries/get_analysis_query.py - 実装"
+          - "Unit Tests作成"
+        acceptance_criteria:
+          - "全Command/Queryが設計書通りに実装されている"
+          - "バリデーションが正常に動作する"
+          - "UUIDとタイムスタンプが自動設定される"
+        github_actions:
+          - "コミット: feat: Commands & Queries実装"
+
+      - id: "P2-002"
+        title: "Application Handlers実装"
+        description: "ユースケースハンドラーの実装"
+        design_docs:
+          - "アプリケーション層設計_20250809.md"
+        subtasks:
+          - "src/application/handlers/report_handler.py - レポート処理実装"
+          - "src/application/handlers/data_handler.py - データ取得処理実装"
+          - "src/application/handlers/alert_handler.py - アラート処理実装"
+          - "src/application/handlers/analysis_handler.py - 分析処理実装"
+          - "Integration Tests作成"
+        acceptance_criteria:
+          - "全ハンドラーが設計書通りに実装されている"
+          - "エラーハンドリングが適切に実装されている"
+          - "ログ出力が適切に行われている"
+        github_actions:
+          - "コミット: feat: Application Handlers実装"
+
+      - id: "P2-003"
+        title: "外部サービスインターフェース実装"
+        description: "Application Layer の外部サービスインターフェース"
+        design_docs:
+          - "アプリケーション層設計_20250809.md"
+        subtasks:
+          - "src/application/interfaces/data_fetcher_interface.py - 実装"
+          - "src/application/interfaces/ai_analyzer_interface.py - 実装"
+          - "src/application/interfaces/notifier_interface.py - 実装"
+          - "src/application/interfaces/cache_interface.py - 実装"
+        acceptance_criteria:
+          - "全インターフェースが抽象メソッドとして定義されている"
+          - "戻り値の型ヒントが正確に設定されている"
+        github_actions:
+          - "コミット: feat: 外部サービスインターフェース実装"
+
+      - id: "P2-004"
+        title: "DTOs実装"
+        description: "データ転送オブジェクトの実装"
+        design_docs:
+          - "アプリケーション層設計_20250809.md"
+          - "補足設計_Application層_20250809.md"
+        subtasks:
+          - "src/application/dto/rate_dto.py - 実装"
+          - "src/application/dto/analysis_dto.py - 実装"
+          - "src/application/dto/alert_dto.py - 実装"
+          - "src/application/dto/report_dto.py - 実装"
+          - "シリアライゼーション/デシリアライゼーションテスト"
+        acceptance_criteria:
+          - "エンティティとDTOの相互変換が正常に動作する"
+          - "JSON シリアライゼーションが正常に動作する"
+        github_actions:
+          - "コミット: feat: DTOs実装"
+
+      - id: "P2-005"
+        title: "例外処理システム実装"
+        description: "アプリケーション例外とエラーハンドリング"
+        design_docs:
+          - "補足設計_Application層_20250809.md"
+        subtasks:
+          - "src/application/exceptions/base_exceptions.py - 実装"
+          - "src/application/exceptions/exception_handler.py - 実装"
+          - "カスタム例外クラス群実装"
+          - "例外ハンドリングテスト"
+        acceptance_criteria:
+          - "例外が適切に分類されている"
+          - "エラーレスポンスが統一されている"
+          - "ログが適切に出力される"
+        github_actions:
+          - "コミット: feat: 例外処理システム実装"
+
+  phase3_infrastructure_layer:
+    name: "Infrastructure Layer実装"
+    description: "データアクセスと外部システム連携の実装"
+    priority: "HIGH"
+    estimated_days: 8
+    depends_on: ["phase2_application_layer"]
+
+    tasks:
+      - id: "P3-001"
+        title: "データベースモデル実装"
+        description: "SQLAlchemyモデルの実装"
+        design_docs:
+          - "インフラ・プラグイン設計_20250809.md"
+        subtasks:
+          - "src/infrastructure/database/models/base.py - BaseModel実装"
+          - "src/infrastructure/database/models/exchange_rate_model.py - 実装"
+          - "src/infrastructure/database/models/analysis_report_model.py - 実装"
+          - "src/infrastructure/database/models/technical_indicator_model.py - 実装"
+          - "src/infrastructure/database/models/alert_model.py - 実装"
+          - "マイグレーションファイル作成 (alembic)"
+        acceptance_criteria:
+          - "全モデルが設計書通りに実装されている"
+          - "リレーションシップが正確に定義されている"
+          - "インデックスが適切に設定されている"
+        github_actions:
+          - "コミット: feat: データベースモデル実装"
+
+      - id: "P3-002"
+        title: "Repository実装"
+        description: "ドメインリポジトリの具象実装"
+        design_docs:
+          - "インフラ・プラグイン設計_20250809.md"
+        subtasks:
+          - "src/infrastructure/database/repositories/base_repository.py - 実装"
+          - "src/infrastructure/database/repositories/exchange_rate_repository_impl.py"
+          - "src/infrastructure/database/repositories/analysis_report_repository_impl.py"
+          - "src/infrastructure/database/repositories/technical_indicator_repository_impl.py"
+          - "Repository Integration Tests作成"
+        acceptance_criteria:
+          - "全Repository がドメインインターフェースを実装している"
+          - "CRUD操作が正常に動作する"
+          - "エラーハンドリングが適切に実装されている"
+        github_actions:
+          - "コミット: feat: Repository実装"
+
+      - id: "P3-003"
+        title: "外部API クライアント実装"
+        description: "Alpha Vantage等の外部APIクライアント"
+        design_docs:
+          - "インフラ・プラグイン設計_20250809.md"
+        subtasks:
+          - "src/infrastructure/external_apis/base_api_client.py - 実装"
+          - "src/infrastructure/external_apis/alpha_vantage_client.py - 実装"
+          - "src/infrastructure/external_apis/openai_client.py - 実装"
+          - "レート制限とリトライ機能実装"
+          - "API クライアントテスト (Mock使用)"
+        acceptance_criteria:
+          - "APIクライアントが設計書通りに実装されている"
+          - "レート制限が正常に動作する"
+          - "エラー時のリトライが機能する"
+        github_actions:
+          - "コミット: feat: 外部APIクライアント実装"
+
+      - id: "P3-004"
+        title: "メッセージング・通知システム実装"
+        description: "Discord、Email等の通知機能"
+        design_docs:
+          - "補足設計_Infrastructure層_20250809.md"
+        subtasks:
+          - "src/infrastructure/messaging/discord_client.py - 実装"
+          - "src/infrastructure/messaging/email_client.py - 実装"
+          - "src/infrastructure/messaging/webhook_client.py - 実装"
+          - "通知テンプレート作成"
+          - "通知システムテスト"
+        acceptance_criteria:
+          - "Discord通知が正常に送信される"
+          - "Email通知が正常に送信される"
+          - "通知内容が適切にフォーマットされる"
+        github_actions:
+          - "コミット: feat: メッセージング・通知システム実装"
+
+      - id: "P3-005"
+        title: "キャッシュシステム実装"
+        description: "Redisキャッシュの実装"
+        design_docs:
+          - "補足設計_Infrastructure層_20250809.md"
+        subtasks:
+          - "src/infrastructure/cache/redis_cache.py - 実装"
+          - "src/infrastructure/cache/memory_cache.py - フォールバック実装"
+          - "キャッシュ戦略実装 (TTL、無効化)"
+          - "キャッシュテスト"
+        acceptance_criteria:
+          - "Redis接続が正常に動作する"
+          - "キャッシュの読み書きが正常に動作する"
+          - "TTLが正常に機能する"
+        github_actions:
+          - "コミット: feat: キャッシュシステム実装"
+
+      - id: "P3-006"
+        title: "監視・メトリクスシステム実装"
+        description: "アプリケーション監視とメトリクス収集"
+        design_docs:
+          - "補足設計_Infrastructure層_20250809.md"
+        subtasks:
+          - "src/infrastructure/monitoring/metrics_collector.py - 実装"
+          - "src/infrastructure/monitoring/health_checker.py - 実装"
+          - "ヘルスチェックエンドポイント実装"
+          - "メトリクス dashboard作成"
+        acceptance_criteria:
+          - "システムメトリクスが収集される"
+          - "ヘルスチェックが正常に動作する"
+          - "パフォーマンス情報が取得できる"
+        github_actions:
+          - "コミット: feat: 監視・メトリクスシステム実装"
+
+  phase4_plugin_system:
+    name: "プラグインシステム実装"
+    description: "拡張可能なプラグインアーキテクチャの実装"
+    priority: "MEDIUM"
+    estimated_days: 6
+    depends_on: ["phase3_infrastructure_layer"]
+
+    tasks:
+      - id: "P4-001"
+        title: "プラグインフレームワーク実装"
+        description: "プラグインの基盤システム"
+        design_docs:
+          - "インフラ・プラグイン設計_20250809.md"
+        subtasks:
+          - "plugins/interfaces/base_plugin.py - 基底インターフェース"
+          - "plugins/interfaces/technical_indicator_plugin.py - 実装"
+          - "plugins/interfaces/analysis_plugin.py - 実装"
+          - "plugins/interfaces/report_plugin.py - 実装"
+          - "plugins/registry.py - プラグイン管理システム"
+        acceptance_criteria:
+          - "プラグインが動的に読み込める"
+          - "プラグインが安全に実行される"
+          - "プラグイン設定が管理できる"
+        github_actions:
+          - "コミット: feat: プラグインフレームワーク実装"
+
+      - id: "P4-002"
+        title: "テクニカル指標プラグイン実装"
+        description: "基本的なテクニカル指標プラグイン"
+        design_docs:
+          - "インフラ・プラグイン設計_20250809.md"
+        subtasks:
+          - "plugins/technical_indicators/sma_plugin.py - SMA実装"
+          - "plugins/technical_indicators/rsi_plugin.py - RSI実装"
+          - "plugins/technical_indicators/macd_plugin.py - MACD実装"
+          - "plugins/technical_indicators/bollinger_bands_plugin.py - 実装"
+          - "プラグインテスト作成"
+        acceptance_criteria:
+          - "各指標が正確に計算される"
+          - "設定パラメータが変更できる"
+          - "プラグインが有効/無効切り替えできる"
+        github_actions:
+          - "コミット: feat: テクニカル指標プラグイン実装"
+
+      - id: "P4-003"
+        title: "分析プラグイン実装"
+        description: "市場分析プラグイン"
+        design_docs:
+          - "インフラ・プラグイン設計_20250809.md"
+          - "補足設計_Application層_20250809.md"
+        subtasks:
+          - "plugins/analysis/trend_analysis_plugin.py - 実装"
+          - "plugins/analysis/support_resistance_plugin.py - 実装"
+          - "plugins/analysis/pattern_recognition_plugin.py - 実装"
+          - "分析結果統合システム"
+        acceptance_criteria:
+          - "分析ロジックが正確に動作する"
+          - "複数プラグインの結果が統合される"
+          - "分析結果に信頼度が付与される"
+        github_actions:
+          - "コミット: feat: 分析プラグイン実装"
+
+      - id: "P4-004"
+        title: "レポートプラグイン実装"
+        description: "レポート生成プラグイン"
+        design_docs:
+          - "インフラ・プラグイン設計_20250809.md"
+        subtasks:
+          - "plugins/reports/daily_report_plugin.py - 実装"
+          - "plugins/reports/weekly_report_plugin.py - 実装"
+          - "plugins/reports/custom_report_plugin.py - 実装"
+          - "レポートテンプレートシステム"
+        acceptance_criteria:
+          - "各レポート形式が生成できる"
+          - "カスタムテンプレートが使用できる"
+          - "レポート配信が自動化される"
+        github_actions:
+          - "コミット: feat: レポートプラグイン実装"
+
+  phase5_presentation_layer:
+    name: "Presentation Layer実装"
+    description: "API、Web UI、CLIの実装"
+    priority: "HIGH"
+    estimated_days: 10
+    depends_on: ["phase3_infrastructure_layer"]
+
+    tasks:
+      - id: "P5-001"
+        title: "REST API - 基盤実装"
+        description: "Flask API の基盤とミドルウェア"
+        design_docs:
+          - "プレゼンテーション層設計_20250809.md"
+        subtasks:
+          - "src/presentation/api/app.py - Flask アプリ実装"
+          - "src/presentation/api/middleware/error_handler.py - 実装"
+          - "src/presentation/api/middleware/rate_limit.py - 実装"
+          - "src/presentation/api/middleware/auth.py - 認証基盤"
+          - "API バージョニング実装"
+        acceptance_criteria:
+          - "Flask アプリが正常に起動する"
+          - "ミドルウェアが正常に動作する"
+          - "エラーハンドリングが統一されている"
+        github_actions:
+          - "コミット: feat: REST API基盤実装"
+
+      - id: "P5-002"
+        title: "REST API - エンドポイント実装"
+        description: "各機能のAPIエンドポイント"
+        design_docs:
+          - "プレゼンテーション層設計_20250809.md"
+        subtasks:
+          - "src/presentation/api/routes/health_routes.py - ヘルスチェック"
+          - "src/presentation/api/routes/rates_routes.py - 為替レート"
+          - "src/presentation/api/routes/analysis_routes.py - 分析"
+          - "src/presentation/api/routes/ai_reports_routes.py - AIレポート"
+          - "src/presentation/api/routes/alerts_routes.py - アラート"
+          - "src/presentation/api/routes/plugins_routes.py - プラグイン管理"
+          - "API ドキュメント生成 (OpenAPI/Swagger)"
+        acceptance_criteria:
+          - "全エンドポイントが設計書通りに実装されている"
+          - "適切なHTTPステータスコードが返される"
+          - "APIドキュメントが自動生成される"
+        github_actions:
+          - "コミット: feat: REST APIエンドポイント実装"
+
+      - id: "P5-003"
+        title: "API スキーマ実装"
+        description: "リクエスト・レスポンススキーマ"
+        design_docs:
+          - "プレゼンテーション層設計_20250809.md"
+        subtasks:
+          - "src/presentation/api/schemas/rates_schema.py - 実装"
+          - "src/presentation/api/schemas/analysis_schema.py - 実装"
+          - "src/presentation/api/schemas/ai_reports_schema.py - 実装"
+          - "src/presentation/api/schemas/alerts_schema.py - 実装"
+          - "バリデーションテスト作成"
+        acceptance_criteria:
+          - "リクエストバリデーションが正常に動作する"
+          - "レスポンス形式が統一されている"
+          - "エラーメッセージが分かりやすい"
+        github_actions:
+          - "コミット: feat: APIスキーマ実装"
+
+      - id: "P5-004"
+        title: "Web フロントエンド - 基盤実装"
+        description: "Web UI の基盤とレイアウト"
+        design_docs:
+          - "プレゼンテーション層設計_20250809.md"
+        subtasks:
+          - "src/presentation/web/templates/base.html - ベーステンプレート"
+          - "src/presentation/web/static/css/style.css - スタイル"
+          - "src/presentation/web/static/js/common.js - 共通JavaScript"
+          - "ナビゲーション・フッター実装"
+          - "レスポンシブデザイン対応"
+        acceptance_criteria:
+          - "ベーステンプレートが正常に表示される"
+          - "レスポンシブデザインが機能する"
+          - "ナビゲーションが正常に動作する"
+        github_actions:
+          - "コミット: feat: Web フロントエンド基盤実装"
+
+      - id: "P5-005"
+        title: "Web フロントエンド - ページ実装"
+        description: "各機能のWebページ"
+        design_docs:
+          - "プレゼンテーション層設計_20250809.md"
+        subtasks:
+          - "dashboard.html - ダッシュボードページ"
+          - "charts.html - チャートページ"
+          - "analysis.html - 分析ページ"
+          - "alerts.html - アラートページ"
+          - "settings.html - 設定ページ"
+          - "Chart.js によるグラフ実装"
+          - "リアルタイム更新機能"
+        acceptance_criteria:
+          - "全ページが正常に表示される"
+          - "チャートが正常に描画される"
+          - "リアルタイム更新が機能する"
+        github_actions:
+          - "コミット: feat: Web フロントエンドページ実装"
+
+      - id: "P5-006"
+        title: "CLI インターフェース実装"
+        description: "管理・運用用CLIツール"
+        design_docs:
+          - "プレゼンテーション層設計_20250809.md"
+        subtasks:
+          - "src/presentation/cli/commands.py - CLI コマンド実装"
+          - "src/presentation/cli/db_commands.py - DB関連コマンド"
+          - "src/presentation/cli/plugin_commands.py - プラグイン管理"
+          - "コマンドヘルプとドキュメント"
+          - "設定ウィザード実装"
+        acceptance_criteria:
+          - "全CLIコマンドが正常に動作する"
+          - "ヘルプが分かりやすい"
+          - "エラーメッセージが適切"
+        github_actions:
+          - "コミット: feat: CLI インターフェース実装"
+
+  phase6_integration_testing:
+    name: "統合テスト・品質保証"
+    description: "包括的なテストとコード品質の確保"
+    priority: "HIGH"
+    estimated_days: 5
+    depends_on: ["phase5_presentation_layer", "phase4_plugin_system"]
+
+    tasks:
+      - id: "P6-001"
+        title: "統合テスト実装"
+        description: "End-to-End テストの実装"
+        design_docs:
+          - "全設計書を参照"
+        subtasks:
+          - "tests/integration/ - 統合テストケース作成"
+          - "tests/e2e/ - E2Eテストケース作成"
+          - "API統合テスト"
+          - "プラグインシステム統合テスト"
+          - "ワークフローテスト (データ取得→分析→レポート生成)"
+        acceptance_criteria:
+          - "全主要機能の統合テストが作成されている"
+          - "テストカバレッジ 85%以上"
+          - "CI/CDパイプラインでテストが自動実行される"
+        github_actions:
+          - "コミット: feat: 統合テスト実装"
+
+      - id: "P6-002"
+        title: "パフォーマンステスト"
+        description: "負荷テストとパフォーマンス最適化"
+        subtasks:
+          - "負荷テストシナリオ作成"
+          - "API レスポンス時間測定"
+          - "データベースクエリ最適化"
+          - "キャッシュ効果測定"
+          - "メモリ使用量監視"
+        acceptance_criteria:
+          - "API レスポンス時間 < 500ms"
+          - "同時100ユーザーに対応"
+          - "メモリリークがない"
+        github_actions:
+          - "コミット: feat: パフォーマンステスト・最適化"
+
+      - id: "P6-003"
+        title: "セキュリティテスト"
+        description: "セキュリティ脆弱性の検査と対策"
+        subtasks:
+          - "SQL インジェクション対策確認"
+          - "XSS対策確認"
+          - "認証・認可機能テスト"
+          - "API レート制限テスト"
+          - "セキュリティヘッダー設定確認"
+        acceptance_criteria:
+          - "主要な脆弱性への対策が実装されている"
+          - "認証機能が正常に動作する"
+          - "レート制限が機能する"
+        github_actions:
+          - "コミット: feat: セキュリティテスト・対策"
+
+      - id: "P6-004"
+        title: "コード品質・リファクタリング"
+        description: "コード品質の向上とリファクタリング"
+        subtasks:
+          - "Linting (flake8, black, isort) 設定・修正"
+          - "型ヒント (mypy) 完全化"
+          - "docstring 完全化"
+          - "複雑度の高い関数のリファクタリング"
+          - "重複コードの除去"
+        acceptance_criteria:
+          - "全Linting チェックがパス"
+          - "型ヒントが100%完備"
+          - "docstring が全public関数に存在"
+        github_actions:
+          - "コミット: refactor: コード品質向上・リファクタリング"
+
+  phase7_deployment:
+    name: "デプロイメント・運用準備"
+    description: "本番環境デプロイとDevOps設定"
+    priority: "HIGH"
+    estimated_days: 4
+    depends_on: ["phase6_integration_testing"]
+
+    tasks:
+      - id: "P7-001"
+        title: "Docker化"
+        description: "アプリケーションのコンテナ化"
+        subtasks:
+          - "Dockerfile 最適化"
+          - "docker-compose.yml 本番対応"
+          - "Multi-stage build実装"
+          - "セキュリティベストプラクティス適用"
+          - "ヘルスチェック設定"
+        acceptance_criteria:
+          - "Docker イメージが正常にビルドされる"
+          - "docker-compose で環境が起動する"
+          - "ヘルスチェックが機能する"
+        github_actions:
+          - "コミット: feat: Docker化・本番対応"
+
+      - id: "P7-002"
+        title: "CI/CD パイプライン構築"
+        description: "GitHub Actions による自動化"
+        subtasks:
+          - ".github/workflows/test.yml - テスト自動化"
+          - ".github/workflows/build.yml - ビルド自動化"
+          - ".github/workflows/deploy.yml - デプロイ自動化"
+          - "コード品質チェック自動化"
+          - "セキュリティスキャン自動化"
+        acceptance_criteria:
+          - "プルリクエスト時に自動テストが実行される"
+          - "mainブランチマージ時に自動デプロイされる"
+          - "品質ゲートが機能する"
+        github_actions:
+          - "コミット: feat: CI/CDパイプライン構築"
+
+      - id: "P7-003"
+        title: "監視・ログ設定"
+        description: "本番環境監視とログ管理"
+        subtasks:
+          - "Prometheus メトリクス設定"
+          - "Grafana ダッシュボード作成"
+          - "構造化ログ設定"
+          - "アラート設定"
+          - "ログローテーション設定"
+        acceptance_criteria:
+          - "メトリクスが収集される"
+          - "ダッシュボードが表示される"
+          - "ログが適切に出力される"
+        github_actions:
+          - "コミット: feat: 監視・ログ設定"
+
+      - id: "P7-004"
+        title: "ドキュメント作成"
+        description: "運用・保守ドキュメント"
+        subtasks:
+          - "README.md 更新"
+          - "API ドキュメント"
+          - "運用手順書作成"
+          - "トラブルシューティングガイド"
+          - "アーキテクチャドキュメント"
+        acceptance_criteria:
+          - "ドキュメントが最新の実装と一致している"
+          - "新規開発者が設定・開発できる"
+          - "運用手順が明確"
+        github_actions:
+          - "コミット: docs: 運用・保守ドキュメント作成"
+
+workflow_rules:
+  commit_conventions:
+    - "feat: 新機能追加"
+    - "fix: バグ修正"
+    - "refactor: リファクタリング"
+    - "docs: ドキュメント"
+    - "test: テスト追加/修正"
+    - "ci: CI/CD関連"
+    - "build: ビルド関連"
+    - "chore: その他の変更"
+
+  branch_strategy:
+    - "main: 本番ブランチ"
+    - "develop: 開発ブランチ"
+    - "feature/*: 機能開発ブランチ"
+    - "hotfix/*: 緊急修正ブランチ"
+
+  review_process:
+    - "プルリクエスト必須"
+    - "コードレビュー 1名以上"
+    - "テスト全パス確認"
+    - "設計書との整合性確認"
+
+  github_update_timing:
+    - "各タスク完了時にコミット・プッシュ"
+    - "フェーズ完了時にプルリクエスト作成"
+    - "重要なマイルストーン時にタグ作成"
+    - "README・ドキュメント同時更新"
+
+progress_tracking:
+  completion_criteria:
+    - "機能要件を満たしている"
+    - "テストが全てパスしている"
+    - "設計書通りに実装されている"
+    - "コード品質基準を満たしている"
+    - "ドキュメントが更新されている"
+
+  quality_gates:
+    - "Unit Test Coverage >= 90%"
+    - "Integration Test Coverage >= 85%"
+    - "All Linting Checks Pass"
+    - "Security Scan Pass"
+    - "Performance Criteria Met"
+
+estimated_total_days: 45
+estimated_total_weeks: 9

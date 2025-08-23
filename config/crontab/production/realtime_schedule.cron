@@ -1,0 +1,27 @@
+# リアルタイム監視スケジュール
+# 30分間隔で実行
+# 重要経済イベントの直前・直後を監視し、リアルタイム通知を送信
+
+# リアルタイム監視（30分間隔）
+*/30 * * * * cd /app && python -m src.application.interfaces.schedulers.realtime.realtime_scheduler >> /app/data/logs/scheduler/realtime.log 2>&1
+
+# リアルタイム変更検出（30分間隔）
+*/30 * * * * cd /app && python -m src.application.use_cases.analysis.detect_changes --realtime >> /app/data/logs/analysis/realtime_changes.log 2>&1
+
+# リアルタイムAI分析（30分間隔）
+*/30 * * * * cd /app && python -m src.application.use_cases.ai_report.generate_ai_report --realtime >> /app/data/logs/ai_analysis/realtime_reports.log 2>&1
+
+# リアルタイム通知送信（30分間隔）
+*/30 * * * * cd /app && python -m src.application.use_cases.notification.send_notifications --realtime >> /app/data/logs/notifications/realtime_notifications.log 2>&1
+
+# リアルタイムヘルスチェック（15分間隔）
+*/15 * * * * cd /app && python -m scripts/health_check.py --realtime >> /app/data/logs/monitoring/realtime_health.log 2>&1
+
+# リアルタイムパフォーマンス監視（15分間隔）
+*/15 * * * * cd /app && python -m scripts/performance_monitor.py --realtime >> /app/data/logs/monitoring/realtime_performance.log 2>&1
+
+# リアルタイムエラー監視（5分間隔）
+*/5 * * * * cd /app && python -m scripts/error_monitor.py >> /app/data/logs/monitoring/error_monitor.log 2>&1
+
+# リアルタイムアラート送信（5分間隔）
+*/5 * * * * cd /app && python -m scripts/send_alerts.py >> /app/data/logs/monitoring/alerts.log 2>&1

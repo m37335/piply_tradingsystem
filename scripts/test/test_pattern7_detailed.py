@@ -402,7 +402,7 @@ class Pattern7DetailedTester:
         price_data = pd.DataFrame(prices)
         # カラム名を小文字に統一
         price_data.columns = price_data.columns.str.lower()
-        
+
         # 指標データ
         indicators = {
             "rsi": {

@@ -10,9 +10,8 @@ Base Repository Implementation
 
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from ....domain.entities.base import BaseEntity
 from ....domain.repositories.base import BaseRepository
@@ -108,7 +107,10 @@ class BaseRepositoryImpl(BaseRepository[E]):
 
             if model:
                 entity = self._model_to_entity(model)
-                logger.debug(f"Found {self._entity_class.__name__} by ID: {entity_id}")
+                logger.debug(
+                    f"Found {self._entity_class.__name__} by ID: "
+                    f"{entity_id}"
+                )
                 return entity
             else:
                 logger.debug(
@@ -119,40 +121,6 @@ class BaseRepositoryImpl(BaseRepository[E]):
         except Exception as e:
             logger.error(
                 f"Failed to get {self._entity_class.__name__} by ID {entity_id}: {str(e)}"
-            )
-            raise
-
-    async def get_by_uuid(self, entity_uuid: str) -> Optional[E]:
-        """
-        UUIDでエンティティを取得
-
-        Args:
-            entity_uuid: 取得するエンティティのUUID
-
-        Returns:
-            Optional[E]: エンティティ、存在しない場合None
-        """
-        try:
-            result = await self._session.execute(
-                select(self._model_class).where(self._model_class.uuid == entity_uuid)
-            )
-            model = result.scalar_one_or_none()
-
-            if model:
-                entity = self._model_to_entity(model)
-                logger.debug(
-                    f"Found {self._entity_class.__name__} by UUID: {entity_uuid}"
-                )
-                return entity
-            else:
-                logger.debug(
-                    f"No {self._entity_class.__name__} found with UUID: {entity_uuid}"
-                )
-                return None
-
-        except Exception as e:
-            logger.error(
-                f"Failed to get {self._entity_class.__name__} by UUID {entity_uuid}: {str(e)}"
             )
             raise
 
@@ -189,7 +157,7 @@ class BaseRepositoryImpl(BaseRepository[E]):
                 return result_entity
             else:
                 # IDがない場合は新規追加として扱う
-                logger.warning(f"Entity has no ID, treating as new: {entity.uuid}")
+                logger.warning("Entity has no ID, treating as new")
                 return await self.add(entity)
 
         except Exception as e:
@@ -370,28 +338,6 @@ class BaseRepositoryImpl(BaseRepository[E]):
             return count > 0
         except Exception as e:
             logger.error(f"Failed to check existence by ID {entity_id}: {str(e)}")
-            raise
-
-    async def exists_by_uuid(self, entity_uuid: str) -> bool:
-        """
-        指定UUIDのエンティティが存在するかチェック
-
-        Args:
-            entity_uuid: チェックするUUID
-
-        Returns:
-            bool: 存在する場合True
-        """
-        try:
-            result = await self._session.execute(
-                select(func.count(self._model_class.id)).where(
-                    self._model_class.uuid == entity_uuid
-                )
-            )
-            count = result.scalar()
-            return count > 0
-        except Exception as e:
-            logger.error(f"Failed to check existence by UUID {entity_uuid}: {str(e)}")
             raise
 
     async def find_by_criteria(self, criteria: Dict[str, Any]) -> List[E]:

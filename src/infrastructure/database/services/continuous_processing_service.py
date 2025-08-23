@@ -20,15 +20,15 @@ from typing import Any, Dict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from scripts.cron.enhanced_unified_technical_calculator import (
+    EnhancedUnifiedTechnicalCalculator,
+)
 from src.infrastructure.database.models.price_data_model import PriceDataModel
 from src.infrastructure.database.services.efficient_pattern_detection_service import (
     EfficientPatternDetectionService,
 )
 from src.infrastructure.database.services.notification_integration_service import (
     NotificationIntegrationService,
-)
-from src.infrastructure.database.services.talib_technical_indicator_service import (
-    TALibTechnicalIndicatorService,
 )
 from src.infrastructure.database.services.timeframe_aggregator_service import (
     TimeframeAggregatorService,
@@ -52,7 +52,9 @@ class ContinuousProcessingService:
         # 依存サービス初期化
         self.session = session
         self.timeframe_aggregator = TimeframeAggregatorService(session)
-        self.technical_indicator_service = TALibTechnicalIndicatorService(session)
+        self.enhanced_calculator = (
+            None  # EnhancedUnifiedTechnicalCalculatorは後で初期化
+        )
         self.pattern_detection_service = EfficientPatternDetectionService(session)
         # 通知サービス初期化
         self.notification_service = NotificationIntegrationService(session)
@@ -61,7 +63,7 @@ class ContinuousProcessingService:
         self.currency_pair = "USD/JPY"
         self.timeframes = [
             "M5",
-            "H1", 
+            "H1",
             "H4",
             "D1",
         ]  # TALibTechnicalIndicatorServiceの形式に合わせる
@@ -79,7 +81,7 @@ class ContinuousProcessingService:
 
     async def process_5m_data(self, price_data: PriceDataModel) -> Dict[str, Any]:
         """
-        5分足データの継続処理を実行
+        5分足データの継続処理を実行（EnhancedUnifiedTechnicalCalculator統合版）
 
         Args:
             price_data: 取得された5分足データ
@@ -91,7 +93,9 @@ class ContinuousProcessingService:
         self.processing_stats["total_cycles"] += 1
 
         try:
-            logger.info("🔄 継続処理サイクル開始")
+            logger.info(
+                "🔄 継続処理サイクル開始（EnhancedUnifiedTechnicalCalculator統合）"
+            )
 
             results = {
                 "aggregation": {},
@@ -112,9 +116,11 @@ class ContinuousProcessingService:
             aggregation_results = await self.aggregate_timeframes()
             results["aggregation"] = aggregation_results
 
-            # 3. テクニカル指標を計算
-            logger.info("📈 テクニカル指標計算中...")
-            indicator_results = await self.calculate_all_indicators()
+            # 3. EnhancedUnifiedTechnicalCalculatorでテクニカル指標を計算
+            logger.info(
+                "📈 EnhancedUnifiedTechnicalCalculatorでテクニカル指標計算中..."
+            )
+            indicator_results = await self.calculate_all_indicators_enhanced()
             results["indicators"] = indicator_results
 
             # 4. パターン検出を実行
@@ -175,7 +181,8 @@ class ContinuousProcessingService:
             results["1d"] = len(d1_data)
 
             logger.info(
-                f"✅ 時間軸集計完了: 1h={results['1h']}件, 4h={results['4h']}件, 1d={results['1d']}件"
+                f"✅ 時間軸集計完了: 1h={results['1h']}件, "
+                f"4h={results['4h']}件, 1d={results['1d']}件"
             )
             return results
 
@@ -183,34 +190,35 @@ class ContinuousProcessingService:
             logger.error(f"❌ 時間軸集計エラー: {e}")
             return {"error": str(e)}
 
-    async def calculate_all_indicators(self) -> Dict[str, int]:
+    async def calculate_all_indicators_enhanced(self) -> Dict[str, int]:
         """
-        全時間軸のテクニカル指標を計算
+        全時間軸のテクニカル指標を計算（EnhancedUnifiedTechnicalCalculator使用）
 
         Returns:
             Dict[str, int]: 各時間軸の指標計算件数
         """
         try:
-            logger.info("📈 テクニカル指標計算開始")
+            logger.info("📈 EnhancedUnifiedTechnicalCalculatorでテクニカル指標計算開始")
 
-            results = {}
-
-            # 各時間軸のテクニカル指標を計算（TA-Lib使用）
-            for timeframe in self.timeframes:
-                indicator_count = await self.technical_indicator_service.calculate_and_save_all_indicators(
-                    timeframe
+            # EnhancedUnifiedTechnicalCalculatorを初期化
+            if self.enhanced_calculator is None:
+                self.enhanced_calculator = EnhancedUnifiedTechnicalCalculator(
+                    self.currency_pair
                 )
-                results[timeframe] = (
-                    sum(indicator_count.values())
-                    if isinstance(indicator_count, dict)
-                    else indicator_count
-                )
+                await self.enhanced_calculator.initialize()
 
-            logger.info(f"✅ テクニカル指標計算完了: {results}")
+            # 全時間軸の指標を一括計算
+            results = await self.enhanced_calculator.calculate_all_indicators()
+
+            logger.info(
+                f"✅ EnhancedUnifiedTechnicalCalculatorでテクニカル指標計算完了: {results}"
+            )
             return results
 
         except Exception as e:
-            logger.error(f"❌ テクニカル指標計算エラー: {e}")
+            logger.error(
+                f"❌ EnhancedUnifiedTechnicalCalculatorでテクニカル指標計算エラー: {e}"
+            )
             return {"error": str(e)}
 
     async def detect_patterns(self) -> Dict[str, int]:
@@ -327,9 +335,9 @@ class ContinuousProcessingService:
                         f"⚠️ 既存データが同じOHLC値: {existing.open_price:.4f}"
                     )
                 else:
-                    logger.info(f"✅ 既存データは正常なOHLC値")
+                    logger.info("✅ 既存データは正常なOHLC値")
 
-                logger.info(f"✅ 既存データを返します")
+                logger.info("✅ 既存データを返します")
                 return existing
 
             # データを保存

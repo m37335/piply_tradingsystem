@@ -25,7 +25,7 @@ class DiscordNotificationService:
     """Discord通知サービス"""
 
     def __init__(self, webhook_url: str = ""):
-        self.webhook_url = webhook_url or os.getenv("DISCORD_WEBHOOK_URL", "")
+        self.webhook_url = webhook_url or os.getenv("DISCORD_ECONOMICINDICATORS_WEBHOOK_URL", "")
         self.session = None
         self.logger = logger
 

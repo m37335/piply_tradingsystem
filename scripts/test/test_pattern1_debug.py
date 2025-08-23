@@ -130,21 +130,18 @@ class Pattern1DebugTester:
 
         # 基本的な指標データ
         indicators = {
-            'rsi': {
-                'current_value': 70.0,  # RSI > 65
-                'values': [70.0] * 50
+            "rsi": {"current_value": 70.0, "values": [70.0] * 50},  # RSI > 65
+            "macd": {
+                "macd": [0.1 + i * 0.01 for i in range(50)],
+                "signal": [0.05 + i * 0.008 for i in range(50)],
+                "histogram": [0.05 + i * 0.002 for i in range(50)],
             },
-            'macd': {
-                'macd': [0.1 + i * 0.01 for i in range(50)],
-                'signal': [0.05 + i * 0.008 for i in range(50)],
-                'histogram': [0.05 + i * 0.002 for i in range(50)]
+            "bollinger_bands": {
+                "upper": [p + 0.5 for p in prices],
+                "middle": prices,
+                "lower": [p - 0.5 for p in prices],
+                "std": [0.5] * 50,
             },
-            'bollinger_bands': {
-                'upper': [p + 0.5 for p in prices],
-                'middle': prices,
-                'lower': [p - 0.5 for p in prices],
-                'std': [0.5] * 50
-            }
         }
 
         # 各時間足のデータ

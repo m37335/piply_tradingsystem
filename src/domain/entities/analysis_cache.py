@@ -42,7 +42,6 @@ class AnalysisCache(BaseEntity):
         expires_at: datetime,
         timeframe: Optional[str] = None,
         id: Optional[int] = None,
-        uuid: Optional[str] = None,
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None,
         version: int = 1,
@@ -58,14 +57,13 @@ class AnalysisCache(BaseEntity):
             expires_at: 有効期限
             timeframe: 時間軸（オプション）
             id: データベースID
-            uuid: UUID
+
             created_at: 作成時刻
             updated_at: 更新時刻
             version: バージョン
         """
         super().__init__(
             id=id,
-            uuid=uuid,
             created_at=created_at,
             updated_at=updated_at,
             version=version,
@@ -171,7 +169,6 @@ class AnalysisCache(BaseEntity):
 
         return cls(
             id=data.get("id"),
-            uuid=data.get("uuid"),
             analysis_type=data["analysis_type"],
             currency_pair=data["currency_pair"],
             timeframe=data.get("timeframe"),
@@ -204,7 +201,6 @@ class AnalysisCache(BaseEntity):
 
         return AnalysisCacheModel(
             id=self.id,
-            uuid=self.uuid,
             analysis_type=self.analysis_type,
             currency_pair=self.currency_pair,
             timeframe=self.timeframe,
@@ -229,7 +225,6 @@ class AnalysisCache(BaseEntity):
         """
         return cls(
             id=model.id,
-            uuid=model.uuid,
             analysis_type=model.analysis_type,
             currency_pair=model.currency_pair,
             timeframe=model.timeframe,

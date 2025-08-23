@@ -380,7 +380,9 @@ class WedgePatternDetector:
                 "current_price": current_price,
                 "pattern_type": pattern_type,
                 "pattern_data": pattern_data,
-                "direction": pattern_data.get("direction", "SELL" if pattern_type == "rising_wedge" else "BUY"),
+                "direction": pattern_data.get(
+                    "direction", "SELL" if pattern_type == "rising_wedge" else "BUY"
+                ),
                 "description": f"収束するトレンドラインで形成される{pattern_name}パターン",
             }
 

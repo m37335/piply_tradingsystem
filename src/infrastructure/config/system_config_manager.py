@@ -54,7 +54,7 @@ class SystemConfigManager:
         return {
             # データベース設定
             "database": {
-                "url": "sqlite+aiosqlite:///./app.db",
+                "url": "sqlite+aiosqlite:///data/exchange_analytics.db",
                 "pool_size": 10,
                 "max_overflow": 20,
                 "pool_timeout": 30,
@@ -263,9 +263,13 @@ class SystemConfigManager:
                     if content:  # ファイルが空でない場合のみJSON解析
                         file_config = json.loads(content)
                         self._merge_configs(self._config, file_config)
-                        self.logger.info(f"設定ファイルを読み込みました: {self.config_file_path}")
+                        self.logger.info(
+                            f"設定ファイルを読み込みました: {self.config_file_path}"
+                        )
                     else:
-                        self.logger.info(f"設定ファイルが空です: {self.config_file_path}")
+                        self.logger.info(
+                            f"設定ファイルが空です: {self.config_file_path}"
+                        )
         except Exception as e:
             self.logger.warning(f"設定ファイルの読み込みに失敗しました: {e}")
 

@@ -186,7 +186,9 @@ class BreakoutDetector:
             recent_prices = price_data["Close"].iloc[-3:]
             if len(recent_prices) >= 3:
                 momentum_condition = (
-                    recent_prices.iloc[-1] > recent_prices.iloc[-2] > recent_prices.iloc[-3]
+                    recent_prices.iloc[-1]
+                    > recent_prices.iloc[-2]
+                    > recent_prices.iloc[-3]
                 )
 
         return momentum_condition

@@ -8,8 +8,9 @@ ContinuousProcessingService と ContinuousProcessingScheduler の統合テスト
 """
 
 import asyncio
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from src.infrastructure.database.services.continuous_processing_service import (
     ContinuousProcessingService,
@@ -52,46 +53,50 @@ class TestContinuousProcessingIntegration:
     async def test_continuous_service_initialization(self, continuous_service):
         """ContinuousProcessingService の初期化テスト"""
         # UnifiedTechnicalIndicatorService が正しく初期化されていることを確認
-        assert hasattr(continuous_service, 'technical_indicator_service')
+        assert hasattr(continuous_service, "technical_indicator_service")
         assert continuous_service.technical_indicator_service is not None
         assert (
-            continuous_service.technical_indicator_service.__class__.__name__ == 
-            'UnifiedTechnicalIndicatorService'
+            continuous_service.technical_indicator_service.__class__.__name__
+            == "UnifiedTechnicalIndicatorService"
         )
 
     async def test_scheduler_initialization(self, scheduler):
         """ContinuousProcessingScheduler の初期化テスト"""
         # ContinuousProcessingService が正しく初期化されていることを確認
-        assert hasattr(scheduler, 'continuous_service')
+        assert hasattr(scheduler, "continuous_service")
         assert scheduler.continuous_service is not None
         assert (
-            scheduler.continuous_service.__class__.__name__ == 
-            'ContinuousProcessingService'
+            scheduler.continuous_service.__class__.__name__
+            == "ContinuousProcessingService"
         )
 
-    async def test_continuous_service_process_5m_data(self, continuous_service, mock_price_data):
+    async def test_continuous_service_process_5m_data(
+        self, continuous_service, mock_price_data
+    ):
         """ContinuousProcessingService の5分足データ処理テスト"""
         with patch.object(
             continuous_service.technical_indicator_service,
-            'calculate_and_save_all_indicators',
-            return_value={"total": 10, "timeframe": "M5", "status": "success"}
+            "calculate_and_save_all_indicators",
+            return_value={"total": 10, "timeframe": "M5", "status": "success"},
         ):
             with patch.object(
                 continuous_service.timeframe_aggregator,
-                'aggregate_1h_data',
-                return_value=[mock_price_data]
+                "aggregate_1h_data",
+                return_value=[mock_price_data],
             ):
                 with patch.object(
                     continuous_service.timeframe_aggregator,
-                    'aggregate_4h_data',
-                    return_value=[mock_price_data]
+                    "aggregate_4h_data",
+                    return_value=[mock_price_data],
                 ):
                     with patch.object(
                         continuous_service.timeframe_aggregator,
-                        'aggregate_1d_data',
-                        return_value=[mock_price_data]
+                        "aggregate_1d_data",
+                        return_value=[mock_price_data],
                     ):
-                        result = await continuous_service.process_5m_data(mock_price_data)
+                        result = await continuous_service.process_5m_data(
+                            mock_price_data
+                        )
 
                         assert result["status"] == "success"
                         assert "aggregation" in result
@@ -103,14 +108,12 @@ class TestContinuousProcessingIntegration:
     async def test_scheduler_run_single_cycle(self, scheduler):
         """ContinuousProcessingScheduler の単一サイクル実行テスト"""
         with patch.object(
-            scheduler.data_fetcher,
-            'fetch_real_5m_data',
-            return_value=AsyncMock()
+            scheduler.data_fetcher, "fetch_real_5m_data", return_value=AsyncMock()
         ):
             with patch.object(
                 scheduler.continuous_service,
-                'process_5m_data',
-                return_value={"status": "success"}
+                "process_5m_data",
+                return_value={"status": "success"},
             ):
                 result = await scheduler.run_single_cycle()
 
@@ -131,8 +134,8 @@ class TestContinuousProcessingIntegration:
         # より包括的なエラーハンドリングテスト
         with patch.object(
             continuous_service.timeframe_aggregator,
-            'aggregate_1h_data',
-            side_effect=Exception("時間軸集計エラー")
+            "aggregate_1h_data",
+            side_effect=Exception("時間軸集計エラー"),
         ):
             result = await continuous_service.process_5m_data(mock_price_data)
 
@@ -156,7 +159,7 @@ class TestContinuousProcessingIntegration:
         """UnifiedTechnicalCalculator 統合テスト"""
         # UnifiedTechnicalIndicatorService の健全性チェック
         health = await continuous_service.technical_indicator_service.health_check()
-        
+
         # 初期化前は uninitialized 状態
         assert health["status"] in ["uninitialized", "healthy"]
 
@@ -164,18 +167,18 @@ class TestContinuousProcessingIntegration:
         """時間軸集計テスト"""
         with patch.object(
             continuous_service.timeframe_aggregator,
-            'aggregate_1h_data',
-            return_value=[AsyncMock()]
+            "aggregate_1h_data",
+            return_value=[AsyncMock()],
         ):
             with patch.object(
                 continuous_service.timeframe_aggregator,
-                'aggregate_4h_data',
-                return_value=[AsyncMock()]
+                "aggregate_4h_data",
+                return_value=[AsyncMock()],
             ):
                 with patch.object(
                     continuous_service.timeframe_aggregator,
-                    'aggregate_1d_data',
-                    return_value=[AsyncMock()]
+                    "aggregate_1d_data",
+                    return_value=[AsyncMock()],
                 ):
                     result = await continuous_service.aggregate_timeframes()
 

@@ -10,8 +10,9 @@ UnifiedTechnicalCalculator 統合テスト
 """
 
 import asyncio
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from src.infrastructure.database.services.unified_technical_indicator_service import (
     UnifiedTechnicalIndicatorService,
@@ -35,7 +36,7 @@ class TestUnifiedTechnicalIntegration:
             "MACD": 5,
             "BB": 8,
             "STOCH": 6,
-            "ATR": 4
+            "ATR": 4,
         }
         mock.health_check.return_value = {"status": "healthy"}
         return mock
@@ -47,7 +48,9 @@ class TestUnifiedTechnicalIntegration:
 
     async def test_unified_service_initialization(self, unified_service):
         """UnifiedTechnicalIndicatorService の初期化テスト"""
-        with patch('scripts.cron.unified_technical_calculator.UnifiedTechnicalCalculator') as mock_calc:
+        with patch(
+            "scripts.cron.unified_technical_calculator.UnifiedTechnicalCalculator"
+        ) as mock_calc:
             mock_calc.return_value.initialize = AsyncMock(return_value=True)
 
             result = await unified_service.initialize()
@@ -56,7 +59,9 @@ class TestUnifiedTechnicalIntegration:
             assert unified_service.is_initialized is True
             assert unified_service.calculator is not None
 
-    async def test_calculate_and_save_all_indicators(self, unified_service, mock_unified_calculator):
+    async def test_calculate_and_save_all_indicators(
+        self, unified_service, mock_unified_calculator
+    ):
         """全指標計算テスト"""
         unified_service.calculator = mock_unified_calculator
         unified_service.is_initialized = True
@@ -102,7 +107,7 @@ class TestUnifiedTechnicalIntegration:
         mock_unified_calculator.calculate_rsi.return_value = {
             "current_value": 65.5,
             "timeframe": "M5",
-            "indicator": "RSI"
+            "indicator": "RSI",
         }
 
         result = await unified_service.calculate_rsi(mock_data, "M5")
@@ -123,7 +128,7 @@ class TestUnifiedTechnicalIntegration:
             "signal": 0.0987,
             "histogram": 0.0247,
             "timeframe": "M5",
-            "indicator": "MACD"
+            "indicator": "MACD",
         }
 
         result = await unified_service.calculate_macd(mock_data, "M5")
@@ -134,7 +139,9 @@ class TestUnifiedTechnicalIntegration:
         assert result["timeframe"] == "M5"
         assert result["indicator"] == "MACD"
 
-    async def test_calculate_bollinger_bands(self, unified_service, mock_unified_calculator):
+    async def test_calculate_bollinger_bands(
+        self, unified_service, mock_unified_calculator
+    ):
         """ボリンジャーバンド計算テスト"""
         unified_service.calculator = mock_unified_calculator
         unified_service.is_initialized = True
@@ -146,7 +153,7 @@ class TestUnifiedTechnicalIntegration:
             "middle": 102.0,
             "lower": 98.5,
             "timeframe": "M5",
-            "indicator": "Bollinger_Bands"
+            "indicator": "Bollinger_Bands",
         }
 
         result = await unified_service.calculate_bollinger_bands(mock_data, "M5")
@@ -169,7 +176,9 @@ class TestUnifiedTechnicalIntegration:
 
     async def test_initialization_failure(self, unified_service):
         """初期化失敗テスト"""
-        with patch('scripts.cron.unified_technical_calculator.UnifiedTechnicalCalculator') as mock_calc:
+        with patch(
+            "scripts.cron.unified_technical_calculator.UnifiedTechnicalCalculator"
+        ) as mock_calc:
             # コンストラクタでエラーを発生させる
             mock_calc.side_effect = Exception("初期化エラー")
 

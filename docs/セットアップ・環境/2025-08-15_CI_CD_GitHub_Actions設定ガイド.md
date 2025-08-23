@@ -1,4 +1,4 @@
-**旧ファイル名**: `GITHUB_ACTIONS_SETUP.md`  
+**旧ファイル名**: `GITHUB_ACTIONS_SETUP.md`
 
 # 🚀 GitHub Actions 24 時間稼働設定ガイド
 

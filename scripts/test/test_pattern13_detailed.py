@@ -35,7 +35,7 @@ class Pattern13DetailedTester:
         # 複数のテストケースを試行
         for test_case in range(1, 5):  # 4つのテストケース
             logger.info(f"テストケース {test_case} を試行中...")
-            
+
             # テストデータ作成
             logger.info(f"パターン13用テストデータ作成中...（テストケース {test_case}）")
             test_data = self._create_pattern13_test_data(test_case)
@@ -141,15 +141,20 @@ class Pattern13DetailedTester:
         """条件分析"""
         try:
             # 三尊天井検出
-            three_buddhas_top_result = self.detector._detect_three_buddhas_top(test_data)
-            
+            three_buddhas_top_result = self.detector._detect_three_buddhas_top(
+                test_data
+            )
+
             # 逆三尊検出
-            inverse_three_buddhas_result = self.detector._detect_inverse_three_buddhas(test_data)
-            
+            inverse_three_buddhas_result = self.detector._detect_inverse_three_buddhas(
+                test_data
+            )
+
             return {
                 "three_buddhas_top": three_buddhas_top_result is not None,
                 "inverse_three_buddhas": inverse_three_buddhas_result is not None,
-                "either_pattern": (three_buddhas_top_result is not None) or (inverse_three_buddhas_result is not None)
+                "either_pattern": (three_buddhas_top_result is not None)
+                or (inverse_three_buddhas_result is not None),
             }
         except Exception as e:
             logger.error(f"条件分析エラー: {e}")
@@ -157,7 +162,7 @@ class Pattern13DetailedTester:
                 "three_buddhas_top": False,
                 "inverse_three_buddhas": False,
                 "either_pattern": False,
-                "error": str(e)
+                "error": str(e),
             }
 
 
@@ -165,7 +170,7 @@ async def main():
     """メイン関数"""
     tester = Pattern13DetailedTester()
     result = await tester.test_pattern13_detailed()
-    
+
     if result:
         print("\n✅ パターン13検出成功！")
         print(f"パターンタイプ: {result.get('pattern_type', 'unknown')}")

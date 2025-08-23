@@ -21,19 +21,19 @@ async def test_fetch_real_5m_direct():
     """fetch_real_5m_dataメソッドを直接テスト"""
     try:
         logger.info("=== fetch_real_5m_data直接テスト開始 ===")
-        
+
         # SQLite環境を強制設定
         os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///data/exchange_analytics.db"
-        
+
         session = await get_async_session()
         data_fetcher = DataFetcherService(session)
-        
+
         logger.info("DataFetcherService初期化完了")
-        
+
         # fetch_real_5m_dataを直接呼び出し
         logger.info("fetch_real_5m_data呼び出し中...")
         result = await data_fetcher.fetch_real_5m_data()
-        
+
         if result:
             logger.info("✅ fetch_real_5m_data成功:")
             logger.info(f"  Open: {result.open_price}")
@@ -45,13 +45,14 @@ async def test_fetch_real_5m_direct():
             logger.info(f"  Data Source: {result.data_source}")
         else:
             logger.warning("❌ fetch_real_5m_data失敗: Noneが返されました")
-        
+
         await session.close()
         logger.info("=== fetch_real_5m_data直接テスト完了 ===")
-        
+
     except Exception as e:
         logger.error(f"❌ fetch_real_5m_data直接テストエラー: {e}")
         import traceback
+
         traceback.print_exc()
 
 

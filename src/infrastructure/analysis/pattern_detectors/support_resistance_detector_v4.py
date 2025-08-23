@@ -3,7 +3,7 @@
 Support Resistance Detector V4 (Pattern 15) - TA-Lib座標系版
 座標系ベースのサポート/レジスタンスライン検出器
 
-数学的アプローチ: 
+数学的アプローチ:
 - X軸: 時間（インデックス）
 - Y軸: 価格（始値・終値）
 - 1次関数: y = ax + b
@@ -459,9 +459,7 @@ class SupportResistanceDetectorV4:
             # 最適なラインを選択
             best_score, best_line = scored_lines[0]
 
-            logger.info(
-                f"最適ライン選択: {best_line['line_type']}, スコア: {best_score:.3f}"
-            )
+            logger.info(f"最適ライン選択: {best_line['line_type']}, スコア: {best_score:.3f}")
             return best_line
 
         except Exception as e:

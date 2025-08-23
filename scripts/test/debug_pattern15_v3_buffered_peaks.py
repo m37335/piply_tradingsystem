@@ -299,9 +299,7 @@ class Pattern15V3BufferedPeaksDebugger:
                 "zone_percentage": (np.sum(support_zone_points) / len(low_prices))
                 * 100,
                 "zone_indices": support_zone_indices.tolist()[:10],  # 最初の10個
-                "zone_prices": low_prices[support_zone_points][
-                    :10
-                ].tolist(),  # 最初の10個
+                "zone_prices": low_prices[support_zone_points][:10].tolist(),  # 最初の10個
             }
 
             return analysis
@@ -316,14 +314,14 @@ class Pattern15V3BufferedPeaksDebugger:
             async with db_manager.get_session() as session:
                 query = text(
                     """
-                    SELECT 
+                    SELECT
                         timestamp as Date,
                         open_price as Open,
                         high_price as High,
                         low_price as Low,
                         close_price as Close,
                         volume as Volume
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     ORDER BY timestamp DESC
                     LIMIT :limit
@@ -432,9 +430,7 @@ async def main():
                 print(f"    ⚠️ フォールバック処理:")
                 print(f"      理由: {fallback_peaks.get('reason', '')}")
                 print(f"      ピーク数: {fallback_peaks.get('peak_count', 0)}")
-                print(
-                    f"      ピークインデックス: {fallback_peaks.get('peaks', [])[:5]}"
-                )
+                print(f"      ピークインデックス: {fallback_peaks.get('peaks', [])[:5]}")
 
             final_result = resistance_peaks.get("final_result", {})
             print(f"    最終結果:")
@@ -446,12 +442,8 @@ async def main():
 
             buffer_zone = resistance_peaks.get("buffer_zone_analysis", {})
             print(f"    バッファゾーン:")
-            print(
-                f"      ゾーン内ポイント数: {buffer_zone.get('buffer_zone_points', 0)}"
-            )
-            print(
-                f"      ゾーン割合: {buffer_zone.get('buffer_zone_percentage', 0):.1f}%"
-            )
+            print(f"      ゾーン内ポイント数: {buffer_zone.get('buffer_zone_points', 0)}")
+            print(f"      ゾーン割合: {buffer_zone.get('buffer_zone_percentage', 0):.1f}%")
 
         # サポートボトム
         support_troughs = debug_analysis.get("support_troughs", {})
@@ -471,9 +463,7 @@ async def main():
                 print(f"    ⚠️ フォールバック処理:")
                 print(f"      理由: {fallback_peaks.get('reason', '')}")
                 print(f"      ボトム数: {fallback_peaks.get('peak_count', 0)}")
-                print(
-                    f"      ボトムインデックス: {fallback_peaks.get('peaks', [])[:5]}"
-                )
+                print(f"      ボトムインデックス: {fallback_peaks.get('peaks', [])[:5]}")
 
             final_result = support_troughs.get("final_result", {})
             print(f"    最終結果:")
@@ -485,12 +475,8 @@ async def main():
 
             buffer_zone = support_troughs.get("buffer_zone_analysis", {})
             print(f"    バッファゾーン:")
-            print(
-                f"      ゾーン内ポイント数: {buffer_zone.get('buffer_zone_points', 0)}"
-            )
-            print(
-                f"      ゾーン割合: {buffer_zone.get('buffer_zone_percentage', 0):.1f}%"
-            )
+            print(f"      ゾーン内ポイント数: {buffer_zone.get('buffer_zone_points', 0)}")
+            print(f"      ゾーン割合: {buffer_zone.get('buffer_zone_percentage', 0):.1f}%")
 
 
 if __name__ == "__main__":

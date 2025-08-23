@@ -1,0 +1,220 @@
+# 時間足集計システム マスタープロジェクト計画書
+# Exchange Analytics System - 時間足集計システム
+
+project:
+  name: "Exchange Analytics System - 時間足集計システム"
+  version: "1.0.0"
+  created_date: "2025-08-15"
+  estimated_duration: "7-8日"
+  total_estimated_hours: 99
+  team_size: 1
+
+overview:
+  description: "5分足データから1時間足、4時間足、日足を自動集計・保存するシステムの完全実装"
+  objective: "シンプルで保守性の高い時間足集計システムの構築"
+  success_criteria:
+    - "全時間足の自動集計・保存が正常に動作する"
+    - "システム全体のパフォーマンスが目標を達成する"
+    - "エラーハンドリングと監視機能が適切に動作する"
+    - "本番環境での安定動作が確認される"
+
+phases:
+  phase_1:
+    name: "1時間足集計実装"
+    priority: "高"
+    estimated_duration: "2-3日"
+    estimated_hours: 42
+    start_date: "2025-08-16"
+    end_date: "2025-08-19"
+    dependencies: []
+    deliverables:
+      - "BaseAggregator基底クラス"
+      - "HourlyAggregatorクラス"
+      - "1時間足集計スクリプト"
+      - "単体・統合テスト"
+      - "crontab設定"
+
+  phase_2:
+    name: "4時間足集計実装"
+    priority: "中"
+    estimated_duration: "1-2日"
+    estimated_hours: 19
+    start_date: "2025-08-20"
+    end_date: "2025-08-22"
+    dependencies: ["phase_1"]
+    deliverables:
+      - "FourHourAggregatorクラス"
+      - "4時間足集計スクリプト"
+      - "単体・統合テスト"
+      - "crontab設定"
+
+  phase_3:
+    name: "日足集計実装"
+    priority: "中"
+    estimated_duration: "1-2日"
+    estimated_hours: 20
+    start_date: "2025-08-23"
+    end_date: "2025-08-25"
+    dependencies: ["phase_1", "phase_2"]
+    deliverables:
+      - "DailyAggregatorクラス"
+      - "日足集計スクリプト"
+      - "単体・統合テスト"
+      - "crontab設定"
+
+  phase_4:
+    name: "統合テスト・本番デプロイ"
+    priority: "高"
+    estimated_duration: "1日"
+    estimated_hours: 18
+    start_date: "2025-08-26"
+    end_date: "2025-08-28"
+    dependencies: ["phase_1", "phase_2", "phase_3"]
+    deliverables:
+      - "統合テスト"
+      - "パフォーマンステスト"
+      - "監視システム"
+      - "本番環境テスト"
+      - "ドキュメント更新"
+
+timeline:
+  week_1:
+    start_date: "2025-08-16"
+    end_date: "2025-08-22"
+    activities:
+      - "Phase 1: 1時間足集計実装"
+      - "Phase 2: 4時間足集計実装"
+    milestones:
+      - "2025-08-19: Phase 1完了"
+      - "2025-08-22: Phase 2完了"
+
+  week_2:
+    start_date: "2025-08-23"
+    end_date: "2025-08-28"
+    activities:
+      - "Phase 3: 日足集計実装"
+      - "Phase 4: 統合テスト・本番デプロイ"
+    milestones:
+      - "2025-08-25: Phase 3完了"
+      - "2025-08-28: プロジェクト完了"
+
+dependencies:
+  external:
+    - "PostgreSQLデータベースの安定動作"
+    - "Yahoo Finance APIの利用可能性"
+    - "crontabの設定権限"
+  internal:
+    - "simple_data_fetcher.pyの正常動作"
+    - "既存のデータベース接続機能"
+    - "ログシステムの設定"
+
+risks:
+  risk_1:
+    description: "Phase 1の遅延による全体スケジュールへの影響"
+    probability: "中"
+    impact: "高"
+    mitigation: "Phase 1を優先的に進め、十分な時間を確保"
+
+  risk_2:
+    description: "パフォーマンス問題による実装の見直し"
+    probability: "中"
+    impact: "中"
+    mitigation: "段階的なテストと最適化を実施"
+
+  risk_3:
+    description: "データベース負荷の増大"
+    probability: "低"
+    impact: "高"
+    mitigation: "インデックス最適化とクエリ最適化を実施"
+
+  risk_4:
+    description: "本番環境での予期しない問題"
+    probability: "中"
+    impact: "高"
+    mitigation: "十分なテストと段階的なデプロイを実施"
+
+resources:
+  required_skills:
+    - "Python (asyncio)"
+    - "SQLAlchemy"
+    - "PostgreSQL"
+    - "crontab"
+    - "パフォーマンステスト"
+    - "システム監視"
+  estimated_total_hours: 99
+  team_size: 1
+
+success_metrics:
+  functional:
+    - "全時間足の集計・保存が正常に動作する"
+    - "データの整合性が保たれる"
+    - "エラーハンドリングが適切に機能する"
+    - "重複データが適切に回避される"
+
+  performance:
+    - "1時間足集計: 10秒以内"
+    - "4時間足集計: 15秒以内"
+    - "日足集計: 20秒以内"
+    - "システム全体: 安定動作"
+
+  quality:
+    - "テストカバレッジ: 80%以上"
+    - "コードレビュー完了"
+    - "ドキュメント完成"
+    - "本番環境での安定動作確認"
+
+  operational:
+    - "監視システムが正常に動作する"
+    - "アラート機能が適切に機能する"
+    - "運用マニュアルが完成する"
+    - "トラブルシューティングガイドが作成される"
+
+deliverables:
+  code:
+    - "scripts/cron/hourly_aggregator.py"
+    - "scripts/cron/four_hour_aggregator.py"
+    - "scripts/cron/daily_aggregator.py"
+    - "tests/integration/test_timeframe_aggregation.py"
+    - "tests/performance/test_aggregation_performance.py"
+    - "scripts/monitoring/aggregation_monitor.py"
+
+  configuration:
+    - "current_crontab.txt (更新)"
+    - "logs/hourly_aggregator.log"
+    - "logs/four_hour_aggregator.log"
+    - "logs/daily_aggregator.log"
+
+  documentation:
+    - "timeframe_aggregation_system_design.md"
+    - "timeframe_aggregation_implementation_spec.md"
+    - "phase1_hourly_aggregation_plan.yaml"
+    - "phase2_four_hour_aggregation_plan.yaml"
+    - "phase3_daily_aggregation_plan.yaml"
+    - "phase4_integration_test_plan.yaml"
+    - "master_project_plan.yaml"
+
+  reports:
+    - "実装完了報告書"
+    - "パフォーマンステスト結果"
+    - "本番環境テスト結果"
+    - "運用マニュアル"
+    - "トラブルシューティングガイド"
+
+communication:
+  daily_standup: "毎日09:00"
+  weekly_review: "毎週金曜日16:00"
+  milestone_review: "各マイルストーン完了時"
+  issue_tracking: "GitHub Issues"
+  documentation: "Markdown + YAML"
+
+quality_assurance:
+  code_review: "全コードのレビュー必須"
+  testing: "単体・統合・パフォーマンステスト"
+  documentation: "設計書・実装仕様書・運用マニュアル"
+  deployment: "段階的なデプロイとテスト"
+
+post_implementation:
+  monitoring: "24時間監視システム"
+  maintenance: "定期的なメンテナンス"
+  updates: "機能追加・改善の継続"
+  support: "運用サポート体制"

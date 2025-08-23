@@ -1,0 +1,272 @@
+# Phase 2: 高度な検出機能実装計画
+# 期間: 2-3週間
+# 作成日: 2025-01-15
+# バージョン: 1.0.0
+
+project:
+  name: "プロトレーダー向け為替アラートシステム"
+  phase: "Phase 2"
+  title: "高度な検出機能"
+  duration: "2-3週間"
+  start_date: "2025-02-04"
+  end_date: "2025-02-25"
+
+objectives:
+  - "複数タイムフレーム分析機能の実装"
+  - "高度なリスク管理機能の構築"
+  - "相関性分析機能の実装"
+  - "トレンド強度計算機能の実装"
+
+dependencies:
+  - "Phase 1の基本アラートシステム"
+  - "既存のtechnical_indicatorsテーブル"
+  - "価格データテーブル"
+  - "外部API（相関データ取得用）"
+
+week3:
+  title: "複数タイムフレーム分析"
+  duration: "5営業日"
+  tasks:
+    - id: "MTF-001"
+      title: "マルチタイムフレーム統合分析実装"
+      description: "複数の時間軸データを統合して分析する機能の実装"
+      priority: "High"
+      estimated_hours: 12
+      assignee: "Algorithm Developer"
+      acceptance_criteria:
+        - "複数タイムフレームのデータを同時に分析できる"
+        - "時間軸間の一貫性チェックが動作する"
+        - "統合信頼度スコアが計算される"
+        - "トレンドの方向性が明確に判定される"
+      subtasks:
+        - "MultiTimeframeAnalyzerクラス実装"
+        - "時間軸データ統合ロジック実装"
+        - "一貫性チェック機能実装"
+        - "統合信頼度計算実装"
+        - "トレンド方向性判定実装"
+        - "テストケース作成"
+        - "バックテスト実行"
+        - "パフォーマンス最適化"
+
+    - id: "MTF-002"
+      title: "トレンド強度計算実装"
+      description: "複数指標を組み合わせたトレンド強度の計算機能"
+      priority: "High"
+      estimated_hours: 10
+      assignee: "Algorithm Developer"
+      acceptance_criteria:
+        - "移動平均線の傾きが計算される"
+        - "ADXによるトレンド強度が測定される"
+        - "複数指標の重み付け計算が動作する"
+        - "トレンド強度スコアが0-100で正規化される"
+      subtasks:
+        - "TrendStrengthCalculatorクラス実装"
+        - "移動平均線傾き計算実装"
+        - "ADX計算機能実装"
+        - "重み付け計算ロジック実装"
+        - "スコア正規化機能実装"
+        - "テストケース作成"
+        - "履歴データ分析"
+        - "パフォーマンス最適化"
+
+    - id: "MTF-003"
+      title: "時間軸間フィルタリング実装"
+      description: "上位時間軸のトレンドを下位時間軸のシグナルに適用するフィルタ"
+      priority: "Medium"
+      estimated_hours: 8
+      assignee: "Algorithm Developer"
+      acceptance_criteria:
+        - "上位時間軸のトレンドが下位時間軸に適用される"
+        - "逆張りシグナルが適切にフィルタリングされる"
+        - "フィルタリング強度が調整可能"
+        - "フィルタリング結果が記録される"
+      subtasks:
+        - "TimeframeFilterクラス実装"
+        - "上位時間軸トレンド取得機能実装"
+        - "フィルタリングロジック実装"
+        - "強度調整機能実装"
+        - "結果記録機能実装"
+        - "テストケース作成"
+        - "フィルタリング効果測定"
+        - "パフォーマンス最適化"
+
+week4:
+  title: "リスク管理強化"
+  duration: "5営業日"
+  tasks:
+    - id: "RISK-001"
+      title: "ポジションサイズ計算実装"
+      description: "リスク許容度に基づく動的ポジションサイズ計算機能"
+      priority: "High"
+      estimated_hours: 10
+      assignee: "Risk Management Developer"
+      acceptance_criteria:
+        - "アカウント残高に基づくリスク計算が動作する"
+        - "ボラティリティに応じたサイズ調整が行われる"
+        - "最大リスク制限が適切に適用される"
+        - "推奨ポジションサイズが明確に提示される"
+      subtasks:
+        - "PositionSizeCalculatorクラス実装"
+        - "アカウントリスク計算実装"
+        - "ボラティリティ調整機能実装"
+        - "最大リスク制限機能実装"
+        - "推奨サイズ計算実装"
+        - "テストケース作成"
+        - "リスクシミュレーション実行"
+        - "ドキュメント作成"
+
+    - id: "RISK-002"
+      title: "動的ストップロス調整実装"
+      description: "市場状況に応じてストップロスレベルを動的に調整する機能"
+      priority: "High"
+      estimated_hours: 8
+      assignee: "Risk Management Developer"
+      acceptance_criteria:
+        - "ATRに基づくストップロス幅が計算される"
+        - "サポート/レジスタンスレベルが考慮される"
+        - "ボラティリティ変化に応じた調整が行われる"
+        - "調整履歴が記録される"
+      subtasks:
+        - "DynamicStopLossAdjusterクラス実装"
+        - "ATRベース幅計算実装"
+        - "サポート/レジスタンス分析実装"
+        - "ボラティリティ調整機能実装"
+        - "調整履歴記録機能実装"
+        - "テストケース作成"
+        - "調整効果測定"
+        - "パフォーマンス最適化"
+
+    - id: "RISK-003"
+      title: "ポートフォリオリスク管理実装"
+      description: "複数ポジションの統合リスク管理機能"
+      priority: "Medium"
+      estimated_hours: 12
+      assignee: "Risk Management Developer"
+      acceptance_criteria:
+        - "複数ポジションの総リスクが計算される"
+        - "相関性を考慮したリスク調整が行われる"
+        - "最大ポートフォリオリスク制限が適用される"
+        - "リスク分散推奨が生成される"
+      subtasks:
+        - "PortfolioRiskManagerクラス実装"
+        - "総リスク計算機能実装"
+        - "相関性考慮機能実装"
+        - "リスク制限機能実装"
+        - "分散推奨機能実装"
+        - "テストケース作成"
+        - "ポートフォリオシミュレーション"
+        - "ドキュメント作成"
+
+week5:
+  title: "相関性分析実装"
+  duration: "5営業日"
+  tasks:
+    - id: "CORR-001"
+      title: "通貨ペア相関性分析実装"
+      description: "USD/JPYと他の主要通貨ペアの相関性分析機能"
+      priority: "Medium"
+      estimated_hours: 10
+      assignee: "Data Analyst"
+      acceptance_criteria:
+        - "複数通貨ペアの相関性が計算される"
+        - "相関性の変化が検出される"
+        - "相関性に基づくリスク警告が生成される"
+        - "相関性データが履歴として保存される"
+      subtasks:
+        - "CorrelationAnalyzerクラス実装"
+        - "相関性計算ロジック実装"
+        - "変化検出機能実装"
+        - "リスク警告生成機能実装"
+        - "履歴保存機能実装"
+        - "テストケース作成"
+        - "相関性データ分析"
+        - "パフォーマンス最適化"
+
+    - id: "CORR-002"
+      title: "相関性ベースフィルタリング実装"
+      description: "高相関時のシグナルフィルタリング機能"
+      priority: "Medium"
+      estimated_hours: 6
+      assignee: "Data Analyst"
+      acceptance_criteria:
+        - "高相関時のシグナルが適切にフィルタリングされる"
+        - "相関性閾値が調整可能"
+        - "フィルタリング結果が記録される"
+        - "フィルタリング効果が測定される"
+      subtasks:
+        - "CorrelationFilterクラス実装"
+        - "高相関検出機能実装"
+        - "シグナルフィルタリング実装"
+        - "閾値調整機能実装"
+        - "結果記録機能実装"
+        - "テストケース作成"
+        - "フィルタリング効果測定"
+        - "パフォーマンス最適化"
+
+    - id: "CORR-003"
+      title: "相関性データベース実装"
+      description: "相関性データの永続化と分析機能"
+      priority: "Low"
+      estimated_hours: 8
+      assignee: "Backend Developer"
+      acceptance_criteria:
+        - "相関性データがデータベースに保存される"
+        - "履歴データの分析が可能"
+        - "相関性パターンの検出が動作する"
+        - "データの可視化が提供される"
+      subtasks:
+        - "相関性データテーブル作成"
+        - "データ保存機能実装"
+        - "履歴分析機能実装"
+        - "パターン検出機能実装"
+        - "可視化機能実装"
+        - "テストケース作成"
+        - "データ品質確認"
+        - "ドキュメント作成"
+
+deliverables:
+  - "マルチタイムフレーム分析エンジン（Pythonファイル）"
+  - "リスク管理システム（Pythonファイル）"
+  - "相関性分析システム（Pythonファイル）"
+  - "データベーススキーマ拡張（SQLファイル）"
+  - "設定ファイル（YAML/JSON）"
+  - "テストケース（Pythonファイル）"
+  - "技術ドキュメント（Markdown）"
+
+risks:
+  - risk: "複数タイムフレーム処理の複雑性"
+    impact: "High"
+    mitigation: "段階的実装と十分なテスト"
+  - risk: "相関性データの取得制限"
+    impact: "Medium"
+    mitigation: "外部APIの代替手段確保"
+  - risk: "リスク計算の精度不足"
+    impact: "High"
+    mitigation: "専門家レビューとバックテスト"
+
+success_criteria:
+  - "マルチタイムフレーム分析が70%以上の精度で動作"
+  - "リスク管理機能が適切なポジションサイズを計算"
+  - "相関性分析が高相関を80%以上の精度で検出"
+  - "システム全体のレスポンス時間が10秒以内"
+  - "リスク調整後のシグナル成功率が65%以上"
+
+testing:
+  unit_tests:
+    - "マルチタイムフレーム分析の単体テスト"
+    - "リスク計算アルゴリズムのテスト"
+    - "相関性計算の精度テスト"
+  integration_tests:
+    - "複数機能の統合テスト"
+    - "データベース連携テスト"
+    - "外部API連携テスト"
+  performance_tests:
+    - "大量データでの分析性能テスト"
+    - "リアルタイム処理の負荷テスト"
+
+documentation:
+  - "マルチタイムフレーム分析仕様書"
+  - "リスク管理システム仕様書"
+  - "相関性分析仕様書"
+  - "API仕様書"
+  - "運用ガイド"

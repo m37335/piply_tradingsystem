@@ -1,0 +1,414 @@
+# 旧ファイル名: phase2_todo.yaml
+
+phase: 2
+title: "中頻度パターンの適度な緩和"
+duration: "2週間"
+target_detection_rate: "25% → 50%以上"
+target_frequency: "月50-100回の検出"
+
+overview:
+  description: "中頻度パターン（10, 12, 5, 3, 16）の基準を100倍緩和し、検出率を50%以上に向上させる"
+  priority: "高"
+  impact: "検出率の大幅向上"
+
+target_patterns:
+  - pattern_id: 10
+    name: "ダブルトップ/ボトム"
+    current_frequency: "541回/月"
+    target_frequency: "月20-100回の検出"
+    relaxation_multiplier: 100
+  - pattern_id: 12
+    name: "フラッグパターン"
+    current_frequency: "440回/月"
+    target_frequency: "月20-100回の検出"
+    relaxation_multiplier: 100
+  - pattern_id: 5
+    name: "RSI戦い"
+    current_frequency: "304回/月"
+    target_frequency: "月20-100回の検出"
+    relaxation_multiplier: 100
+  - pattern_id: 3
+    name: "ダイバージェンス"
+    current_frequency: "224回/月"
+    target_frequency: "月20-100回の検出"
+    relaxation_multiplier: 100
+  - pattern_id: 16
+    name: "ロールリバーサル"
+    current_frequency: "216回/月"
+    target_frequency: "月20-100回の検出"
+    relaxation_multiplier: 100
+
+tasks:
+  week_1:
+    day_1_2:
+      patterns: [10, 12]
+      pattern_names: ["ダブルトップ/ボトム", "フラッグパターン"]
+      tasks:
+        - task_id: "10-001"
+          title: "ダブルトップ/ボトム基準パラメータの100倍緩和"
+          description: "パラメータを適度に緩和して検出感度を向上"
+          file: "src/infrastructure/analysis/pattern_detectors/double_top_bottom_detector.py"
+          method: "__init__"
+          changes:
+            - parameter: "min_peak_distance"
+              current_value: 5
+              target_value: 2
+              description: "最小ピーク距離を2に緩和"
+            - parameter: "peak_tolerance"
+              current_value: 0.02
+              target_value: 0.1
+              description: "ピーク許容範囲を5倍に拡大"
+            - parameter: "min_pattern_height"
+              current_value: 0.03
+              target_value: 0.01
+              description: "最小パターン高さを3倍に緩和"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "10-002"
+          title: "ダブルトップ/ボトム検出ロジックの最適化"
+          description: "2点パターン検出ロジックを最適化"
+          file: "src/infrastructure/analysis/pattern_detectors/double_top_bottom_detector.py"
+          methods:
+            - "_find_peaks"
+            - "_validate_double_pattern"
+          changes:
+            - method: "_find_peaks"
+              description: "ピーク検出条件を緩和"
+            - method: "_validate_double_pattern"
+              description: "2点パターン検証条件を緩和"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "12-001"
+          title: "フラッグパターン基準パラメータの100倍緩和"
+          description: "パラメータを適度に緩和して検出感度を向上"
+          file: "src/infrastructure/analysis/pattern_detectors/flag_pattern_detector.py"
+          method: "__init__"
+          changes:
+            - parameter: "max_flag_length"
+              current_value: 10
+              target_value: 20
+              description: "最大フラッグ長を20に拡大"
+            - parameter: "flag_angle_tolerance"
+              current_value: 0.2
+              target_value: 0.5
+              description: "フラッグ角度許容範囲を2.5倍に拡大"
+            - parameter: "min_flag_height"
+              current_value: 0.02
+              target_value: 0.005
+              description: "最小フラッグ高さを4倍に緩和"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "12-002"
+          title: "フラッグパターン検出ロジックの最適化"
+          description: "フラッグパターン検出ロジックを最適化"
+          file: "src/infrastructure/analysis/pattern_detectors/flag_pattern_detector.py"
+          methods:
+            - "_detect_flag_pattern"
+            - "_validate_flag"
+          changes:
+            - method: "_detect_flag_pattern"
+              description: "フラッグパターン検出条件を緩和"
+            - method: "_validate_flag"
+              description: "フラッグ検証条件を緩和"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "10-12-003"
+          title: "個別テストの実行"
+          description: "調整後のパターン10, 12の詳細テストを実行"
+          files:
+            - "scripts/test/test_pattern10_detailed.py"
+            - "scripts/test/test_pattern12_detailed.py"
+          test_cases:
+            pattern_10:
+              - "標準ダブルトップ"
+              - "標準ダブルボトム"
+              - "短いダブル"
+              - "完璧なダブル"
+            pattern_12:
+              - "標準上昇フラッグ"
+              - "標準下降フラッグ"
+              - "短いフラッグ"
+              - "完璧なフラッグ"
+          expected_results:
+            - "全テストケースで検出成功"
+            - "信頼度0.7以上"
+          status: "pending"
+          priority: "medium"
+
+    day_3_4:
+      patterns: [5, 3]
+      pattern_names: ["RSI戦い", "ダイバージェンス"]
+      tasks:
+        - task_id: "5-001"
+          title: "RSI戦い基準パラメータの100倍緩和"
+          description: "パラメータを適度に緩和して検出感度を向上"
+          file: "src/infrastructure/analysis/pattern_detectors/rsi_battle_detector.py"
+          method: "__init__"
+          changes:
+            - parameter: "rsi_range_min"
+              current_value: 30
+              target_value: 20
+              description: "RSI範囲最小値を20に緩和"
+            - parameter: "rsi_range_max"
+              current_value: 70
+              target_value: 80
+              description: "RSI範囲最大値を80に緩和"
+            - parameter: "min_battle_duration"
+              current_value: 5
+              target_value: 2
+              description: "最小戦い期間を2に緩和"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "5-002"
+          title: "RSI計算の最適化"
+          description: "RSI計算ロジックを最適化"
+          file: "src/infrastructure/analysis/pattern_detectors/rsi_battle_detector.py"
+          methods:
+            - "_calculate_rsi"
+            - "_detect_rsi_battle"
+          changes:
+            - method: "_calculate_rsi"
+              description: "RSI計算精度を向上"
+            - method: "_detect_rsi_battle"
+              description: "RSI戦い検出条件を緩和"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "3-001"
+          title: "ダイバージェンス基準パラメータの100倍緩和"
+          description: "パラメータを適度に緩和して検出感度を向上"
+          file: "src/infrastructure/analysis/pattern_detectors/divergence_detector.py"
+          method: "__init__"
+          changes:
+            - parameter: "divergence_threshold"
+              current_value: 0.02
+              target_value: 0.1
+              description: "ダイバージェンス閾値を5倍に緩和"
+            - parameter: "min_divergence_length"
+              current_value: 10
+              target_value: 5
+              description: "最小ダイバージェンス長を5に緩和"
+            - parameter: "confirmation_period"
+              current_value: 3
+              target_value: 1
+              description: "確認期間を1に緩和"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "3-002"
+          title: "ダイバージェンス検出ロジックの最適化"
+          description: "ダイバージェンス検出ロジックを最適化"
+          file: "src/infrastructure/analysis/pattern_detectors/divergence_detector.py"
+          methods:
+            - "_detect_divergence"
+            - "_validate_divergence"
+          changes:
+            - method: "_detect_divergence"
+              description: "ダイバージェンス検出条件を緩和"
+            - method: "_validate_divergence"
+              description: "ダイバージェンス検証条件を緩和"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "5-3-003"
+          title: "個別テストの実行"
+          description: "調整後のパターン5, 3の詳細テストを実行"
+          files:
+            - "scripts/test/test_pattern5_detailed.py"
+            - "scripts/test/test_pattern3_detailed.py"
+          test_cases:
+            pattern_5:
+              - "標準RSI戦い"
+              - "長期RSI戦い"
+              - "短期RSI戦い"
+              - "強烈なRSI戦い"
+            pattern_3:
+              - "標準ダイバージェンス"
+              - "短期ダイバージェンス"
+              - "強烈なダイバージェンス"
+              - "完璧なダイバージェンス"
+          expected_results:
+            - "全テストケースで検出成功"
+            - "信頼度0.7以上"
+          status: "pending"
+          priority: "medium"
+
+    day_5_7:
+      pattern: 16
+      pattern_name: "ロールリバーサル"
+      tasks:
+        - task_id: "16-001"
+          title: "ロールリバーサル基準パラメータの100倍緩和"
+          description: "パラメータを適度に緩和して検出感度を向上"
+          file: "src/infrastructure/analysis/pattern_detectors/roll_reversal_detector.py"
+          method: "__init__"
+          changes:
+            - parameter: "min_roll_length"
+              current_value: 2
+              target_value: 1
+              description: "最小ロール長を1に緩和"
+            - parameter: "reversal_threshold"
+              current_value: 0.005
+              target_value: 0.02
+              description: "リバーサル閾値を4倍に緩和"
+            - parameter: "momentum_threshold"
+              current_value: 0.005
+              target_value: 0.02
+              description: "モメンタム閾値を4倍に緩和"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "16-002"
+          title: "方向転換検出の改善"
+          description: "方向転換検出ロジックを最適化"
+          file: "src/infrastructure/analysis/pattern_detectors/roll_reversal_detector.py"
+          methods:
+            - "_detect_bullish_roll_reversal"
+            - "_detect_bearish_roll_reversal"
+            - "_validate_roll_reversal"
+          changes:
+            - method: "_detect_bullish_roll_reversal"
+              description: "強気ロールリバーサル検出条件を緩和"
+            - method: "_detect_bearish_roll_reversal"
+              description: "弱気ロールリバーサル検出条件を緩和"
+            - method: "_validate_roll_reversal"
+              description: "ロールリバーサル検証条件を緩和"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "16-003"
+          title: "個別テストの実行"
+          description: "調整後のパターン16の詳細テストを実行"
+          file: "scripts/test/test_pattern16_detailed.py"
+          test_cases:
+            - "標準強気ロールリバーサル"
+            - "標準弱気ロールリバーサル"
+            - "短いロールリバーサル"
+            - "強烈なモメンタム"
+          expected_results:
+            - "全テストケースで検出成功"
+            - "信頼度0.7以上"
+          status: "pending"
+          priority: "medium"
+
+        - task_id: "16-004"
+          title: "統合テストの実行"
+          description: "Phase 2完了後の統合テストを実行"
+          file: "scripts/test/test_all_patterns_integration.py"
+          test_scope:
+            - "全16パターンの同時検出"
+            - "実際の市場データでの検証"
+          expected_results:
+            - "検出率50%以上（8/16パターン）"
+            - "処理時間30秒以内"
+            - "エラー率5%以下"
+          status: "pending"
+          priority: "high"
+
+  week_2:
+    day_1_3:
+      title: "精度向上と誤検出削減"
+      tasks:
+        - task_id: "W2-001"
+          title: "誤検出の分析と対策"
+          description: "Phase 1, 2で検出された誤検出を分析し、対策を実施"
+          analysis_scope:
+            - "誤検出パターンの特定"
+            - "誤検出原因の分析"
+            - "対策の実装"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "W2-002"
+          title: "信頼度計算の改善"
+          description: "検出信頼度の計算精度を向上"
+          files:
+            - "src/infrastructure/analysis/pattern_detectors/*.py"
+          improvements:
+            - "信頼度計算アルゴリズムの改善"
+            - "重み付けの最適化"
+            - "閾値の調整"
+          status: "pending"
+          priority: "medium"
+
+        - task_id: "W2-003"
+          title: "パフォーマンス最適化"
+          description: "処理速度とメモリ使用量の最適化"
+          optimizations:
+            - "アルゴリズムの効率化"
+            - "メモリ使用量の削減"
+            - "並列処理の導入"
+          status: "pending"
+          priority: "medium"
+
+    day_4_5:
+      title: "包括的テストと検証"
+      tasks:
+        - task_id: "W2-004"
+          title: "包括的テストの実行"
+          description: "全パターンの包括的テストを実行"
+          test_files:
+            - "scripts/test/test_all_patterns_integration.py"
+            - "scripts/test/test_database_market_data.py"
+          test_scenarios:
+            - "実際の市場データでの検証"
+            - "異なる時間足での検証"
+            - "エッジケースの検証"
+          status: "pending"
+          priority: "high"
+
+        - task_id: "W2-005"
+          title: "性能評価とレポート作成"
+          description: "Phase 2の性能評価とレポートを作成"
+          metrics:
+            - "検出率"
+            - "信頼度"
+            - "処理時間"
+            - "エラー率"
+          report_components:
+            - "性能評価レポート"
+            - "改善点の特定"
+            - "Phase 3への提案"
+          status: "pending"
+          priority: "medium"
+
+success_criteria:
+  detection_rate:
+    target: "50%以上"
+    measurement: "統合テストでの検出パターン数"
+  frequency:
+    target: "月50-100回"
+    measurement: "実際の市場データでの月間検出回数"
+  confidence:
+    target: "0.7以上"
+    measurement: "検出パターンの平均信頼度"
+  performance:
+    processing_time: "30秒以内"
+    error_rate: "5%以下"
+
+deliverables:
+  - "中頻度パターン5個の基準緩和完了"
+  - "個別テスト結果レポート"
+  - "統合テスト結果レポート"
+  - "誤検出分析レポート"
+  - "性能評価レポート"
+  - "Phase 2完了報告書"
+
+risks:
+  - risk: "誤検出の増加"
+    mitigation: "段階的な調整とテスト"
+  - risk: "処理時間の増加"
+    mitigation: "アルゴリズムの最適化"
+  - risk: "信頼度の低下"
+    mitigation: "信頼度計算の改善"
+
+notes:
+  - "各パターンの調整は段階的に行い、テスト結果を確認しながら進める"
+  - "誤検出の分析を重視し、精度向上に注力する"
+  - "実際の市場データでの検証を必ず行う"
+  - "Phase 1の成果を活かし、一貫性を保つ"

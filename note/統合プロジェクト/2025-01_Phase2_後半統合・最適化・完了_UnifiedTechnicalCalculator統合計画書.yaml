@@ -1,0 +1,254 @@
+# 旧ファイル名: 継続処理システム統合実装計画書phase2_2025.yaml
+
+project:
+  name: "継続処理システム統合 - Phase 2"
+  version: "1.0.0"
+  duration_days: 2
+  description: "UnifiedTechnicalCalculator を継続処理システムに統合（後半：後半統合・最適化・完了）"
+
+objectives:
+  - "後半統合の完了"
+  - "最適化と調整の完了"
+  - "プロジェクト全体の完了"
+
+success_criteria:
+  technical:
+    - "SystemInitializationManager の統合完了"
+    - "包括的統合テストの完了"
+    - "パフォーマンス目標の達成"
+    - "最適化の完了"
+  functional:
+    - "全統合テストが成功"
+    - "新機能が正常動作"
+    - "システム安定性の確保"
+  maintainability:
+    - "重複コードの削除完了"
+    - "テストカバレッジ 90% 以上"
+    - "ドキュメント 100% 更新"
+
+phases:
+  - name: "Day 3: 統合実装（後半）"
+    tasks:
+      - id: "TASK_3_1"
+        name: "SystemInitializationManager の修正"
+        assignee: "開発者"
+        duration_hours: 3
+        priority: "高"
+        description: "間接的な UnifiedTechnicalCalculator 統合の確認"
+        file: "src/infrastructure/database/services/system_initialization_manager.py"
+        dependencies: ["TASK_2_1"]
+        subtasks:
+          - "間接的な統合の確認"
+          - "システムサイクルのテスト"
+          - "新機能の活用確認"
+        deliverables:
+          - "修正された SystemInitializationManager"
+          - "システム統合テスト"
+        checklist:
+          - "間接的統合確認完了"
+          - "システムサイクルテスト完了"
+          - "新機能活用確認完了"
+          - "統合テスト実装完了"
+
+      - id: "TASK_3_2"
+        name: "統合テストの実装"
+        assignee: "開発者"
+        duration_hours: 3
+        priority: "高"
+        description: "包括的な統合テストの実装"
+        file: "tests/integration/test_unified_technical_integration.py"
+        dependencies: ["TASK_3_1"]
+        subtasks:
+          - "統合テストファイルの作成"
+          - "各コンポーネントの統合テスト"
+          - "エラーハンドリングのテスト"
+          - "パフォーマンステスト"
+        deliverables:
+          - "包括的な統合テストスイート"
+          - "テスト結果レポート"
+        checklist:
+          - "統合テストファイル作成完了"
+          - "各コンポーネント統合テスト完了"
+          - "エラーハンドリングテスト完了"
+          - "パフォーマンステスト完了"
+          - "テスト結果レポート作成完了"
+
+      - id: "TASK_3_3"
+        name: "パフォーマンステスト"
+        assignee: "開発者"
+        duration_hours: 2
+        priority: "中"
+        description: "パフォーマンス測定と改善効果の定量化"
+        dependencies: ["TASK_3_2"]
+        subtasks:
+          - "計算速度の測定"
+          - "メモリ使用量の測定"
+          - "既存システムとの比較"
+        deliverables:
+          - "パフォーマンス測定結果"
+          - "改善効果の定量化"
+        checklist:
+          - "計算速度測定完了"
+          - "メモリ使用量測定完了"
+          - "既存システム比較完了"
+          - "改善効果定量化完了"
+
+  - name: "Day 4: 最適化と完了"
+    tasks:
+      - id: "TASK_4_1"
+        name: "最適化と調整"
+        assignee: "開発者"
+        duration_hours: 3
+        priority: "中"
+        description: "パフォーマンス最適化とエラーハンドリングの改善"
+        dependencies: ["TASK_3_3"]
+        subtasks:
+          - "パフォーマンス最適化"
+          - "ログ出力の調整"
+          - "エラーメッセージの改善"
+          - "ロールバック機能の強化"
+          - "監視機能の追加"
+        deliverables:
+          - "最適化されたシステム"
+          - "改善されたエラーハンドリング"
+        checklist:
+          - "パフォーマンス最適化完了"
+          - "ログ出力調整完了"
+          - "エラーメッセージ改善完了"
+          - "ロールバック機能強化完了"
+          - "監視機能追加完了"
+
+      - id: "TASK_4_2"
+        name: "既存コードの削除"
+        assignee: "開発者"
+        duration_hours: 2
+        priority: "中"
+        description: "不要になった既存コードの削除"
+        dependencies: ["TASK_4_1"]
+        subtasks:
+          - "TALibTechnicalIndicatorService の削除"
+          - "不要なインポートの削除"
+          - "設定ファイルの更新"
+        deliverables:
+          - "クリーンアップされたコードベース"
+          - "更新された設定ファイル"
+        checklist:
+          - "TALibTechnicalIndicatorService 削除完了"
+          - "不要インポート削除完了"
+          - "設定ファイル更新完了"
+          - "コードベースクリーンアップ完了"
+
+      - id: "TASK_4_3"
+        name: "最終テストとドキュメント更新"
+        assignee: "開発者"
+        duration_hours: 3
+        priority: "高"
+        description: "最終テストとドキュメントの更新"
+        dependencies: ["TASK_4_2"]
+        subtasks:
+          - "全機能の統合テスト"
+          - "エラーケースのテスト"
+          - "パフォーマンステスト"
+          - "実装完了レポートの作成"
+          - "運用マニュアルの更新"
+          - "API ドキュメントの更新"
+        deliverables:
+          - "最終テスト結果"
+          - "更新されたドキュメント"
+        checklist:
+          - "全機能統合テスト完了"
+          - "エラーケーステスト完了"
+          - "パフォーマンステスト完了"
+          - "実装完了レポート作成完了"
+          - "運用マニュアル更新完了"
+          - "API ドキュメント更新完了"
+
+milestones:
+  - name: "Day 3 完了"
+    description: "後半統合完了"
+    tasks: ["TASK_3_1", "TASK_3_2", "TASK_3_3"]
+    deliverables:
+      - "修正された SystemInitializationManager"
+      - "包括的な統合テストスイート"
+      - "パフォーマンス測定結果"
+
+  - name: "プロジェクト完了"
+    description: "全統合完了"
+    tasks: ["TASK_4_1", "TASK_4_2", "TASK_4_3"]
+    deliverables:
+      - "最適化されたシステム"
+      - "クリーンアップされたコードベース"
+      - "更新されたドキュメント"
+
+risks:
+  - id: "RISK_1"
+    name: "移行時のデータ不整合"
+    level: "高"
+    probability: "中"
+    impact: "高"
+    mitigation:
+      - "移行前のデータバックアップ"
+      - "段階的な移行によるリスク分散"
+      - "詳細なログ出力による問題の早期発見"
+
+  - id: "RISK_2"
+    name: "パフォーマンス劣化"
+    level: "中"
+    probability: "低"
+    impact: "中"
+    mitigation:
+      - "移行前後のパフォーマンス比較"
+      - "必要に応じた最適化の実施"
+      - "監視システムによる継続的なパフォーマンス監視"
+
+  - id: "RISK_3"
+    name: "既存機能の動作不良"
+    level: "中"
+    probability: "中"
+    impact: "高"
+    mitigation:
+      - "包括的なテストの実施"
+      - "ロールバック計画の準備"
+      - "段階的な機能確認"
+
+quality_gates:
+  - name: "Day 3 品質ゲート"
+    criteria:
+      - "SystemInitializationManager の統合が正常動作"
+      - "包括的統合テストが全て成功"
+      - "パフォーマンス目標を達成"
+    required_tasks: ["TASK_3_1", "TASK_3_2", "TASK_3_3"]
+
+  - name: "最終品質ゲート"
+    criteria:
+      - "全統合テストが成功"
+      - "パフォーマンス目標を達成"
+      - "エラー率が目標以下"
+      - "新機能が正常動作"
+      - "テストカバレッジ 90% 以上"
+      - "ドキュメント 100% 更新"
+    required_tasks: ["TASK_4_1", "TASK_4_2", "TASK_4_3"]
+
+completion_criteria:
+  technical:
+    - "全統合テストが成功"
+    - "パフォーマンス目標を達成"
+    - "エラー率が目標以下"
+    - "新機能が正常動作"
+
+  quality:
+    - "テストカバレッジ 90% 以上"
+    - "ドキュメント 100% 更新"
+    - "コードレビュー完了"
+    - "セキュリティチェック完了"
+
+  operational:
+    - "運用マニュアル更新"
+    - "監視設定完了"
+    - "ロールバック手順確認"
+    - "チーム内共有完了"
+
+previous_phase:
+  name: "Phase 1: 前半統合"
+  description: "基盤準備と前半統合"
+  file: "note/continuous_processing_system_integration_tasks_phase1_2025.yaml"

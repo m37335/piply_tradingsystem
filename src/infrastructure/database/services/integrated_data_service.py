@@ -19,7 +19,6 @@ import pandas as pd
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.infrastructure.analysis.technical_indicators import TechnicalIndicatorsAnalyzer
-from src.infrastructure.database.services.talib_technical_indicator_service import TALibTechnicalIndicatorService
 from src.infrastructure.database.models.technical_indicator_model import (
     TechnicalIndicatorModel,
 )
@@ -32,6 +31,9 @@ from src.infrastructure.database.repositories.technical_indicator_repository_imp
 from src.infrastructure.database.services.data_fetcher_service import DataFetcherService
 from src.infrastructure.database.services.pattern_detection_service import (
     PatternDetectionService,
+)
+from src.infrastructure.database.services.unified_technical_indicator_service import (
+    UnifiedTechnicalIndicatorService,
 )
 from src.infrastructure.error_handling.error_handler import (
     ErrorCategory,
@@ -74,7 +76,7 @@ class IntegratedDataService:
         self.data_fetcher = DataFetcherService(session)
         self.pattern_service = PatternDetectionService(session)
         self.technical_analyzer = TechnicalIndicatorsAnalyzer()
-        self.talib_indicator_service = TALibTechnicalIndicatorService(session)
+        self.unified_indicator_service = UnifiedTechnicalIndicatorService(session)
 
         # リポジトリの初期化
         self.price_repo = PriceDataRepositoryImpl(session)
@@ -161,13 +163,9 @@ class IntegratedDataService:
                 for alert in alerts:
                     logger.warning(f"Performance alert: {alert['message']}")
 
-            logger.info(
-                f"=== 統合データサイクル完了: {execution_time.total_seconds():.2f}秒 ==="
-            )
+            logger.info(f"=== 統合データサイクル完了: {execution_time.total_seconds():.2f}秒 ===")
             logger.info(f"データ取得: {results['data_fetch']['records']}件")
-            logger.info(
-                f"テクニカル指標: {results['technical_indicators']['indicators']}件"
-            )
+            logger.info(f"テクニカル指標: {results['technical_indicators']['indicators']}件")
             logger.info(f"パターン検出: {results['pattern_detection']['patterns']}件")
             logger.info(
                 f"パフォーマンス: CPU={results['performance']['cpu_percent']:.1f}%, "
@@ -230,7 +228,9 @@ class IntegratedDataService:
             logger.info("🔄 TA-Lib統合テクニカル指標計算開始...")
 
             # TA-Libサービスを使用して全時間軸の指標を計算
-            results = await self.talib_indicator_service.calculate_all_timeframe_indicators()
+            results = (
+                await self.talib_indicator_service.calculate_all_timeframe_indicators()
+            )
 
             total_indicators = 0
             for timeframe, timeframe_results in results.items():
@@ -432,9 +432,7 @@ class IntegratedDataService:
             bb_result = self.technical_analyzer.calculate_bollinger_bands(df, timeframe)
 
             if "error" in bb_result:
-                logger.warning(
-                    f"    ⚠️ ボリンジャーバンド計算エラー: {bb_result['error']}"
-                )
+                logger.warning(f"    ⚠️ ボリンジャーバンド計算エラー: {bb_result['error']}")
                 return 0
 
             upper_band = bb_result.get("upper_band")

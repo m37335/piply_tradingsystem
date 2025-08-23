@@ -120,9 +120,7 @@ async def test_updated_rsi_detector():
                     signal_type = (
                         "BUY" if buy_condition else "SELL" if sell_condition else "NONE"
                     )
-                    status = (
-                        "✅ シグナル生成" if signal_type != "NONE" else "❌ 条件不満足"
-                    )
+                    status = "✅ シグナル生成" if signal_type != "NONE" else "❌ 条件不満足"
 
                     ema_momentum = "上昇" if ema_12 > ema_26 else "下降"
                     print(

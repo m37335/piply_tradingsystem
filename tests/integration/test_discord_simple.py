@@ -5,28 +5,32 @@ Discord通知の簡単なテスト
 
 import asyncio
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
+
 
 async def test_discord_simple():
     """Discord通知の簡単なテスト"""
     print("🔍 Discord通知の簡単なテスト")
     print("=" * 50)
-    
+
     webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
     print(f"Webhook URL: {webhook_url[:50]}..." if webhook_url else "Webhook URL: 未設定")
-    
+
     if not webhook_url:
         print("❌ DISCORD_WEBHOOK_URLが設定されていません")
         return
-    
+
     try:
         # DiscordNotificationServiceをインポート
-        from src.domain.services.notification.discord_notification_service import DiscordNotificationService
-        
+        from src.domain.services.notification.discord_notification_service import (
+            DiscordNotificationService,
+        )
+
         print("📤 Discordにテストメッセージを送信中...")
-        
+
         async with DiscordNotificationService(webhook_url) as notification_service:
             # 簡単なテストメッセージ
             test_message = """
@@ -41,10 +45,10 @@ async def test_discord_simple():
 
 🚀 システムは正常に稼働中です！
             """
-            
+
             await notification_service._send_message(test_message)
             print("✅ Discord通知テスト成功！")
-            
+
             # 買いシグナルのテスト
             buy_message = """
 🚨 **最適化アラートシステム**
@@ -75,14 +79,16 @@ async def test_discord_simple():
 ---
 *最適化された移動平均線戦略による自動アラート*
             """
-            
+
             await notification_service._send_message(buy_message)
             print("✅ 買いシグナルテスト成功！")
-            
+
     except Exception as e:
         print(f"❌ Discord通知エラー: {e}")
         import traceback
+
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     asyncio.run(test_discord_simple())

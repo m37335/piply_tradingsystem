@@ -42,7 +42,7 @@ async def test_relaxed_conditions():
             result = await db_session.execute(
                 text(
                     """
-                    SELECT 
+                    SELECT
                         ti1.value as rsi_value,
                         ti2.value as sma_value,
                         ti3.value as ema_12,
@@ -51,19 +51,19 @@ async def test_relaxed_conditions():
                         ti1.timestamp,
                         ti1.timeframe
                     FROM technical_indicators ti1
-                    LEFT JOIN technical_indicators ti2 ON 
-                        ti1.timestamp = ti2.timestamp 
-                        AND ti1.timeframe = ti2.timeframe 
+                    LEFT JOIN technical_indicators ti2 ON
+                        ti1.timestamp = ti2.timestamp
+                        AND ti1.timeframe = ti2.timeframe
                         AND ti2.indicator_type = 'SMA_20'
-                    LEFT JOIN technical_indicators ti3 ON 
-                        ti1.timestamp = ti3.timestamp 
-                        AND ti1.timeframe = ti3.timeframe 
+                    LEFT JOIN technical_indicators ti3 ON
+                        ti1.timestamp = ti3.timestamp
+                        AND ti1.timeframe = ti3.timeframe
                         AND ti3.indicator_type = 'EMA_12'
-                    LEFT JOIN technical_indicators ti4 ON 
-                        ti1.timestamp = ti4.timestamp 
-                        AND ti1.timeframe = ti4.timeframe 
+                    LEFT JOIN technical_indicators ti4 ON
+                        ti1.timestamp = ti4.timestamp
+                        AND ti1.timeframe = ti4.timeframe
                         AND ti4.indicator_type = 'EMA_26'
-                    LEFT JOIN price_data pd ON 
+                    LEFT JOIN price_data pd ON
                         ti1.timestamp = pd.timestamp
                         AND ti1.currency_pair = pd.currency_pair
                     WHERE ti1.indicator_type = 'RSI'
@@ -76,9 +76,7 @@ async def test_relaxed_conditions():
             )
             current_conditions = result.fetchall()
 
-            print(
-                f"✅ 現在の条件（RSI < 30 または RSI > 70）: {len(current_conditions)}件"
-            )
+            print(f"✅ 現在の条件（RSI < 30 または RSI > 70）: {len(current_conditions)}件")
             for (
                 rsi,
                 sma,
@@ -95,9 +93,7 @@ async def test_relaxed_conditions():
                     signal_type = (
                         "BUY" if buy_condition else "SELL" if sell_condition else "NONE"
                     )
-                    status = (
-                        "✅ シグナル生成" if signal_type != "NONE" else "❌ 条件不満足"
-                    )
+                    status = "✅ シグナル生成" if signal_type != "NONE" else "❌ 条件不満足"
 
                     print(f"  📊 {timeframe}: RSI={rsi:.2f} | {signal_type} {status}")
 
@@ -107,7 +103,7 @@ async def test_relaxed_conditions():
             result = await db_session.execute(
                 text(
                     """
-                    SELECT 
+                    SELECT
                         ti1.value as rsi_value,
                         ti2.value as sma_value,
                         ti3.value as ema_12,
@@ -116,19 +112,19 @@ async def test_relaxed_conditions():
                         ti1.timestamp,
                         ti1.timeframe
                     FROM technical_indicators ti1
-                    LEFT JOIN technical_indicators ti2 ON 
-                        ti1.timestamp = ti2.timestamp 
-                        AND ti1.timeframe = ti2.timeframe 
+                    LEFT JOIN technical_indicators ti2 ON
+                        ti1.timestamp = ti2.timestamp
+                        AND ti1.timeframe = ti2.timeframe
                         AND ti2.indicator_type = 'SMA_20'
-                    LEFT JOIN technical_indicators ti3 ON 
-                        ti1.timestamp = ti3.timestamp 
-                        AND ti1.timeframe = ti3.timeframe 
+                    LEFT JOIN technical_indicators ti3 ON
+                        ti1.timestamp = ti3.timestamp
+                        AND ti1.timeframe = ti3.timeframe
                         AND ti3.indicator_type = 'EMA_12'
-                    LEFT JOIN technical_indicators ti4 ON 
-                        ti1.timestamp = ti4.timestamp 
-                        AND ti1.timeframe = ti4.timeframe 
+                    LEFT JOIN technical_indicators ti4 ON
+                        ti1.timestamp = ti4.timestamp
+                        AND ti1.timeframe = ti4.timeframe
                         AND ti4.indicator_type = 'EMA_26'
-                    LEFT JOIN price_data pd ON 
+                    LEFT JOIN price_data pd ON
                         ti1.timestamp = pd.timestamp
                         AND ti1.currency_pair = pd.currency_pair
                     WHERE ti1.indicator_type = 'RSI'
@@ -141,9 +137,7 @@ async def test_relaxed_conditions():
             )
             relaxed_conditions = result.fetchall()
 
-            print(
-                f"✅ 緩和条件（RSI < 35 または RSI > 65）: {len(relaxed_conditions)}件"
-            )
+            print(f"✅ 緩和条件（RSI < 35 または RSI > 65）: {len(relaxed_conditions)}件")
             for (
                 rsi,
                 sma,
@@ -160,9 +154,7 @@ async def test_relaxed_conditions():
                     signal_type = (
                         "BUY" if buy_condition else "SELL" if sell_condition else "NONE"
                     )
-                    status = (
-                        "✅ シグナル生成" if signal_type != "NONE" else "❌ 条件不満足"
-                    )
+                    status = "✅ シグナル生成" if signal_type != "NONE" else "❌ 条件不満足"
 
                     ema_momentum = "上昇" if ema_12 > ema_26 else "下降"
                     print(
@@ -179,7 +171,7 @@ async def test_relaxed_conditions():
             result = await db_session.execute(
                 text(
                     """
-                    SELECT 
+                    SELECT
                         ti1.value as rsi_value,
                         ti2.value as sma_value,
                         ti3.value as ema_12,
@@ -188,19 +180,19 @@ async def test_relaxed_conditions():
                         ti1.timestamp,
                         ti1.timeframe
                     FROM technical_indicators ti1
-                    LEFT JOIN technical_indicators ti2 ON 
-                        ti1.timestamp = ti2.timestamp 
-                        AND ti1.timeframe = ti2.timeframe 
+                    LEFT JOIN technical_indicators ti2 ON
+                        ti1.timestamp = ti2.timestamp
+                        AND ti1.timeframe = ti2.timeframe
                         AND ti2.indicator_type = 'SMA_20'
-                    LEFT JOIN technical_indicators ti3 ON 
-                        ti1.timestamp = ti3.timestamp 
-                        AND ti1.timeframe = ti3.timeframe 
+                    LEFT JOIN technical_indicators ti3 ON
+                        ti1.timestamp = ti3.timestamp
+                        AND ti1.timeframe = ti3.timeframe
                         AND ti3.indicator_type = 'EMA_12'
-                    LEFT JOIN technical_indicators ti4 ON 
-                        ti1.timestamp = ti4.timestamp 
-                        AND ti1.timeframe = ti4.timeframe 
+                    LEFT JOIN technical_indicators ti4 ON
+                        ti1.timestamp = ti4.timestamp
+                        AND ti1.timeframe = ti4.timeframe
                         AND ti4.indicator_type = 'EMA_26'
-                    LEFT JOIN price_data pd ON 
+                    LEFT JOIN price_data pd ON
                         ti1.timestamp = pd.timestamp
                         AND ti1.currency_pair = pd.currency_pair
                     WHERE ti1.indicator_type = 'RSI'
@@ -213,9 +205,7 @@ async def test_relaxed_conditions():
             )
             more_relaxed_conditions = result.fetchall()
 
-            print(
-                f"✅ さらに緩和条件（RSI < 40 または RSI > 60）: {len(more_relaxed_conditions)}件"
-            )
+            print(f"✅ さらに緩和条件（RSI < 40 または RSI > 60）: {len(more_relaxed_conditions)}件")
             for (
                 rsi,
                 sma,
@@ -232,9 +222,7 @@ async def test_relaxed_conditions():
                     signal_type = (
                         "BUY" if buy_condition else "SELL" if sell_condition else "NONE"
                     )
-                    status = (
-                        "✅ シグナル生成" if signal_type != "NONE" else "❌ 条件不満足"
-                    )
+                    status = "✅ シグナル生成" if signal_type != "NONE" else "❌ 条件不満足"
 
                     ema_momentum = "上昇" if ema_12 > ema_26 else "下降"
                     print(

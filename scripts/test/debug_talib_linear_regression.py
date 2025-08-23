@@ -69,15 +69,17 @@ class TALibLinearRegressionDebugger:
             await db_manager.close()
             return {"error": str(e)}
 
-    def _analyze_linear_regression_period(self, data: pd.DataFrame, period: int) -> Dict:
+    def _analyze_linear_regression_period(
+        self, data: pd.DataFrame, period: int
+    ) -> Dict:
         """特定期間での線形回帰詳細分析"""
         try:
             analysis = {}
 
             # 価格データの準備
-            high_prices = data['High'].values
-            low_prices = data['Low'].values
-            close_prices = data['Close'].values
+            high_prices = data["High"].values
+            low_prices = data["Low"].values
+            close_prices = data["Close"].values
 
             # 高値での線形回帰分析
             high_analysis = self._analyze_single_linear_regression(
@@ -103,7 +105,9 @@ class TALibLinearRegressionDebugger:
             logger.error(f"期間 {period} 分析エラー: {e}")
             return {"error": str(e)}
 
-    def _analyze_single_linear_regression(self, prices: np.ndarray, period: int, price_type: str) -> Dict:
+    def _analyze_single_linear_regression(
+        self, prices: np.ndarray, period: int, price_type: str
+    ) -> Dict:
         """単一価格系列での線形回帰詳細分析"""
         try:
             analysis = {}
@@ -122,8 +126,8 @@ class TALibLinearRegressionDebugger:
                     "min": float(np.min(prices)),
                     "max": float(np.max(prices)),
                     "mean": float(np.mean(prices)),
-                    "std": float(np.std(prices))
-                }
+                    "std": float(np.std(prices)),
+                },
             }
 
             # 線形回帰結果の統計
@@ -138,20 +142,30 @@ class TALibLinearRegressionDebugger:
                     "min": float(np.min(valid_reg)) if len(valid_reg) > 0 else None,
                     "max": float(np.max(valid_reg)) if len(valid_reg) > 0 else None,
                     "mean": float(np.mean(valid_reg)) if len(valid_reg) > 0 else None,
-                    "std": float(np.std(valid_reg)) if len(valid_reg) > 0 else None
+                    "std": float(np.std(valid_reg)) if len(valid_reg) > 0 else None,
                 },
                 "slope_stats": {
                     "min": float(np.min(valid_slope)) if len(valid_slope) > 0 else None,
                     "max": float(np.max(valid_slope)) if len(valid_slope) > 0 else None,
-                    "mean": float(np.mean(valid_slope)) if len(valid_slope) > 0 else None,
-                    "std": float(np.std(valid_slope)) if len(valid_slope) > 0 else None
+                    "mean": float(np.mean(valid_slope))
+                    if len(valid_slope) > 0
+                    else None,
+                    "std": float(np.std(valid_slope)) if len(valid_slope) > 0 else None,
                 },
                 "intercept_stats": {
-                    "min": float(np.min(valid_intercept)) if len(valid_intercept) > 0 else None,
-                    "max": float(np.max(valid_intercept)) if len(valid_intercept) > 0 else None,
-                    "mean": float(np.mean(valid_intercept)) if len(valid_intercept) > 0 else None,
-                    "std": float(np.std(valid_intercept)) if len(valid_intercept) > 0 else None
-                }
+                    "min": float(np.min(valid_intercept))
+                    if len(valid_intercept) > 0
+                    else None,
+                    "max": float(np.max(valid_intercept))
+                    if len(valid_intercept) > 0
+                    else None,
+                    "mean": float(np.mean(valid_intercept))
+                    if len(valid_intercept) > 0
+                    else None,
+                    "std": float(np.std(valid_intercept))
+                    if len(valid_intercept) > 0
+                    else None,
+                },
             }
 
             # 最新の値の詳細分析
@@ -163,9 +177,9 @@ class TALibLinearRegressionDebugger:
                 analysis["latest_analysis"] = latest_analysis
 
             # 線形回帰の計算原理の説明
-            analysis["calculation_explanation"] = self._explain_linear_regression_calculation(
-                prices, period
-            )
+            analysis[
+                "calculation_explanation"
+            ] = self._explain_linear_regression_calculation(prices, period)
 
             return analysis
 
@@ -173,9 +187,15 @@ class TALibLinearRegressionDebugger:
             logger.error(f"単一線形回帰分析エラー: {e}")
             return {"error": str(e)}
 
-    def _analyze_latest_values(self, prices: np.ndarray, linear_reg: np.ndarray, 
-                             slope: np.ndarray, intercept: np.ndarray, 
-                             period: int, latest_idx: int) -> Dict:
+    def _analyze_latest_values(
+        self,
+        prices: np.ndarray,
+        linear_reg: np.ndarray,
+        slope: np.ndarray,
+        intercept: np.ndarray,
+        period: int,
+        latest_idx: int,
+    ) -> Dict:
         """最新値の詳細分析"""
         try:
             analysis = {}
@@ -202,18 +222,23 @@ class TALibLinearRegressionDebugger:
                 "end_index": end_idx,
                 "regression_data": {
                     "prices": regression_data.tolist(),
-                    "indices": regression_indices.tolist()
-                }
+                    "indices": regression_indices.tolist(),
+                },
             }
 
             # 手動計算との比較
-            manual_calculation = self._manual_linear_regression(regression_data, regression_indices)
+            manual_calculation = self._manual_linear_regression(
+                regression_data, regression_indices
+            )
             analysis["manual_calculation"] = manual_calculation
 
             # 計算の検証
             verification = self._verify_calculation(
-                latest_reg, latest_slope, latest_intercept, 
-                regression_data, regression_indices
+                latest_reg,
+                latest_slope,
+                latest_intercept,
+                regression_data,
+                regression_indices,
             )
             analysis["verification"] = verification
 
@@ -223,7 +248,9 @@ class TALibLinearRegressionDebugger:
             logger.error(f"最新値分析エラー: {e}")
             return {"error": str(e)}
 
-    def _manual_linear_regression(self, y_values: np.ndarray, x_values: np.ndarray) -> Dict:
+    def _manual_linear_regression(
+        self, y_values: np.ndarray, x_values: np.ndarray
+    ) -> Dict:
         """手動での線形回帰計算"""
         try:
             # 最小二乗法による線形回帰
@@ -260,20 +287,26 @@ class TALibLinearRegressionDebugger:
                 "x_mean": float(x_mean),
                 "y_mean": float(y_mean),
                 "numerator": float(numerator),
-                "denominator": float(denominator)
+                "denominator": float(denominator),
             }
 
         except Exception as e:
             logger.error(f"手動線形回帰計算エラー: {e}")
             return {"error": str(e)}
 
-    def _verify_calculation(self, ta_reg: float, ta_slope: float, ta_intercept: float,
-                          y_values: np.ndarray, x_values: np.ndarray) -> Dict:
+    def _verify_calculation(
+        self,
+        ta_reg: float,
+        ta_slope: float,
+        ta_intercept: float,
+        y_values: np.ndarray,
+        x_values: np.ndarray,
+    ) -> Dict:
         """TA-Lib計算の検証"""
         try:
             # 手動計算
             manual = self._manual_linear_regression(y_values, x_values)
-            
+
             if "error" in manual:
                 return {"error": manual["error"]}
 
@@ -291,28 +324,30 @@ class TALibLinearRegressionDebugger:
                     "ta_lib": float(ta_slope),
                     "manual": float(manual["slope"]),
                     "difference": float(slope_diff),
-                    "match": slope_diff < 1e-10
+                    "match": slope_diff < 1e-10,
                 },
                 "intercept_comparison": {
                     "ta_lib": float(ta_intercept),
                     "manual": float(manual["intercept"]),
                     "difference": float(intercept_diff),
-                    "match": intercept_diff < 1e-10
+                    "match": intercept_diff < 1e-10,
                 },
                 "prediction_comparison": {
                     "ta_lib": float(ta_prediction),
                     "manual": float(manual_prediction),
                     "ta_reg_value": float(ta_reg),
-                    "difference": float(abs(ta_prediction - ta_reg))
+                    "difference": float(abs(ta_prediction - ta_reg)),
                 },
-                "r_squared": float(manual["r_squared"])
+                "r_squared": float(manual["r_squared"]),
             }
 
         except Exception as e:
             logger.error(f"計算検証エラー: {e}")
             return {"error": str(e)}
 
-    def _explain_linear_regression_calculation(self, prices: np.ndarray, period: int) -> Dict:
+    def _explain_linear_regression_calculation(
+        self, prices: np.ndarray, period: int
+    ) -> Dict:
         """線形回帰計算原理の説明"""
         try:
             explanation = {
@@ -324,19 +359,19 @@ class TALibLinearRegressionDebugger:
                     "3. x軸: データポイントのインデックス（0, 1, 2, ...）",
                     "4. y軸: 価格データ（High, Low, Close）",
                     "5. 各時点で新しい線形回帰値を計算",
-                    "6. 最初の(period-1)個のポイントはNaN（データ不足）"
+                    "6. 最初の(period-1)個のポイントはNaN（データ不足）",
                 ],
                 "formula": {
                     "slope": "a = Σ((x - x_mean) * (y - y_mean)) / Σ((x - x_mean)²)",
                     "intercept": "b = y_mean - a * x_mean",
-                    "prediction": "y_pred = a * x + b"
+                    "prediction": "y_pred = a * x + b",
                 },
                 "example": {
                     "period_14": "過去14個のデータポイントで線形回帰",
                     "period_20": "過去20個のデータポイントで線形回帰",
                     "period_30": "過去30個のデータポイントで線形回帰",
-                    "period_50": "過去50個のデータポイントで線形回帰"
-                }
+                    "period_50": "過去50個のデータポイントで線形回帰",
+                },
             }
 
             return explanation
@@ -351,14 +386,14 @@ class TALibLinearRegressionDebugger:
             async with db_manager.get_session() as session:
                 query = text(
                     """
-                    SELECT 
+                    SELECT
                         timestamp as Date,
                         open_price as Open,
                         high_price as High,
                         low_price as Low,
                         close_price as Close,
                         volume as Volume
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     ORDER BY timestamp DESC
                     LIMIT :days
@@ -387,31 +422,33 @@ async def main():
     """メイン関数"""
     debugger = TALibLinearRegressionDebugger()
     results = await debugger.debug_talib_linear_regression()
-    
+
     if "error" in results:
         print(f"\n❌ デバッグエラー: {results['error']}")
         return
-    
+
     print("\n=== TA-Lib線形回帰詳細デバッグ結果 ===")
-    
+
     results_data = results.get("results", {})
-    
+
     for period_key, period_data in results_data.items():
         print(f"\n📊 {period_key}:")
-        
+
         for price_type, analysis in period_data.items():
             print(f"\n  {price_type.upper()}価格:")
-            
+
             # 基本統計
             basic_stats = analysis.get("basic_stats", {})
             print(f"    データポイント数: {basic_stats.get('total_points', 0)}")
-            print(f"    価格範囲: {basic_stats.get('price_range', {}).get('min', 0):.2f} - {basic_stats.get('price_range', {}).get('max', 0):.2f}")
-            
+            print(
+                f"    価格範囲: {basic_stats.get('price_range', {}).get('min', 0):.2f} - {basic_stats.get('price_range', {}).get('max', 0):.2f}"
+            )
+
             # 回帰統計
             reg_stats = analysis.get("regression_stats", {})
             print(f"    有効ポイント: {reg_stats.get('valid_points', 0)}")
             print(f"    NaNポイント: {reg_stats.get('nan_points', 0)}")
-            
+
             # 最新分析
             latest_analysis = analysis.get("latest_analysis", {})
             if latest_analysis:
@@ -421,35 +458,35 @@ async def main():
                 print(f"    最新傾き: {latest_values.get('latest_slope', 0):.6f}")
                 print(f"    最新切片: {latest_values.get('latest_intercept', 0):.2f}")
                 print(f"    使用データポイント: {latest_values.get('data_points_used', 0)}")
-                
+
                 # 手動計算との比較
                 manual_calc = latest_analysis.get("manual_calculation", {})
                 if "error" not in manual_calc:
                     print(f"    手動計算傾き: {manual_calc.get('slope', 0):.6f}")
                     print(f"    手動計算切片: {manual_calc.get('intercept', 0):.2f}")
                     print(f"    決定係数R²: {manual_calc.get('r_squared', 0):.3f}")
-                
+
                 # 検証結果
                 verification = latest_analysis.get("verification", {})
                 if "error" not in verification:
                     slope_comp = verification.get("slope_comparison", {})
                     intercept_comp = verification.get("intercept_comparison", {})
-                    
+
                     print(f"    傾き一致: {slope_comp.get('match', False)}")
                     print(f"    切片一致: {intercept_comp.get('match', False)}")
-    
+
     # 計算原理の説明
     print(f"\n📚 計算原理:")
     first_period = list(results_data.values())[0]
     first_price_type = list(first_period.values())[0]
     explanation = first_price_type.get("calculation_explanation", {})
-    
+
     print(f"  方法: {explanation.get('method', 'N/A')}")
     print(f"  ウィンドウサイズ: {explanation.get('window_size', 'N/A')}")
     print(f"  計算プロセス:")
     for step in explanation.get("calculation_process", []):
         print(f"    {step}")
-    
+
     print(f"  数式:")
     formulas = explanation.get("formula", {})
     for name, formula in formulas.items():

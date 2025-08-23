@@ -42,9 +42,7 @@ class PerformanceMonitorTester:
             print(f"   メモリ使用率: {metrics.get('memory_percent', 'N/A'):.1f}%")
             print(f"   メモリ使用量: {metrics.get('memory_mb', 'N/A'):.1f} MB")
             print(f"   ディスク使用率: {metrics.get('disk_usage_percent', 'N/A'):.1f}%")
-            print(
-                f"   データベースサイズ: {metrics.get('database_size_mb', 'N/A'):.1f} MB"
-            )
+            print(f"   データベースサイズ: {metrics.get('database_size_mb', 'N/A'):.1f} MB")
             print(f"   アクティブ接続数: {metrics.get('active_connections', 'N/A')}")
 
             return True
@@ -132,15 +130,9 @@ class PerformanceMonitorTester:
             print(f"   期間: {summary.get('period_hours', 'N/A')}時間")
             print(f"   測定回数: {summary.get('total_measurements', 'N/A')}")
             print(f"   平均CPU使用率: {summary.get('avg_cpu_percent', 'N/A'):.1f}%")
-            print(
-                f"   平均メモリ使用率: {summary.get('avg_memory_percent', 'N/A'):.1f}%"
-            )
-            print(
-                f"   平均クエリ時間: {summary.get('avg_query_time_ms', 'N/A'):.2f} ms"
-            )
-            print(
-                f"   平均処理時間: {summary.get('avg_processing_time_ms', 'N/A'):.2f} ms"
-            )
+            print(f"   平均メモリ使用率: {summary.get('avg_memory_percent', 'N/A'):.1f}%")
+            print(f"   平均クエリ時間: {summary.get('avg_query_time_ms', 'N/A'):.2f} ms")
+            print(f"   平均処理時間: {summary.get('avg_processing_time_ms', 'N/A'):.2f} ms")
             print(f"   総エラー数: {summary.get('total_errors', 'N/A')}")
             print(f"   総成功数: {summary.get('total_successes', 'N/A')}")
             print(f"   稼働時間: {summary.get('uptime_hours', 'N/A'):.1f}時間")

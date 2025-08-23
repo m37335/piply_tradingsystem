@@ -30,7 +30,9 @@ class RealDataPatternAnalyzer:
 
         try:
             # データベース接続
-            await db_manager.initialize("sqlite+aiosqlite:///./data/exchange_analytics.db")
+            await db_manager.initialize(
+                "sqlite+aiosqlite:///./data/exchange_analytics.db"
+            )
             logger.info("✅ データベース接続完了")
 
             # 直近3ヶ月のデータを取得
@@ -44,10 +46,10 @@ class RealDataPatternAnalyzer:
 
             # データ分析実行
             analysis = self._analyze_data_patterns(data)
-            
+
             # データベース接続終了
             await db_manager.close()
-            
+
             return analysis
 
         except Exception as e:
@@ -59,30 +61,32 @@ class RealDataPatternAnalyzer:
         """市場データ取得"""
         try:
             async with db_manager.get_session() as session:
-                query = text("""
-                    SELECT 
+                query = text(
+                    """
+                    SELECT
                         timestamp as Date,
                         open_price as Open,
                         high_price as High,
                         low_price as Low,
                         close_price as Close,
                         volume as Volume
-                    FROM price_data 
+                    FROM price_data
                     WHERE currency_pair = 'USD/JPY'
                     ORDER BY timestamp DESC
                     LIMIT :days
-                """)
-                
+                """
+                )
+
                 result = await session.execute(query, {"days": days})
                 rows = result.fetchall()
-                
+
                 if not rows:
                     return pd.DataFrame()
-                
-                data = pd.DataFrame(rows, columns=[
-                    "Date", "Open", "High", "Low", "Close", "Volume"
-                ])
-                
+
+                data = pd.DataFrame(
+                    rows, columns=["Date", "Open", "High", "Low", "Close", "Volume"]
+                )
+
                 data = data.sort_values("Date").reset_index(drop=True)
                 return data
 
@@ -97,17 +101,17 @@ class RealDataPatternAnalyzer:
             "high_patterns": {},
             "low_patterns": {},
             "price_movements": {},
-            "recommendations": []
+            "recommendations": [],
         }
 
         # 基本統計
         analysis["basic_stats"] = {
             "total_points": len(data),
             "price_range": f"{data['Close'].min():.4f} - {data['Close'].max():.4f}",
-            "avg_price": data['Close'].mean(),
-            "price_volatility": data['Close'].std(),
+            "avg_price": data["Close"].mean(),
+            "price_volatility": data["Close"].std(),
             "high_range": f"{data['High'].min():.4f} - {data['High'].max():.4f}",
-            "low_range": f"{data['Low'].min():.4f} - {data['Low'].max():.4f}"
+            "low_range": f"{data['Low'].min():.4f} - {data['Low'].max():.4f}",
         }
 
         # 高値パターン分析
@@ -130,7 +134,7 @@ class RealDataPatternAnalyzer:
             "strict_peaks": [],
             "relaxed_peaks": [],
             "consecutive_highs": [],
-            "high_frequency": 0
+            "high_frequency": 0,
         }
 
         # 厳格なピーク検出（元の条件）
@@ -171,7 +175,7 @@ class RealDataPatternAnalyzer:
             "strict_bottoms": [],
             "relaxed_bottoms": [],
             "consecutive_lows": [],
-            "low_frequency": 0
+            "low_frequency": 0,
         }
 
         # 厳格なボトム検出（元の条件）
@@ -211,7 +215,7 @@ class RealDataPatternAnalyzer:
         movements = {
             "price_changes": [],
             "high_low_spreads": [],
-            "volatility_patterns": []
+            "volatility_patterns": [],
         }
 
         # 価格変化の分析
@@ -226,7 +230,10 @@ class RealDataPatternAnalyzer:
 
         # ボラティリティパターンの分析
         for i in range(1, len(data)):
-            volatility = abs(data.iloc[i]["Close"] - data.iloc[i - 1]["Close"]) / data.iloc[i - 1]["Close"]
+            volatility = (
+                abs(data.iloc[i]["Close"] - data.iloc[i - 1]["Close"])
+                / data.iloc[i - 1]["Close"]
+            )
             movements["volatility_patterns"].append(volatility)
 
         return movements
@@ -251,7 +258,9 @@ class RealDataPatternAnalyzer:
             recommendations.append("緩和された条件でもピーク/ボトムが検出されません。さらに条件を緩和する必要があります。")
 
         if relaxed_highs > 0 or relaxed_lows > 0:
-            recommendations.append(f"緩和された条件で高値ピーク{relaxed_highs}件、安値ボトム{relaxed_lows}件が検出されました。")
+            recommendations.append(
+                f"緩和された条件で高値ピーク{relaxed_highs}件、安値ボトム{relaxed_lows}件が検出されました。"
+            )
 
         # 高値/安値の頻度分析
         high_freq = high_patterns["high_frequency"]
@@ -270,13 +279,13 @@ async def main():
     """メイン関数"""
     analyzer = RealDataPatternAnalyzer()
     results = await analyzer.analyze_real_data_patterns()
-    
+
     if "error" in results:
         print(f"\n❌ 分析エラー: {results['error']}")
         return
-    
+
     print("\n=== 実データパターン分析結果 ===")
-    
+
     # 基本統計
     print(f"\n📊 基本統計:")
     stats = results["basic_stats"]
@@ -286,25 +295,25 @@ async def main():
     print(f"  価格ボラティリティ: {stats['price_volatility']:.4f}")
     print(f"  高値範囲: {stats['high_range']}")
     print(f"  安値範囲: {stats['low_range']}")
-    
+
     # 高値パターン
     print(f"\n🔴 高値パターン:")
     high_patterns = results["high_patterns"]
     print(f"  厳格なピーク: {len(high_patterns['strict_peaks'])}件")
     print(f"  緩和されたピーク: {len(high_patterns['relaxed_peaks'])}件")
     print(f"  高値頻度: {high_patterns['high_frequency']:.4f}")
-    if high_patterns['consecutive_highs']:
+    if high_patterns["consecutive_highs"]:
         print(f"  連続高値パターン: {high_patterns['consecutive_highs'][:5]}")  # 最初の5件のみ
-    
+
     # 安値パターン
     print(f"\n🟢 安値パターン:")
     low_patterns = results["low_patterns"]
     print(f"  厳格なボトム: {len(low_patterns['strict_bottoms'])}件")
     print(f"  緩和されたボトム: {len(low_patterns['relaxed_bottoms'])}件")
     print(f"  安値頻度: {low_patterns['low_frequency']:.4f}")
-    if low_patterns['consecutive_lows']:
+    if low_patterns["consecutive_lows"]:
         print(f"  連続安値パターン: {low_patterns['consecutive_lows'][:5]}")  # 最初の5件のみ
-    
+
     # 価格変動
     print(f"\n📈 価格変動:")
     movements = results["price_movements"]
@@ -312,7 +321,7 @@ async def main():
     if price_changes:
         print(f"  平均価格変化: {sum(price_changes) / len(price_changes):.4f}")
         print(f"  最大価格変化: {max(price_changes, key=abs):.4f}")
-    
+
     # 推奨事項
     print(f"\n💡 推奨事項:")
     for recommendation in results["recommendations"]:

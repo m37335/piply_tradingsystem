@@ -292,24 +292,24 @@ DISCORD_CHANNEL_ID=your_channel_id
 ```python
 class AlertConfigManager:
     """アラート設定管理クラス"""
-    
+
     def __init__(self, config_path: Optional[str] = None):
         self.config_path = config_path or "config/alerts.yaml"
         self._config: Optional[AlertConfig] = None
-        
+
         # .envファイルを読み込み
         self._load_env_file()
         self._load_config()
-    
+
     def get_discord_webhook_url(self, alert_type: str) -> Optional[str]:
         """アラートタイプ別のDiscord Webhook URLを取得"""
-        
+
     def get_discord_channel_id(self) -> Optional[str]:
         """DiscordチャンネルIDを取得"""
-        
+
     def is_alert_enabled(self, alert_type: str) -> bool:
         """アラートタイプが有効かどうかを判定"""
-        
+
     def get_threshold_config(self, alert_type: str, currency_pair: str = None) -> Dict:
         """閾値設定を取得"""
 ```
@@ -361,7 +361,7 @@ exchange-analytics monitor alerts resolve <alert_id> --by <user>
 
 ```
 🚨 アラート設定
-                💰 レート閾値アラート設定                 
+                💰 レート閾値アラート設定
 ┏━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━┓
 ┃ 通貨ペア ┃ 上限閾値 ┃ 下限閾値 ┃ チェック間隔 ┃ 重要度 ┃
 ┡━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━┩
@@ -374,7 +374,7 @@ exchange-analytics monitor alerts resolve <alert_id> --by <user>
 
 ```
 🚨 アクティブアラート確認中...
-                                                   🚨 Active Alerts                                                    
+                                                   🚨 Active Alerts
 ┏━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┓
 ┃ ID ┃ Type              ┃ Severity ┃ Message                                          ┃ Created             ┃ Status ┃
 ┡━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━┩
@@ -426,31 +426,31 @@ config/
 ```python
 class AlertModel(BaseModel):
     """アラートデータモデル"""
-    
+
     __tablename__ = "alerts"
-    
+
     # フィールド定義
     uuid = Column(String(36), unique=True, nullable=False)
     alert_type = Column(String(50), nullable=False, index=True)
     severity = Column(String(20), nullable=False, index=True)
     status = Column(String(20), nullable=False, default="active")
     # ... その他のフィールド
-    
+
     def __init__(self, **kwargs):
         """初期化時にUUIDを自動生成"""
         if "uuid" not in kwargs:
             kwargs["uuid"] = str(uuid.uuid4())
         super().__init__(**kwargs)
-    
+
     def acknowledge(self, acknowledged_by: str) -> None:
         """アラートを確認済みにする"""
-        
+
     def resolve(self, resolved_by: str) -> None:
         """アラートを解決済みにする"""
-        
+
     def is_active(self) -> bool:
         """アラートがアクティブかどうかを判定"""
-        
+
     def is_high_severity(self) -> bool:
         """高重要度かどうかを判定"""
 ```
@@ -460,7 +460,7 @@ class AlertModel(BaseModel):
 ```python
 class AlertRepositoryImpl(BaseRepositoryImpl):
     """アラートリポジトリ実装"""
-    
+
     async def find_active_alerts(
         self,
         limit: Optional[int] = None,
@@ -468,31 +468,31 @@ class AlertRepositoryImpl(BaseRepositoryImpl):
         alert_type: Optional[str] = None,
     ) -> List[AlertModel]:
         """アクティブなアラートを取得"""
-        
+
     async def find_by_severity(
         self, severity: str, limit: Optional[int] = None
     ) -> List[AlertModel]:
         """重要度でアラートを検索"""
-        
+
     async def find_by_type(
         self, alert_type: str, limit: Optional[int] = None
     ) -> List[AlertModel]:
         """アラートタイプで検索"""
-        
+
     async def find_recent_alerts(
         self, hours: int = 24, limit: Optional[int] = None
     ) -> List[AlertModel]:
         """最近のアラートを取得"""
-        
+
     async def get_alert_statistics(self) -> Dict[str, Any]:
         """アラート統計情報を取得"""
-        
+
     async def acknowledge_alert(self, alert_id: int, acknowledged_by: str) -> bool:
         """アラートを確認済みにする"""
-        
+
     async def resolve_alert(self, alert_id: int, resolved_by: str) -> bool:
         """アラートを解決済みにする"""
-        
+
     async def create_alert(
         self,
         alert_type: str,
@@ -518,11 +518,11 @@ def get_jst_now() -> datetime:
 
 class BaseModel(Base):
     """全モデルの基底クラス"""
-    
+
     created_at = Column(
-        DateTime(timezone=True), 
-        nullable=False, 
-        default=get_jst_now, 
+        DateTime(timezone=True),
+        nullable=False,
+        default=get_jst_now,
         comment="作成日時"
     )
     updated_at = Column(
@@ -544,7 +544,7 @@ if created_time:
     if created_time.tzinfo is None:
         jst = pytz.timezone('Asia/Tokyo')
         created_time = jst.localize(created_time)
-    
+
     # JSTに変換して表示
     jst = pytz.timezone('Asia/Tokyo')
     jst_time = created_time.astimezone(jst)
@@ -617,10 +617,10 @@ notification_settings:
 ```python
 class SlackNotifier:
     """Slack通知クラス"""
-    
+
     def __init__(self, webhook_url: str):
         self.webhook_url = webhook_url
-    
+
     async def send_alert(self, alert: AlertModel) -> bool:
         """アラートをSlackに送信"""
         # 実装
@@ -640,10 +640,10 @@ async def get_custom_statistics(self) -> Dict[str, Any]:
             AlertModel.alert_type,
             func.count(AlertModel.id)
         ).group_by(AlertModel.alert_type)
-        
+
         result = await self.session.execute(query)
         return {"custom_stats": dict(result)}
-        
+
     except Exception as e:
         logger.error(f"Error getting custom statistics: {e}")
         return {}
@@ -692,23 +692,23 @@ exchange-analytics alert-config show
 
 ```sql
 -- アラート統計
-SELECT 
+SELECT
     alert_type,
     severity,
     status,
     COUNT(*) as count
-FROM alerts 
+FROM alerts
 GROUP BY alert_type, severity, status
 ORDER BY alert_type, severity;
 
 -- 最近のアラート
-SELECT 
+SELECT
     id,
     alert_type,
     severity,
     message,
     created_at
-FROM alerts 
+FROM alerts
 WHERE created_at >= NOW() - INTERVAL '24 hours'
 ORDER BY created_at DESC;
 ```
@@ -719,14 +719,14 @@ ORDER BY created_at DESC;
 
 ```sql
 -- インデックス使用状況確認
-SELECT 
+SELECT
     schemaname,
     tablename,
     indexname,
     idx_scan,
     idx_tup_read,
     idx_tup_fetch
-FROM pg_stat_user_indexes 
+FROM pg_stat_user_indexes
 WHERE tablename = 'alerts';
 ```
 
@@ -734,11 +734,11 @@ WHERE tablename = 'alerts';
 
 ```sql
 -- テーブルサイズ確認
-SELECT 
+SELECT
     schemaname,
     tablename,
     pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size
-FROM pg_tables 
+FROM pg_tables
 WHERE tablename = 'alerts';
 ```
 
@@ -748,8 +748,8 @@ WHERE tablename = 'alerts';
 
 ```sql
 -- 解決済みアラートの削除（30日以上前）
-DELETE FROM alerts 
-WHERE status = 'resolved' 
+DELETE FROM alerts
+WHERE status = 'resolved'
 AND resolved_at < NOW() - INTERVAL '30 days';
 ```
 
@@ -954,7 +954,6 @@ SELECT alert_type, COUNT(*) FROM alerts GROUP BY alert_type;
 
 ---
 
-**📧 お問い合わせ**: システム管理者  
-**📅 最終更新**: 2025-08-16  
+**📧 お問い合わせ**: システム管理者
+**📅 最終更新**: 2025-08-16
 **🔄 バージョン**: 1.2.0
-

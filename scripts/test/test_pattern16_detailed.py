@@ -35,7 +35,7 @@ class Pattern16DetailedTester:
         # 複数のテストケースを試行
         for test_case in range(1, 5):  # 4つのテストケース
             logger.info(f"テストケース {test_case} を試行中...")
-            
+
             # テストデータ作成
             logger.info(f"パターン16用テストデータ作成中...（テストケース {test_case}）")
             test_data = self._create_pattern16_test_data(test_case)
@@ -138,14 +138,15 @@ class Pattern16DetailedTester:
         try:
             # 強気ロールリバーサル検出
             bullish_roll_result = self.detector._detect_bullish_roll_reversal(test_data)
-            
+
             # 弱気ロールリバーサル検出
             bearish_roll_result = self.detector._detect_bearish_roll_reversal(test_data)
-            
+
             return {
                 "bullish_roll_reversal": bullish_roll_result is not None,
                 "bearish_roll_reversal": bearish_roll_result is not None,
-                "either_pattern": (bullish_roll_result is not None) or (bearish_roll_result is not None)
+                "either_pattern": (bullish_roll_result is not None)
+                or (bearish_roll_result is not None),
             }
         except Exception as e:
             logger.error(f"条件分析エラー: {e}")
@@ -153,7 +154,7 @@ class Pattern16DetailedTester:
                 "bullish_roll_reversal": False,
                 "bearish_roll_reversal": False,
                 "either_pattern": False,
-                "error": str(e)
+                "error": str(e),
             }
 
 
@@ -161,7 +162,7 @@ async def main():
     """メイン関数"""
     tester = Pattern16DetailedTester()
     result = await tester.test_pattern16_detailed()
-    
+
     if result:
         print("\n✅ パターン16検出成功！")
         print(f"パターンタイプ: {result.get('pattern_type', 'unknown')}")

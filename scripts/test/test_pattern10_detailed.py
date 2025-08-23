@@ -35,7 +35,7 @@ class Pattern10DetailedTester:
         # 複数のテストケースを試行
         for test_case in range(1, 5):  # 4つのテストケース
             logger.info(f"テストケース {test_case} を試行中...")
-            
+
             # テストデータ作成
             logger.info(f"パターン10用テストデータ作成中...（テストケース {test_case}）")
             test_data = self._create_pattern10_test_data(test_case)
@@ -292,7 +292,10 @@ class Pattern10DetailedTester:
 
         # 指標データ
         indicators = {
-            "rsi": {"current_value": 65, "values": [50 + i * 0.02 for i in range(1200)]},
+            "rsi": {
+                "current_value": 65,
+                "values": [50 + i * 0.02 for i in range(1200)],
+            },
             "macd": {
                 "macd": pd.Series([0.1 + i * 0.0001 for i in range(1200)]),
                 "signal": pd.Series([0.05 + i * 0.00008 for i in range(1200)]),
@@ -372,7 +375,10 @@ class Pattern10DetailedTester:
 
         # 指標データ
         indicators = {
-            "rsi": {"current_value": 65, "values": [50 + i * 0.002 for i in range(14400)]},
+            "rsi": {
+                "current_value": 65,
+                "values": [50 + i * 0.002 for i in range(14400)],
+            },
             "macd": {
                 "macd": pd.Series([0.1 + i * 0.00001 for i in range(14400)]),
                 "signal": pd.Series([0.05 + i * 0.000008 for i in range(14400)]),
@@ -395,17 +401,17 @@ class Pattern10DetailedTester:
         for timeframe in ["D1", "H4", "H1", "M5"]:
             if timeframe in test_data:
                 price_data = test_data[timeframe]["price_data"]
-                
+
                 # ダブルトップ検出
                 double_top_result = self.detector._detect_double_top(price_data)
-                
+
                 # ダブルボトム検出
                 double_bottom_result = self.detector._detect_double_bottom(price_data)
-                
+
                 conditions_analysis[timeframe] = {
                     "double_top": double_top_result,
                     "double_bottom": double_bottom_result,
-                    "either_pattern": double_top_result or double_bottom_result
+                    "either_pattern": double_top_result or double_bottom_result,
                 }
 
         return conditions_analysis
@@ -415,7 +421,7 @@ async def main():
     """メイン関数"""
     tester = Pattern10DetailedTester()
     result = await tester.test_pattern10_detailed()
-    
+
     if result:
         print("\n✅ パターン10検出成功！")
         print(f"信頼度: {result['confidence_score']}")

@@ -4,7 +4,6 @@
 """
 
 import pandas as pd
-
 from tests.unit.test_double_top_bottom_detector import TestDoubleTopBottomDetector
 
 

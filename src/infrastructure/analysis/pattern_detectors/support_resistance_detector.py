@@ -237,9 +237,7 @@ class SupportResistanceDetector:
 
             # レンジの中心価格
             center_price = (resistance_price + support_price) / 2
-            range_tolerance = (
-                abs(resistance_price - support_price) * 0.1
-            )  # 10%の許容範囲
+            range_tolerance = abs(resistance_price - support_price) * 0.1  # 10%の許容範囲
 
             # 価格の行き来を分析
             for i in range(len(price_data)):
@@ -302,9 +300,7 @@ class SupportResistanceDetector:
             oscillation_frequency = min(total_touches / 20.0, 1.0)  # 20回で最大1.0
 
             # クロス回数の正規化
-            crossing_frequency = min(
-                oscillations["crossings"] / 10.0, 1.0
-            )  # 10回で最大1.0
+            crossing_frequency = min(oscillations["crossings"] / 10.0, 1.0)  # 10回で最大1.0
 
             # 総合強度計算
             strength = (
@@ -547,9 +543,7 @@ class SupportResistanceDetector:
                         "current_price": current_price,
                         "confirmed": True,
                     }
-            elif (
-                abs(current_price - line_price) / line_price < 0.05
-            ):  # 価格がラインの5%以内
+            elif abs(current_price - line_price) / line_price < 0.05:  # 価格がラインの5%以内
                 # 価格がラインに近い場合も検出
                 return {
                     "type": "near_line",
@@ -713,9 +707,7 @@ class SupportResistanceDetector:
                 "notification_color": "0x32CD32",
                 "strategy": strategy,
                 "entry_condition": (
-                    "ブレイクアウト確認"
-                    if pattern_type != "range_pattern"
-                    else "レンジ内トレード"
+                    "ブレイクアウト確認" if pattern_type != "range_pattern" else "レンジ内トレード"
                 ),
                 "current_price": current_price,
                 "pattern_type": pattern_type,

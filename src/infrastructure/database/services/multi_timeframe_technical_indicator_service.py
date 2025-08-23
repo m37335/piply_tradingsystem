@@ -259,10 +259,11 @@ class MultiTimeframeTechnicalIndicatorService:
                 if isinstance(additional_data, str):
                     try:
                         import json
+
                         additional_data = json.loads(additional_data)
                     except (json.JSONDecodeError, TypeError):
                         additional_data = {}
-                
+
                 latest_indicators["macd"] = {
                     "value": float(latest_macd[0].value),
                     "signal": additional_data.get("signal_line", 0.0),
@@ -280,10 +281,11 @@ class MultiTimeframeTechnicalIndicatorService:
                 if isinstance(additional_data, str):
                     try:
                         import json
+
                         additional_data = json.loads(additional_data)
                     except (json.JSONDecodeError, TypeError):
                         additional_data = {}
-                
+
                 latest_indicators["bb"] = {
                     "value": float(latest_bb[0].value),
                     "upper": additional_data.get("upper_band", 0.0),
@@ -546,21 +548,23 @@ class MultiTimeframeTechnicalIndicatorService:
 
             # 直接SQLで検索（文字列比較の問題を回避）
             from sqlalchemy import text
-            
-            query = text("""
-                SELECT COUNT(*) FROM technical_indicators 
+
+            query = text(
+                """
+                SELECT COUNT(*) FROM technical_indicators
                 WHERE timestamp >= :start_date AND timestamp <= :end_date
-            """)
-            
+            """
+            )
+
             result = await self.session.execute(
-                query, 
+                query,
                 {
-                    'start_date': start_date.strftime('%Y-%m-%d %H:%M:%S'),
-                    'end_date': end_date.strftime('%Y-%m-%d %H:%M:%S')
-                }
+                    "start_date": start_date,  # datetimeオブジェクトを直接渡す
+                    "end_date": end_date,      # datetimeオブジェクトを直接渡す
+                },
             )
             total_count = result.scalar()
-            
+
             logger.info(f"総指標数: {total_count}件 ({start_date} から {end_date})")
 
             return total_count
@@ -569,7 +573,9 @@ class MultiTimeframeTechnicalIndicatorService:
             logger.error(f"最新指標数取得エラー: {e}")
             return 0
 
-    async def calculate_indicators_for_timeframe(self, timeframe: str) -> Dict[str, int]:
+    async def calculate_indicators_for_timeframe(
+        self, timeframe: str
+    ) -> Dict[str, int]:
         """
         指定時間軸のテクニカル指標を計算
 
@@ -584,7 +590,7 @@ class MultiTimeframeTechnicalIndicatorService:
 
             # 既存のcalculate_timeframe_indicatorsメソッドを使用
             indicators = await self.calculate_timeframe_indicators(timeframe)
-            
+
             if indicators:
                 # データベースに保存
                 await self.save_timeframe_indicators(timeframe, indicators)

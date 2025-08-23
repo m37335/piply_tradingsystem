@@ -50,9 +50,7 @@ class Pattern9DetailedTester:
 
                 # 結果分析
                 if result is not None:
-                    logger.info(
-                        f"✅ パターン9検出成功！（テストケース {test_case_index + 1}）"
-                    )
+                    logger.info(f"✅ パターン9検出成功！（テストケース {test_case_index + 1}）")
                     logger.info(f"  信頼度: {result.get('confidence_score', 'N/A')}")
                     logger.info(f"  条件: {result.get('conditions_met', {})}")
 
@@ -65,9 +63,7 @@ class Pattern9DetailedTester:
                         "pattern_info": result,
                     }
                 else:
-                    logger.info(
-                        f"❌ テストケース {test_case_index + 1} では検出されませんでした"
-                    )
+                    logger.info(f"❌ テストケース {test_case_index + 1} では検出されませんでした")
 
                     # 条件の詳細分析
                     condition_analysis = self._analyze_conditions(test_data)
@@ -87,9 +83,7 @@ class Pattern9DetailedTester:
 
     def _create_pattern9_test_data(self, test_case_index: int = 0) -> Dict:
         """パターン9の条件を満たすテストデータ作成"""
-        logger.info(
-            f"パターン9用テストデータ作成中...（テストケース {test_case_index + 1}）"
-        )
+        logger.info(f"パターン9用テストデータ作成中...（テストケース {test_case_index + 1}）")
 
         # パターン9の条件:
         # ヒゲ比率: 20%以下

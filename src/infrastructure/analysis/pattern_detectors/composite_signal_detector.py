@@ -116,12 +116,12 @@ class CompositeSignalDetector:
         if "macd" in macd_data and "signal" in macd_data:
             macd_series = macd_data["macd"]
             signal_series = macd_data["signal"]
-            
+
             if len(macd_series) >= 3:
                 # 最近3期間でMACDが上昇しているかチェック
                 recent_macd = macd_series.iloc[-3:]
                 recent_signal = signal_series.iloc[-3:]
-                
+
                 # MACDがシグナルを上回っているか、または上昇傾向にあるか
                 current_macd = recent_macd.iloc[-1]
                 current_signal = recent_signal.iloc[-1]
@@ -135,8 +135,10 @@ class CompositeSignalDetector:
             recent_prices = price_data["Close"].iloc[-5:]
             # 価格が上昇傾向にあるか、または安定しているかチェック
             price_condition = (
-                recent_prices.iloc[-1] > recent_prices.iloc[-2] or
-                abs(recent_prices.iloc[-1] - recent_prices.iloc[-2]) / recent_prices.iloc[-2] < 0.01
+                recent_prices.iloc[-1] > recent_prices.iloc[-2]
+                or abs(recent_prices.iloc[-1] - recent_prices.iloc[-2])
+                / recent_prices.iloc[-2]
+                < 0.01
             )
 
         # 3つすべての条件が一致しているかチェック
@@ -170,11 +172,11 @@ class CompositeSignalDetector:
             upper_band = bb_data["upper"].iloc[-1]
             lower_band = bb_data["lower"].iloc[-1]
             middle_band = bb_data["middle"].iloc[-1]
-            
+
             # 価格がボリンジャーバンド内にあるか、またはミドル付近にあるか
             bb_condition = (
-                lower_band <= current_price <= upper_band or
-                abs(current_price - middle_band) / middle_band < 0.02
+                lower_band <= current_price <= upper_band
+                or abs(current_price - middle_band) / middle_band < 0.02
             )
 
         # 2つすべての条件が一致しているかチェック
@@ -208,11 +210,11 @@ class CompositeSignalDetector:
             upper_band = bb_data["upper"].iloc[-1]
             lower_band = bb_data["lower"].iloc[-1]
             middle_band = bb_data["middle"].iloc[-1]
-            
+
             # 価格がボリンジャーバンド内にあるか、またはミドル付近にあるか
             bb_condition = (
-                lower_band <= current_price <= upper_band or
-                abs(current_price - middle_band) / middle_band < 0.02
+                lower_band <= current_price <= upper_band
+                or abs(current_price - middle_band) / middle_band < 0.02
             )
 
         # 2つすべての条件が一致しているかチェック
