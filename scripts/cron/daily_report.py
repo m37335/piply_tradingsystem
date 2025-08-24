@@ -17,7 +17,8 @@ sys.path.append("/app")
 
 def calculate_stats_from_logs():
     """継続処理システムのログから統計を計算（重複排除版）"""
-    log_file = "/app/logs/continuous_processing_cron.log"
+    # 現在のシステム構成に合わせてログファイルを変更
+    log_file = "/app/logs/simple_data_fetcher.log"
     integrated_ai_log = "/app/logs/integrated_ai_cron.log"
     jst = pytz.timezone("Asia/Tokyo")
     today = datetime.now(jst).date()
@@ -33,84 +34,64 @@ def calculate_stats_from_logs():
 
     # 重複排除用のセット
     processed_timestamps = set()
-    ai_analysis_timestamps = set()
-    discord_notification_timestamps = set()
 
     try:
-        # 継続処理システムのログから統計を計算
-        with open(log_file, "r") as f:
-            for line in f:
-                # 今日のログのみ処理
-                if str(today) in line:
-                    # タイムスタンプを抽出
-                    timestamp_match = re.search(
-                        r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})", line
-                    )
-                    if timestamp_match:
-                        timestamp = timestamp_match.group(1)
+        # シンプルデータ取得システムのログから統計を計算
+        if os.path.exists(log_file):
+            with open(log_file, "r") as f:
+                for line in f:
+                    # 今日のログのみ処理
+                    if str(today) in line:
+                        # タイムスタンプを抽出
+                        timestamp_match = re.search(
+                            r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})", line
+                        )
+                        if timestamp_match:
+                            timestamp = timestamp_match.group(1)
 
-                        # データ保存成功をカウント（重複排除）
-                        if (
-                            "saved_5m_data" in line
-                            and timestamp not in processed_timestamps
-                        ):
-                            stats["successful_fetches"] += 1
-                            stats["total_fetches"] += 1
-                            processed_timestamps.add(timestamp)
+                            # データ保存成功をカウント（重複排除）
+                            if (
+                                "Saved price data" in line
+                                and timestamp not in processed_timestamps
+                            ):
+                                stats["successful_fetches"] += 1
+                                stats["total_fetches"] += 1
+                                processed_timestamps.add(timestamp)
 
-                        # エラーをカウント（重複排除）
-                        elif (
-                            "ERROR" in line or "FAILED" in line
-                        ) and timestamp not in processed_timestamps:
-                            stats["failed_fetches"] += 1
-                            stats["total_fetches"] += 1
-                            processed_timestamps.add(timestamp)
+                            # エラーをカウント（重複排除）
+                            elif (
+                                "ERROR" in line or "FAILED" in line
+                            ) and timestamp not in processed_timestamps:
+                                stats["failed_fetches"] += 1
+                                stats["total_fetches"] += 1
+                                processed_timestamps.add(timestamp)
 
-                        # パターン検出をカウント（重複排除）
-                        elif (
-                            "パターン検出完了" in line
-                            and "detected" in line
-                            and timestamp not in ai_analysis_timestamps
-                        ):
-                            stats["ai_analyses"] += 1
-                            ai_analysis_timestamps.add(timestamp)
-
-                        # Discord通知をカウント（重複排除）
-                        elif (
-                            "通知処理完了" in line
-                            and "送信" in line
-                            and timestamp not in discord_notification_timestamps
-                        ):
-                            stats["discord_notifications"] += 1
-                            discord_notification_timestamps.add(timestamp)
+                            # データ取得サイクル完了をカウント（重複排除）
+                            elif (
+                                "データ取得サイクル完了" in line
+                                and timestamp not in processed_timestamps
+                            ):
+                                # 既にSaved price dataでカウント済みの場合はスキップ
+                                pass
 
         # 統合AI分析のログから統計を計算
-        with open(integrated_ai_log, "r") as f:
-            for line in f:
-                # 今日のログのみ処理
-                if str(today) in line:
-                    # タイムスタンプを抽出
-                    timestamp_match = re.search(
-                        r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})", line
-                    )
-                    if timestamp_match:
-                        timestamp = timestamp_match.group(1)
+        if os.path.exists(integrated_ai_log):
+            ai_analysis_count = 0
+            discord_notification_count = 0
 
-                        # 統合AI分析をカウント（重複排除）
-                        if (
-                            "統合AI戦略分析生成中" in line
-                            and timestamp not in ai_analysis_timestamps
-                        ):
-                            stats["ai_analyses"] += 1
-                            ai_analysis_timestamps.add(timestamp)
+            with open(integrated_ai_log, "r") as f:
+                for line in f:
+                    # 統合AI分析成功をカウント
+                    if "✅ 統合AI分析生成成功" in line:
+                        ai_analysis_count += 1
 
-                        # 統合AI分析のDiscord配信をカウント（重複排除）
-                        elif (
-                            "統合分析Discord配信成功" in line
-                            and timestamp not in discord_notification_timestamps
-                        ):
-                            stats["discord_notifications"] += 1
-                            discord_notification_timestamps.add(timestamp)
+                    # 統合AI分析のDiscord配信成功をカウント
+                    elif "✅ 統合分析Discord配信成功" in line:
+                        discord_notification_count += 1
+
+            # 統合AI分析の統計を追加
+            stats["ai_analyses"] = ai_analysis_count
+            stats["discord_notifications"] = discord_notification_count
 
     except FileNotFoundError as e:
         print(f"Log file not found: {e}")
@@ -125,6 +106,8 @@ def calculate_stats_from_logs():
     print(f"   - AI分析回数: {stats['ai_analyses']}")
     print(f"   - Discord通知: {stats['discord_notifications']}")
     print(f"   - 処理済みタイムスタンプ数: {len(processed_timestamps)}")
+    print(f"   - 参照ログファイル: {log_file}")
+    print(f"   - 参照AIログファイル: {integrated_ai_log}")
 
     return stats
 

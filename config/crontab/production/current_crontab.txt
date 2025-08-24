@@ -6,10 +6,10 @@ PATH=/usr/local/bin:/usr/bin:/bin
 HOME=/app
 
 # 🔄 継続処理システム（5分間隔、平日24時間稼働）
-# システム初期化状態をチェックし、適切な処理を実行
+# シンプルな5分データ取得（API制限対応）
 */5 * * * 1-5 cd /app && export $(cat .env | grep -v '^#' | xargs) && \
-    timeout 300 python scripts/cron/continuous_processing_cron.py --mode system_cycle >> \
-    /app/logs/continuous_processing_cron.log 2>&1
+    timeout 300 python scripts/cron/simple_data_fetcher.py >> \
+    /app/logs/simple_data_fetcher.log 2>&1
 
 # 📈 日次レポート（毎日6:00 JST）
 0 6 * * * cd /app && export $(cat .env | grep -v '^#' | xargs) && \
@@ -58,5 +58,5 @@ HOME=/app
 
 # 🔍 パフォーマンス監視システムテスト（1時間間隔）
 0 * * * * cd /app && export $(cat .env | grep -v '^#' | xargs) && \
-    timeout 120 python scripts/cron/performance_monitoring_test_cron.py >> \
+    timeout 120 python scripts/cron/testing/performance_monitoring_test_cron.py >> \
     /app/logs/performance_monitoring_test_cron.log 2>&1

@@ -267,11 +267,14 @@ class QueryOptimizer:
                 row_count = count_result.scalar()
                 
                 # テーブルサイズを取得
-                size_result = await self.session.execute(text("""
-                    SELECT page_count * page_size as size_bytes
-                    FROM pragma_page_count(), pragma_page_size()
-                    WHERE name = :table_name
-                """), {"table_name": table_name})
+                size_result = await self.session.execute(
+                    text(
+                        """
+                    SELECT pg_total_relation_size(:table_name) as size_bytes
+                """
+                    ),
+                    {"table_name": table_name},
+                )
                 size_bytes = size_result.scalar() or 0
                 
                 # インデックス数を取得

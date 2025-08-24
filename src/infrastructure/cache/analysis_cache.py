@@ -169,6 +169,9 @@ class AnalysisCacheManager:
             bool: 保存成功の場合True
         """
         try:
+            # datetimeオブジェクトを文字列に変換
+            serialized_data = self._serialize_datetime_objects(analysis_data)
+
             cache_key = self._generate_cache_key(
                 analysis_type, currency_pair, timeframe, **kwargs
             )
@@ -179,7 +182,7 @@ class AnalysisCacheManager:
                 analysis_type=analysis_type,
                 currency_pair=currency_pair,
                 timeframe=timeframe,
-                analysis_data=analysis_data,
+                analysis_data=serialized_data,
                 cache_key=cache_key,
                 expires_at=expires_at,
             )
@@ -199,6 +202,28 @@ class AnalysisCacheManager:
                 f"{currency_pair}: {str(e)}"
             )
             return False
+
+    def _serialize_datetime_objects(self, data: Any) -> Any:
+        """
+        datetimeオブジェクトを文字列に変換
+
+        Args:
+            data: 変換対象のデータ
+
+        Returns:
+            Any: 変換後のデータ
+        """
+        if isinstance(data, datetime):
+            return data.isoformat()
+        elif isinstance(data, dict):
+            return {
+                key: self._serialize_datetime_objects(value)
+                for key, value in data.items()
+            }
+        elif isinstance(data, list):
+            return [self._serialize_datetime_objects(item) for item in data]
+        else:
+            return data
 
     async def invalidate_analysis(
         self,

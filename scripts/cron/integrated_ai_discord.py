@@ -8,8 +8,8 @@ import asyncio
 import os
 import sys
 import traceback
-from datetime import datetime
-from typing import Any, Dict, Optional
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
 
 import httpx
 import pytz
@@ -37,6 +37,211 @@ from src.infrastructure.optimization.batch_processor import BatchProcessor
 from src.infrastructure.optimization.data_optimizer import DataOptimizer
 
 
+class FibonacciAnalyzer:
+    """フィボナッチリトレースメント分析クラス（期間別階層アプローチ）"""
+
+    def __init__(self):
+        self.fibonacci_levels = [0.236, 0.382, 0.5, 0.618, 0.786]
+        self.timeframe_periods = {
+            "D1": 90,  # 3ヶ月間
+            "H4": 14,  # 2週間
+            "H1": 24,  # 24時間（1日分）
+            "M5": 48,  # 4時間分（240分 / 5分）
+        }
+
+    def calculate_fibonacci_analysis(
+        self, historical_data: List[Dict], timeframe: str
+    ) -> Dict[str, Any]:
+        """期間別階層アプローチでフィボナッチ分析"""
+        try:
+            lookback_days = self.timeframe_periods[timeframe]
+            recent_data = historical_data[-lookback_days:]
+
+            if len(recent_data) < 10:  # 最小データ数チェック
+                return {
+                    "indicator": "Fibonacci Retracement",
+                    "timeframe": timeframe,
+                    "error": "Insufficient data for analysis",
+                }
+
+            # スイングポイント検出
+            # データ構造を確認して適切にアクセス
+
+            if hasattr(recent_data, "columns"):  # pandas DataFrameの場合
+
+                swing_high = float(recent_data["High"].max())
+                swing_low = float(recent_data["Low"].min())
+                current_price = float(recent_data["Close"].iloc[-1])
+            elif (
+                isinstance(recent_data, list)
+                and len(recent_data) > 0
+                and hasattr(recent_data[0], "get")
+            ):  # 辞書形式の場合
+                print(f"Debug Fib {timeframe}: Processing dict format")
+                high_values = [
+                    float(d.get("High", d.get("high", 0))) for d in recent_data
+                ]
+                low_values = [float(d.get("Low", d.get("low", 0))) for d in recent_data]
+                swing_high = max(high_values)
+                swing_low = min(low_values)
+                current_price = float(
+                    recent_data[-1].get("Close", recent_data[-1].get("close", 0))
+                )
+            else:  # その他の場合
+                # デバッグ用にデータ構造を確認
+                print(f"Debug: recent_data type: {type(recent_data)}")
+                print(f"Debug: recent_data length: {len(recent_data)}")
+                if len(recent_data) > 0:
+                    print(f"Debug: recent_data[0] type: {type(recent_data[0])}")
+                    print(f"Debug: recent_data[0] content: {recent_data[0]}")
+                    # より詳細な構造確認
+                    if hasattr(recent_data[0], "__dict__"):
+                        print(
+                            f"Debug: recent_data[0].__dict__: {recent_data[0].__dict__}"
+                        )
+                    if hasattr(recent_data[0], "keys"):
+                        print(
+                            f"Debug: recent_data[0].keys(): "
+                            f"{list(recent_data[0].keys())}"
+                        )
+                raise ValueError(f"Unsupported data structure: {type(recent_data)}")
+
+            # フィボナッチレベル計算
+            levels = self._calculate_levels(swing_high, swing_low)
+
+            # 現在価格の位置を判定
+            current_position = self._get_current_position(
+                current_price, levels, swing_high, swing_low
+            )
+
+            return {
+                "indicator": "Fibonacci Retracement",
+                "timeframe": timeframe,
+                "swing_high": swing_high,
+                "swing_low": swing_low,
+                "current_price": current_price,
+                "levels": levels,
+                "current_position": current_position,
+                "data_points": len(recent_data),
+                "timestamp": datetime.now(timezone(timedelta(hours=9))),
+            }
+
+        except Exception as e:
+            return {
+                "indicator": "Fibonacci Retracement",
+                "timeframe": timeframe,
+                "error": f"Calculation error: {str(e)}",
+            }
+
+    def _calculate_levels(
+        self, swing_high: float, swing_low: float
+    ) -> Dict[str, float]:
+        """フィボナッチレベルを計算"""
+        diff = swing_high - swing_low
+
+        if abs(diff) < 0.0001:  # ほぼ同じ値の場合
+            raise ValueError(
+                f"Swing high and low are too close: high={swing_high}, low={swing_low}"
+            )
+
+        levels = {}
+        for level in self.fibonacci_levels:
+            if swing_high > swing_low:  # 上昇トレンドのリトレースメント
+                calculated_level = swing_high - (diff * level)
+                levels[f"{level*100:.1f}%"] = calculated_level
+            else:  # 下降トレンドのリトレースメント
+                calculated_level = swing_low + (diff * level)
+                levels[f"{level*100:.1f}%"] = calculated_level
+
+        return levels
+
+    def _get_current_position(
+        self,
+        current_price: float,
+        levels: Dict[str, float],
+        swing_high: float,
+        swing_low: float,
+    ) -> Dict[str, Any]:
+        """現在価格のフィボナッチ位置を判定（詳細版）"""
+        result = {
+            "position": "",
+            "percentage": 0.0,
+            "nearest_level": "",
+            "distance_to_nearest": 0.0,
+        }
+
+        if swing_high > swing_low:  # 上昇トレンド
+            if current_price > swing_high:
+                result["position"] = "above_swing_high"
+                result["percentage"] = 100.0
+                return result
+            elif current_price < swing_low:
+                result["position"] = "below_swing_low"
+                result["percentage"] = 0.0
+                return result
+            else:
+                # フィボナッチリトレースメントのパーセンテージを計算
+                total_range = swing_high - swing_low
+                retracement = swing_high - current_price
+                percentage = (retracement / total_range) * 100
+                result["percentage"] = round(percentage, 1)
+
+                # 最も近いレベルを特定
+                nearest_level = ""
+                min_distance = float("inf")
+                for level_name, level_price in levels.items():
+                    distance = abs(current_price - level_price)
+                    if distance < min_distance:
+                        min_distance = distance
+                        nearest_level = level_name
+
+                result["nearest_level"] = nearest_level
+                result["distance_to_nearest"] = round(min_distance, 4)
+
+                # 位置の判定
+                if min_distance < total_range * 0.01:  # 1%以内
+                    result["position"] = f"near_{nearest_level}"
+                else:
+                    result["position"] = f"between_levels_{result['percentage']}%"
+
+                return result
+        else:  # 下降トレンド
+            if current_price < swing_low:
+                result["position"] = "below_swing_low"
+                result["percentage"] = 100.0
+                return result
+            elif current_price > swing_high:
+                result["position"] = "below_swing_low"
+                result["percentage"] = 0.0
+                return result
+            else:
+                # フィボナッチエクステンションのパーセンテージを計算
+                total_range = swing_low - swing_high
+                extension = current_price - swing_low
+                percentage = (extension / total_range) * 100
+                result["percentage"] = round(percentage, 1)
+
+                # 最も近いレベルを特定
+                nearest_level = ""
+                min_distance = float("inf")
+                for level_name, level_price in levels.items():
+                    distance = abs(current_price - level_price)
+                    if distance < min_distance:
+                        min_distance = distance
+                        nearest_level = level_name
+
+                result["nearest_level"] = nearest_level
+                result["distance_to_nearest"] = round(min_distance, 4)
+
+                # 位置の判定
+                if min_distance < abs(total_range) * 0.01:  # 1%以内
+                    result["position"] = f"near_{nearest_level}"
+                else:
+                    result["position"] = f"between_levels_{result['percentage']}%"
+
+                return result
+
+
 class IntegratedAIDiscordReporter:
     """統合AI分析Discord配信システム（最適化版）"""
 
@@ -53,6 +258,9 @@ class IntegratedAIDiscordReporter:
 
         # テクニカル指標アナライザー初期化
         self.technical_analyzer = TechnicalIndicatorsAnalyzer()
+
+        # フィボナッチ分析アナライザー初期化
+        self.fibonacci_analyzer = FibonacciAnalyzer()
 
         # 最適化コンポーネント初期化
         self.cache_manager = None
@@ -118,8 +326,45 @@ class IntegratedAIDiscordReporter:
             self.console.print("✅ 最適化コンポーネント初期化完了")
 
         except Exception as e:
-            self.console.print(f"❌ 最適化コンポーネント初期化エラー: {str(e)}")
-            raise
+            self.console.print(f"⚠️ 最適化コンポーネント初期化エラー: {str(e)}")
+            self.console.print("📝 データベース接続なしで実行します")
+
+            # データベース接続エラーの場合、基本機能のみ初期化
+            try:
+                # API制限管理とバッチ処理初期化
+                api_rate_limiter = ApiRateLimiter()
+                batch_processor = BatchProcessor(api_rate_limiter=api_rate_limiter)
+
+                # データ最適化器初期化（キャッシュなし）
+                self.data_optimizer = DataOptimizer(
+                    cache_manager=None,
+                    api_rate_limiter=api_rate_limiter,
+                    batch_processor=batch_processor,
+                    yahoo_finance_client=self.correlation_analyzer.yahoo_client,
+                )
+
+                # Discordクライアント初期化（履歴なし）
+                self.discord_client = DiscordClient(
+                    webhook_url=self.discord_webhook,
+                    notification_history_repository=None,
+                    enable_notification_logging=False,
+                )
+
+                # 通知マネージャー初期化（基本機能のみ）
+                self.notification_manager = NotificationManager(
+                    discord_client=self.discord_client,
+                    notification_history_repository=None,
+                    duplicate_check_window_minutes=30,
+                    max_notifications_per_hour=10,
+                    enable_priority_filtering=False,
+                    enable_duplicate_prevention=False,
+                )
+
+                self.console.print("✅ 基本機能のみで初期化完了")
+
+            except Exception as fallback_error:
+                self.console.print(f"❌ 基本機能初期化も失敗: {str(fallback_error)}")
+                raise
 
     async def close_session(self):
         """データベースセッションをクローズ"""
@@ -139,17 +384,29 @@ class IntegratedAIDiscordReporter:
         self.console.print(f"📈 {currency_pair} テクニカル指標分析中...")
 
         try:
-            # キャッシュチェック（一時的に無効化してテクニカル指標計算を確認）
+            # キャッシュチェック（データベース接続エラーを考慮）
             if self.analysis_cache:
                 # キャッシュを無効化して強制的に再計算
                 try:
                     await self.analysis_cache.invalidate_analysis(
                         "technical_indicators", currency_pair
                     )
-                    self.console.print(f"🔄 {currency_pair} キャッシュ無効化、再計算実行")
+                    self.console.print(
+                        f"🔄 {currency_pair} キャッシュ無効化、再計算実行"
+                    )
                 except Exception as e:
-                    self.console.print(f"⚠️ キャッシュ無効化エラー: {str(e)}")
-                    self.console.print(f"🔄 {currency_pair} 強制再計算実行")
+                    # データベース接続エラーの場合は詳細を表示しない
+                    if "Connect call failed" in str(e):
+                        self.console.print(
+                            f"🔄 {currency_pair} キャッシュ無効、直接計算実行"
+                        )
+                    else:
+                        self.console.print(
+                            f"⚠️ キャッシュ無効化エラー（分析は継続）: {str(e)}"
+                        )
+                        self.console.print(f"🔄 {currency_pair} 強制再計算実行")
+            else:
+                self.console.print(f"🔄 {currency_pair} キャッシュ無効、直接計算実行")
 
             # 複数期間の履歴データ取得（最適化版）
             timeframes = {
@@ -193,6 +450,7 @@ class IntegratedAIDiscordReporter:
                         bb_result = self.technical_analyzer.calculate_bollinger_bands(
                             hist_data, tf
                         )
+                        indicators_data[f"{tf}_BB"] = bb_result
 
                         # 移動平均線計算（時間軸別に異なる期間）
                         if tf == "D1":
@@ -269,7 +527,8 @@ class IntegratedAIDiscordReporter:
                                 signal_line, (int, float)
                             ):
                                 self.console.print(
-                                    f"✅ {tf}: MACD={macd_line:.4f}, Signal={signal_line:.4f}, Hist={histogram:.4f}"
+                                    f"✅ {tf}: MACD={macd_line:.4f}, "
+                                    f"Signal={signal_line:.4f}, Hist={histogram:.4f}"
                                 )
 
                         # ボリンジャーバンド出力
@@ -281,7 +540,8 @@ class IntegratedAIDiscordReporter:
                             middle_band, (int, float)
                         ):
                             self.console.print(
-                                f"✅ {tf}: BB Upper={upper_band:.4f}, Middle={middle_band:.4f}, Lower={lower_band:.4f}"
+                                f"✅ {tf}: BB Upper={upper_band:.4f}, "
+                                f"Middle={middle_band:.4f}, Lower={lower_band:.4f}"
                             )
 
                         # 移動平均線出力
@@ -335,6 +595,29 @@ class IntegratedAIDiscordReporter:
                                     self.console.print(
                                         f"✅ {tf}: MA20={ma_short_val:.4f}"
                                     )
+
+                        # フィボナッチ分析追加
+                        fib_result = (
+                            self.fibonacci_analyzer.calculate_fibonacci_analysis(
+                                hist_data, tf
+                            )
+                        )
+                        indicators_data[f"{tf}_FIB"] = fib_result
+
+                        # フィボナッチ出力
+                        if "error" not in fib_result:
+                            swing_high = fib_result.get("swing_high", "N/A")
+                            swing_low = fib_result.get("swing_low", "N/A")
+                            if isinstance(swing_high, (int, float)) and isinstance(
+                                swing_low, (int, float)
+                            ):
+                                self.console.print(
+                                    f"✅ {tf}: Fib High={swing_high:.4f}, "
+                                    f"Low={swing_low:.4f}"
+                                )
+                        else:
+                            self.console.print(f"⚠️ {tf}: フィボナッチ計算エラー")
+
                     else:
                         self.console.print(f"❌ {tf}: 履歴データ取得失敗")
             else:
@@ -370,6 +653,7 @@ class IntegratedAIDiscordReporter:
                         bb_result = self.technical_analyzer.calculate_bollinger_bands(
                             hist_data, tf
                         )
+                        indicators_data[f"{tf}_BB"] = bb_result
 
                         # 移動平均線計算（時間軸別に異なる期間）
                         if tf == "D1":
@@ -512,17 +796,46 @@ class IntegratedAIDiscordReporter:
                                     self.console.print(
                                         f"✅ {tf}: MA20={ma_short_val:.4f}"
                                     )
+
+                        # フィボナッチ出力（フォールバック部分）
+                        if f"{tf}_FIB" in indicators_data:
+                            fib_data = indicators_data[f"{tf}_FIB"]
+                            if "error" not in fib_data:
+                                swing_high = fib_data.get("swing_high", "N/A")
+                                swing_low = fib_data.get("swing_low", "N/A")
+                                if isinstance(swing_high, (int, float)) and isinstance(
+                                    swing_low, (int, float)
+                                ):
+                                    self.console.print(
+                                        f"✅ {tf}: Fib High={swing_high:.4f}, Low={swing_low:.4f}"
+                                    )
+                            else:
+                                self.console.print(f"⚠️ {tf}: フィボナッチ計算エラー")
+
                     else:
                         self.console.print(f"❌ {tf}: 履歴データ取得失敗")
 
-            # 結果をキャッシュに保存
+            # 結果をキャッシュに保存（データベース接続エラーを考慮）
             if indicators_data and self.analysis_cache:
-                await self.analysis_cache.set_analysis(
-                    "technical_indicators",
-                    currency_pair,
-                    indicators_data,
-                    "multi_timeframe",
-                )
+                try:
+                    await self.analysis_cache.set_analysis(
+                        "technical_indicators",
+                        currency_pair,
+                        indicators_data,
+                        "multi_timeframe",
+                    )
+                    self.console.print(f"✅ {currency_pair} キャッシュ保存成功")
+                except Exception as e:
+                    # データベース接続エラーの場合は詳細を表示しない
+                    if "Connect call failed" in str(e):
+                        self.console.print(
+                            f"✅ {currency_pair} 分析完了（キャッシュ無効）"
+                        )
+                    else:
+                        self.console.print(
+                            f"⚠️ キャッシュ保存エラー（分析は継続）: {str(e)}"
+                        )
+                    # キャッシュエラーでも分析結果は返す
 
             return indicators_data if indicators_data else None
 
@@ -563,177 +876,229 @@ class IntegratedAIDiscordReporter:
         day_high = usdjpy_data.get("day_high", current_rate)
         day_low = usdjpy_data.get("day_low", current_rate)
 
-        # テクニカル指標データを文字列化
-        technical_info = ""
+        # テクニカル指標データを文字列化（プロンプト用に簡潔化）
+        technical_summary = ""
         if technical_data:
-            technical_info = "\n【USD/JPYテクニカル指標】"
-            for key, data in technical_data.items():
-                if isinstance(data, dict):
-                    if "RSI_LONG" in key:
-                        rsi_val = data.get("current_value", "N/A")
-                        rsi_state = data.get("state", "N/A")
-                        if isinstance(rsi_val, (int, float)):
-                            technical_info += (
-                                f"\n{key}: RSI70={rsi_val:.1f} ({rsi_state})"
+            # D1分析サマリー
+            d1_summary = []
+            if "D1_MA_LONG" in technical_data:
+                ma_long = technical_data["D1_MA_LONG"].get("ma_long", "N/A")
+                if isinstance(ma_long, (int, float)):
+                    d1_summary.append(f"MA200: {ma_long:.4f}")
+
+            if "D1_MA_MEDIUM" in technical_data:
+                ma_medium = technical_data["D1_MA_MEDIUM"].get("ma_medium", "N/A")
+                if isinstance(ma_medium, (int, float)):
+                    d1_summary.append(f"MA50: {ma_medium:.4f}")
+
+            if "D1_RSI_LONG" in technical_data:
+                rsi_long = technical_data["D1_RSI_LONG"].get("current_value", "N/A")
+                if isinstance(rsi_long, (int, float)):
+                    d1_summary.append(f"RSI70: {rsi_long:.1f}")
+
+            if "D1_MACD" in technical_data:
+                macd_line = technical_data["D1_MACD"].get("macd_line", "N/A")
+                if isinstance(macd_line, (int, float)):
+                    d1_summary.append(f"MACD: {macd_line:.4f}")
+
+            if "D1_BB" in technical_data:
+                bb_upper = technical_data["D1_BB"].get("upper_band", "N/A")
+                bb_lower = technical_data["D1_BB"].get("lower_band", "N/A")
+                if isinstance(bb_upper, (int, float)) and isinstance(
+                    bb_lower, (int, float)
+                ):
+                    d1_summary.append(
+                        f"BB Upper: {bb_upper:.4f}, Lower: {bb_lower:.4f}"
+                    )
+
+            # フィボナッチ分析サマリー（D1）
+            if "D1_FIB" in technical_data:
+                d1_fib = technical_data["D1_FIB"]
+                if "error" not in d1_fib:
+                    swing_high = d1_fib.get("swing_high", "N/A")
+                    swing_low = d1_fib.get("swing_low", "N/A")
+                    current_position = d1_fib.get("current_position", {})
+                    if isinstance(swing_high, (int, float)) and isinstance(
+                        swing_low, (int, float)
+                    ):
+                        position_info = ""
+                        if isinstance(current_position, dict):
+                            percentage = current_position.get("percentage", "N/A")
+                            nearest_level = current_position.get("nearest_level", "N/A")
+                            position_info = (
+                                f" (現在位置: {percentage}%, 最寄り: {nearest_level})"
                             )
-                        else:
-                            technical_info += f"\n{key}: RSI70={rsi_val} ({rsi_state})"
-                    elif "RSI_MEDIUM" in key:
-                        rsi_val = data.get("current_value", "N/A")
-                        rsi_state = data.get("state", "N/A")
-                        if isinstance(rsi_val, (int, float)):
-                            technical_info += (
-                                f"\n{key}: RSI50={rsi_val:.1f} ({rsi_state})"
+                        d1_summary.append(
+                            f"Fib High: {swing_high:.4f}, "
+                            f"Low: {swing_low:.4f}{position_info}"
+                        )
+
+            # H4分析サマリー
+            h4_summary = []
+            if "H4_MA_MEDIUM" in technical_data:
+                h4_ma_medium = technical_data["H4_MA_MEDIUM"].get("ma_medium", "N/A")
+                if isinstance(h4_ma_medium, (int, float)):
+                    h4_summary.append(f"MA50: {h4_ma_medium:.4f}")
+
+            if "H4_RSI_LONG" in technical_data:
+                h4_rsi_long = technical_data["H4_RSI_LONG"].get("current_value", "N/A")
+                if isinstance(h4_rsi_long, (int, float)):
+                    h4_summary.append(f"RSI70: {h4_rsi_long:.1f}")
+
+            # フィボナッチ分析サマリー（H4）
+            if "H4_FIB" in technical_data:
+                h4_fib = technical_data["H4_FIB"]
+                if "error" not in h4_fib:
+                    swing_high = h4_fib.get("swing_high", "N/A")
+                    swing_low = h4_fib.get("swing_low", "N/A")
+                    current_position = h4_fib.get("current_position", {})
+                    if isinstance(swing_high, (int, float)) and isinstance(
+                        swing_low, (int, float)
+                    ):
+                        position_info = ""
+                        if isinstance(current_position, dict):
+                            percentage = current_position.get("percentage", "N/A")
+                            nearest_level = current_position.get("nearest_level", "N/A")
+                            position_info = (
+                                f" (現在位置: {percentage}%, 最寄り: {nearest_level})"
                             )
-                        else:
-                            technical_info += f"\n{key}: RSI50={rsi_val} ({rsi_state})"
-                    elif "RSI_SHORT" in key:
-                        rsi_val = data.get("current_value", "N/A")
-                        rsi_state = data.get("state", "N/A")
-                        if isinstance(rsi_val, (int, float)):
-                            technical_info += (
-                                f"\n{key}: RSI30={rsi_val:.1f} ({rsi_state})"
+                        h4_summary.append(
+                            f"Fib High: {swing_high:.4f}, "
+                            f"Low: {swing_low:.4f}{position_info}"
+                        )
+
+            # H1分析サマリー
+            h1_summary = []
+            if "H1_MA_SHORT" in technical_data:
+                h1_ma_short = technical_data["H1_MA_SHORT"].get("ma_short", "N/A")
+                if isinstance(h1_ma_short, (int, float)):
+                    h1_summary.append(f"MA20: {h1_ma_short:.4f}")
+
+            if "H1_RSI_LONG" in technical_data:
+                h1_rsi_long = technical_data["H1_RSI_LONG"].get("current_value", "N/A")
+                if isinstance(h1_rsi_long, (int, float)):
+                    h1_summary.append(f"RSI70: {h1_rsi_long:.1f}")
+
+            # フィボナッチ分析サマリー（H1）
+            if "H1_FIB" in technical_data:
+                h1_fib = technical_data["H1_FIB"]
+                if "error" not in h1_fib:
+                    swing_high = h1_fib.get("swing_high", "N/A")
+                    swing_low = h1_fib.get("swing_low", "N/A")
+                    current_position = h1_fib.get("current_position", {})
+                    if isinstance(swing_high, (int, float)) and isinstance(
+                        swing_low, (int, float)
+                    ):
+                        position_info = ""
+                        if isinstance(current_position, dict):
+                            percentage = current_position.get("percentage", "N/A")
+                            nearest_level = current_position.get("nearest_level", "N/A")
+                            position_info = (
+                                f" (現在位置: {percentage}%, 最寄り: {nearest_level})"
                             )
-                        else:
-                            technical_info += f"\n{key}: RSI30={rsi_val} ({rsi_state})"
-                    elif "MACD" in key:
-                        macd_line = data.get("macd_line", "N/A")
-                        signal_line = data.get("signal_line", "N/A")
-                        cross_signal = data.get("cross_signal", "N/A")
-                        if isinstance(macd_line, (int, float)) and isinstance(
-                            signal_line, (int, float)
-                        ):
-                            technical_info += (
-                                f"\n{key}: MACD={macd_line:.4f}, "
-                                f"Signal={signal_line:.4f}, Cross={cross_signal}"
+                        h1_summary.append(
+                            f"Fib High: {swing_high:.4f}, "
+                            f"Low: {swing_low:.4f}{position_info}"
+                        )
+
+            # M5分析サマリー
+            m5_summary = []
+            if "M5_MA_SHORT" in technical_data:
+                m5_ma_short = technical_data["M5_MA_SHORT"].get("ma_short", "N/A")
+                if isinstance(m5_ma_short, (int, float)):
+                    m5_summary.append(f"MA20: {m5_ma_short:.4f}")
+
+            if "M5_RSI_LONG" in technical_data:
+                m5_rsi_long = technical_data["M5_RSI_LONG"].get("current_value", "N/A")
+                if isinstance(m5_rsi_long, (int, float)):
+                    m5_summary.append(f"RSI70: {m5_rsi_long:.1f}")
+
+            # フィボナッチ分析サマリー（M5）
+            if "M5_FIB" in technical_data:
+                m5_fib = technical_data["M5_FIB"]
+                if "error" not in m5_fib:
+                    swing_high = m5_fib.get("swing_high", "N/A")
+                    swing_low = m5_fib.get("swing_low", "N/A")
+                    current_position = m5_fib.get("current_position", {})
+                    if isinstance(swing_high, (int, float)) and isinstance(
+                        swing_low, (int, float)
+                    ):
+                        position_info = ""
+                        if isinstance(current_position, dict):
+                            percentage = current_position.get("percentage", "N/A")
+                            nearest_level = current_position.get("nearest_level", "N/A")
+                            position_info = (
+                                f" (現在位置: {percentage}%, 最寄り: {nearest_level})"
                             )
-                        else:
-                            technical_info += (
-                                f"\n{key}: MACD={macd_line}, "
-                                f"Signal={signal_line}, Cross={cross_signal}"
-                            )
-                    elif "BB" in key:
-                        bb_position = data.get("band_position", "N/A")
-                        bb_signal = data.get("band_walk", "N/A")
-                        technical_info += f"\n{key}: {bb_position} ({bb_signal})"
-                    elif "MA_LONG" in key:
-                        ma_long_val = data.get("ma_long", "N/A")
-                        ma_position = data.get("ma_position", "N/A")
-                        if isinstance(ma_long_val, (int, float)):
-                            technical_info += (
-                                f"\n{key}: MA200={ma_long_val:.4f} ({ma_position})"
-                            )
-                        else:
-                            technical_info += (
-                                f"\n{key}: MA200={ma_long_val} ({ma_position})"
-                            )
-                    elif "MA_MEDIUM" in key:
-                        ma_medium_val = data.get("ma_medium", "N/A")
-                        ma_position = data.get("ma_position", "N/A")
-                        if isinstance(ma_medium_val, (int, float)):
-                            technical_info += (
-                                f"\n{key}: MA50={ma_medium_val:.4f} ({ma_position})"
-                            )
-                        else:
-                            technical_info += (
-                                f"\n{key}: MA50={ma_medium_val} ({ma_position})"
-                            )
-                    elif "MA_SHORT" in key:
-                        ma_short_val = data.get("ma_short", "N/A")
-                        ma_position = data.get("ma_position", "N/A")
-                        if isinstance(ma_short_val, (int, float)):
-                            technical_info += (
-                                f"\n{key}: MA20={ma_short_val:.4f} ({ma_position})"
-                            )
-                        else:
-                            technical_info += (
-                                f"\n{key}: MA20={ma_short_val} ({ma_position})"
-                            )
+                        m5_summary.append(
+                            f"Fib High: {swing_high:.4f}, "
+                            f"Low: {swing_low:.4f}{position_info}"
+                        )
+
+            # 統合サマリー
+            technical_summary = f"""
+D1 (Daily): {', '.join(d1_summary)}
+H4 (4H): {', '.join(h4_summary)}
+H1 (1H): {', '.join(h1_summary)}
+M5 (5M): {', '.join(m5_summary)}
+"""
 
         # 統合分析プロンプト作成
         prompt = f"""
-あなたは経験豊富なプロFXトレーダーかつ親切な投資教育者です。
-FX初学者にも理解できるよう、専門用語には必ず説明を付けながら、
-通貨間の相関性とテクニカル指標を活用した統合分析に基づいて、
-USD/JPY の実践的な売買シナリオを作成してください。
+あなたはプロFXトレーダーです。
+通貨間の相関性とテクニカル指標を活用した統合分析に基づいて、USD/JPYの「負けないトレード」を目指した売買シナリオを2000文字以内で作成してください。
+特に、上昇トレンドでの押し目買いまたは下降トレンドでの押し目売りを優先し、損切り幅を小さく、リスクリワード比率を1:2以上に設定してください。
+以下のデータを基に、USD/JPYの売買シナリオを分析してください。
 
-【統合相関分析結果】
+【データ】
 分析時刻: {current_time}
+現在レート: {current_rate:.4f}
+日中高値: {day_high:.4f}
+日中安値: {day_low:.4f}
+EUR/USD: {eurusd_data.get('rate', 'N/A')} \
+({eurusd_data.get('market_change_percent', 'N/A')}%)
+GBP/USD: {gbpusd_data.get('rate', 'N/A')} \
+({gbpusd_data.get('market_change_percent', 'N/A')}%)
+EUR/JPY: {eurjpy_data.get('rate', 'N/A')} \
+({eurjpy_data.get('market_change_percent', 'N/A')}%)
+GBP/JPY: {gbpjpy_data.get('rate', 'N/A')} \
+({gbpjpy_data.get('market_change_percent', 'N/A')}%)
 
-◆ USD/JPY メイン通貨ペア
-現在レート: {current_rate}
-            変動: {usdjpy_data.get('market_change', 'N/A')} "
-            f"({usdjpy_data.get('market_change_percent', 'N/A')}%)"
-日中高値: {day_high}
-日中安値: {day_low}{technical_info}
+USD分析: {usd_analysis.get('direction', 'N/A')} \
+(信頼度{usd_analysis.get('confidence', 'N/A')}%)
+JPY分析: {jpy_analysis.get('direction', 'N/A')} \
+(信頼度{jpy_analysis.get('confidence', 'N/A')}%)
+統合予測: {usdjpy_forecast.get('forecast_direction', 'N/A')} \
+(信頼度{usdjpy_forecast.get('forecast_confidence', 'N/A')}%)
 
-◆ USD強弱分析
-            方向性: {usd_analysis.get('direction', 'N/A')} "
-            f"(信頼度{usd_analysis.get('confidence', 'N/A')}%)"
-サポート要因: {', '.join(usd_analysis.get('supporting_pairs', []))}
-リスク要因: {', '.join(usd_analysis.get('conflicting_pairs', []))}
-            EUR/USD: {eurusd_data.get('rate', 'N/A')} "
-            f"({eurusd_data.get('market_change_percent', 'N/A')}%)"
-            f"GBP/USD: {gbpusd_data.get('rate', 'N/A')} "
-            f"({gbpusd_data.get('market_change_percent', 'N/A')}%)"
+{correlation_data}
 
-◆ JPY強弱分析
-            方向性: {jpy_analysis.get('direction', 'N/A')} "
-            f"(信頼度{jpy_analysis.get('confidence', 'N/A')}%)"
-サポート要因: {', '.join(jpy_analysis.get('supporting_pairs', []))}
-リスク要因: {', '.join(jpy_analysis.get('conflicting_pairs', []))}
-            EUR/JPY: {eurjpy_data.get('rate', 'N/A')} "
-            f"({eurjpy_data.get('market_change_percent', 'N/A')}%)"
-            f"GBP/JPY: {gbpjpy_data.get('rate', 'N/A')} "
-            f"({gbpjpy_data.get('market_change_percent', 'N/A')}%)"
+{technical_summary}
 
-◆ 統合予測
-            予測方向: {usdjpy_forecast.get('forecast_direction', 'N/A')} "
-            f"(信頼度{usdjpy_forecast.get('forecast_confidence', 'N/A')}%)"
-戦略バイアス: {usdjpy_forecast.get('strategy_bias', 'N/A')}
-トレンド整合: {usdjpy_forecast.get('trend_alignment', 'N/A')}
-相関要因: {', '.join(usdjpy_forecast.get('forecast_factors', []))}
-
-【トレード戦略ルール】
-1. D1・H4で方向性（売買方針）を固定
-2. H1でゾーンと反発・継続サインを探す
-3. M5でタイミングを絞る（過熱・反発・形状確認）
-4. ダイバージェンスは警戒信号として活用
-5. シナリオ外（急騰・急落）のケースも1パターン事前に想定に含める。
-6. 予測信頼度も考慮し、「待ち」というシナリオも想定する。
-
-【戦略要求】
-上記の通貨相関分析とテクニカル指標を踏まえ、以下の形式で1024文字以内の売買シナリオを作成。
-
-情報の優先順位はテクニカル指標・分析です。通貨の相関関係は補強資料として扱うこと。
-サポートラインや抵抗線、フィボナッチリトレースメント、チャネル、ボリンジャーバンドなどのテクニカル指標を活用してください。
-また、テクニカル指標の数値は具体的に示してください。
-pipsは0.01円=1pipです。
-価格は○○.○○○のように具体的な3桁価格で示してください。：
+【指示】
+以下の5つのセクションで分析してください：
 
 【相関分析】他通貨の動きから見るUSD/JPY方向性
-【大局観】D1・H4マルチタイムフレーム分析（※テクニカル指標含む）
-  - D1: 長期トレンド（MA200、MA50）、MACD、RSI
-  - H4: 中期トレンド（MA50、MA20）、ボリンジャーバンド
+【大局観】D1・H4マルチタイムフレーム分析  
 【戦術】H1エントリーゾーン・タイミング分析
-  - H1: 短期トレンド（MA20）、RSI、ボリンジャーバンド
 【タイミング】M5エントリーポイント
-  - M5: 短期トレンド（MA20）、RSI
-【統合シナリオ】相関性とテクニカル指標を考慮した売買戦略・具体的価格指示
- ・エントリー価格: ○○.○○○〜○○.○○○
- ・利確目標: ○○.○○○（〇〇〜〇〇pips※利益）
- ・損切り価格: ○○.○○○（〇〇pips※損失）
- 今のトレードの目的や時間軸によって利確、または損切り価格を決め、直近の安値/高値や移動平均線/ボリンジャーバンドの基準線などの根拠や理由を明記してください。
+  - M5: 精密タイミング
+    * MA20とボリンジャーバンドの短期動向
+    * RSI値による最終エントリー判定
+    * H1のMA20の動向
+    * H1のフィボナッチレベルでの押し目・戻り確認
+    * 過熱感の確認
+【統合シナリオ】具体的価格指示
+    ・エントリー価格: ○○.○○○〜○○.○○○（根拠: M5のMA20とボリンジャーバンドの短期動向・MA20とMA200の長期動向・H1のフィボナッチレベルでの押し目・戻り確認）
+    ・利確目標: ○○.○○○（〇〇pips利益、根拠: MAやD1・H4・H1のフィボナッチレベル、サポート・レジスタンス）
+    ・損切り価格: ○○.○○○（〇〇pips損失、根拠: MAやD1・H4・H1のフィボナッチレベル）
+    ・段階的利確: 第一目標○○.○○○、第二目標○○.○○○
 
-※専門用語解説：
-・pips: 通貨ペアの最小価格単位（USD/JPYなら0.01円=1pip）
-・ダイバージェンス: 価格とテクニカル指標の動きが逆行する現象
-・移動平均線: 過去の価格の平均値を示すトレンド指標
-・その他専門用語があれば簡潔に説明
-
-「EUR/USDがこうだから」「クロス円がこうだから」「テクニカル指標がこうだから」"
-            f"「だからUSD/JPYはこう動く可能性が高い」という統合的で根拠のある分析を重視し、"
-            f"必ず具体的な価格（小数点以下3桁）とpips数を明記してください。"
+**重要**:
+- 現在価格での即座エントリーではなく、押し目・戻りを待つ
+- リスクリワード比率1:2以上
+- 具体的な価格とpips数を明記
+- フィボナッチレベルを「サポートライン」「レジスタンスライン」として説明
 """
 
         try:
@@ -866,6 +1231,119 @@ pipsは0.01円=1pipです。
             color = 0xFFFF00  # 黄色
             trend_emoji = "🔄"
 
+        # AI分析結果をそのまま使用（フィールド分割で処理）
+        analysis_summary = analysis
+
+        # 分析結果を複数のフィールドに分割
+        fields = [
+            {
+                "name": "💱 USD/JPY レート",
+                "value": f"**{current_rate:.4f}** ({current_change:+.2f}%)",
+                "inline": True,
+            },
+            {
+                "name": "🎯 戦略バイアス",
+                "value": f"**{strategy_bias}**",
+                "inline": True,
+            },
+            {
+                "name": "📊 予測信頼度",
+                "value": f"**{forecast_confidence}%**",
+                "inline": True,
+            },
+            {
+                "name": "💵 USD分析",
+                "value": (
+                    f"{usd_analysis.get('direction', 'N/A')} "
+                    f"({usd_analysis.get('confidence', 0)}%)"
+                ),
+                "inline": True,
+            },
+            {
+                "name": "💴 JPY分析",
+                "value": (
+                    f"{jpy_analysis.get('direction', 'N/A')} "
+                    f"({jpy_analysis.get('confidence', 0)}%)"
+                ),
+                "inline": True,
+            },
+            {
+                "name": "🔗 相関要因",
+                "value": ", ".join(
+                    usdjpy_forecast.get("forecast_factors", ["N/A"])[:2]
+                ),  # 最大2個
+                "inline": True,
+            },
+        ]
+
+        # 分析結果を複数のフィールドに分割（各1024文字以内）
+        if len(analysis_summary) > 1024:
+            # 重要なセクションを抽出して分割
+            sections = []
+            if "【統合シナリオ】" in analysis_summary:
+                scenario_start = analysis_summary.find("【統合シナリオ】")
+                # 【統合シナリオ】は最後のセクションなので、次のセクションを探す
+                scenario_end = analysis_summary.find("【", scenario_start + 1)
+                if scenario_end == -1:
+                    # 次のセクションがない場合、テクニカルサマリーの開始位置を探す
+                    tech_summary_start = analysis_summary.find("📊 テクニカルサマリー")
+                    if tech_summary_start != -1:
+                        scenario_end = tech_summary_start
+                    else:
+                        scenario_end = len(analysis_summary)
+                scenario_text = analysis_summary[scenario_start:scenario_end]
+                # 【統合シナリオ】のタイトルを除去して内容のみを取得
+                if scenario_text.startswith("【統合シナリオ】"):
+                    scenario_text = scenario_text[len("【統合シナリオ】") :].strip()
+                if len(scenario_text) > 1024:
+                    scenario_text = scenario_text[:1024] + "..."
+                sections.append(("🎯 統合シナリオ", scenario_text))
+
+            if "【戦術】" in analysis_summary:
+                tactics_start = analysis_summary.find("【戦術】")
+                tactics_end = analysis_summary.find("【", tactics_start + 1)
+                if tactics_end == -1:
+                    tactics_end = len(analysis_summary)
+                tactics_text = analysis_summary[tactics_start:tactics_end]
+                # 【戦術】のタイトルを除去して内容のみを取得
+                if tactics_text.startswith("【戦術】"):
+                    tactics_text = tactics_text[len("【戦術】") :].strip()
+                if len(tactics_text) > 1024:
+                    tactics_text = tactics_text[:1024] + "..."
+                sections.append(("⚡ 戦術分析", tactics_text))
+
+            if "【大局観】" in analysis_summary:
+                overview_start = analysis_summary.find("【大局観】")
+                overview_end = analysis_summary.find("【", overview_start + 1)
+                if overview_end == -1:
+                    overview_end = len(analysis_summary)
+                overview_text = analysis_summary[overview_start:overview_end]
+                # 【大局観】のタイトルを除去して内容のみを取得
+                if overview_text.startswith("【大局観】"):
+                    overview_text = overview_text[len("【大局観】") :].strip()
+                if len(overview_text) > 1024:
+                    overview_text = overview_text[:1024] + "..."
+                sections.append(("📊 大局観", overview_text))
+
+            # セクションをフィールドに追加
+            for section_name, section_text in sections:
+                fields.append(
+                    {
+                        "name": section_name,
+                        "value": section_text,
+                        "inline": False,
+                    }
+                )
+        else:
+            # 短い場合は1つのフィールドに
+            fields.append(
+                {
+                    "name": "🎯 統合売買シナリオ",
+                    "value": analysis_summary,
+                    "inline": False,
+                }
+            )
+
         embed_data = {
             "content": f"{trend_emoji} **🎯 USD/JPY統合相関戦略**",
             "embeds": [
@@ -873,51 +1351,7 @@ pipsは0.01円=1pipです。
                     "title": "🔗 Integrated Currency Correlation Strategy",
                     "description": "通貨間相関性を活用したUSD/JPY売買シナリオ",
                     "color": color,
-                    "fields": [
-                        {
-                            "name": "💱 USD/JPY レート",
-                            "value": f"**{current_rate:.4f}** ({current_change:+.2f}%)",
-                            "inline": True,
-                        },
-                        {
-                            "name": "🎯 戦略バイアス",
-                            "value": f"**{strategy_bias}**",
-                            "inline": True,
-                        },
-                        {
-                            "name": "📊 予測信頼度",
-                            "value": f"**{forecast_confidence}%**",
-                            "inline": True,
-                        },
-                        {
-                            "name": "💵 USD分析",
-                            "value": (
-                                f"{usd_analysis.get('direction', 'N/A')} "
-                                f"({usd_analysis.get('confidence', 0)}%)"
-                            ),
-                            "inline": True,
-                        },
-                        {
-                            "name": "💴 JPY分析",
-                            "value": (
-                                f"{jpy_analysis.get('direction', 'N/A')} "
-                                f"({jpy_analysis.get('confidence', 0)}%)"
-                            ),
-                            "inline": True,
-                        },
-                        {
-                            "name": "🔗 相関要因",
-                            "value": ", ".join(
-                                usdjpy_forecast.get("forecast_factors", ["N/A"])[:2]
-                            ),  # 最大2個
-                            "inline": True,
-                        },
-                        {
-                            "name": "🎯 統合売買シナリオ",
-                            "value": analysis[:1000],  # Discord制限（1000文字）
-                            "inline": False,
-                        },
-                    ],
+                    "fields": fields,
                     "footer": {
                         "text": (
                             "Integrated Currency Correlation Analysis | "
@@ -988,7 +1422,9 @@ pipsは0.01円=1pipです。
 
         except Exception as e:
             error_details = traceback.format_exc()
-            error_msg = f"❌ 統合レポート生成・配信エラー: {str(e)}\n詳細: {error_details}"
+            error_msg = (
+                f"❌ 統合レポート生成・配信エラー: {str(e)}\n詳細: {error_details}"
+            )
             self.console.print(error_msg)
 
             # エラー通知をDiscordに送信
@@ -1034,8 +1470,12 @@ async def main():
     parser = argparse.ArgumentParser(
         description="Integrated AI Discord Reporter (Optimized)"
     )
-    parser.add_argument("--test", action="store_true", help="テストモード（Discordに送信しない）")
-    parser.add_argument("--no-optimization", action="store_true", help="最適化機能を無効にする")
+    parser.add_argument(
+        "--test", action="store_true", help="テストモード（Discordに送信しない）"
+    )
+    parser.add_argument(
+        "--no-optimization", action="store_true", help="最適化機能を無効にする"
+    )
 
     args = parser.parse_args()
 
@@ -1082,14 +1522,285 @@ async def main():
             if analysis:
                 reporter.console.print("📋 統合AI分析結果:")
                 reporter.console.print(f"[cyan]{analysis}[/cyan]")
+            else:
+                reporter.console.print("⚠️ AI分析はスキップ（API制限のため）")
+
+            # technical_summaryの表示（テスト用）
+            if technical_data:
+                reporter.console.print("\n📊 テクニカルサマリー（AIプロンプト用）:")
+                # technical_summaryの生成（generate_integrated_analysisメソッドの一部を再現）
+                technical_summary = ""
+                if technical_data:
+                    # D1分析サマリー
+                    d1_summary = []
+                    if "D1_MA_LONG" in technical_data:
+                        ma_long = technical_data["D1_MA_LONG"].get("ma_long", "N/A")
+                        if isinstance(ma_long, (int, float)):
+                            d1_summary.append(f"MA200: {ma_long:.4f}")
+                    if "D1_MA_MEDIUM" in technical_data:
+                        ma_medium = technical_data["D1_MA_MEDIUM"].get(
+                            "ma_medium", "N/A"
+                        )
+                        if isinstance(ma_medium, (int, float)):
+                            d1_summary.append(f"MA50: {ma_medium:.4f}")
+                    if "D1_FIB" in technical_data:
+                        d1_fib = technical_data["D1_FIB"]
+                        if "error" not in d1_fib:
+                            swing_high = d1_fib.get("swing_high", "N/A")
+                            swing_low = d1_fib.get("swing_low", "N/A")
+                            current_position = d1_fib.get("current_position", {})
+                            if isinstance(swing_high, (int, float)) and isinstance(
+                                swing_low, (int, float)
+                            ):
+                                position_info = ""
+                                if isinstance(current_position, dict):
+                                    percentage = current_position.get(
+                                        "percentage", "N/A"
+                                    )
+                                    nearest_level = current_position.get(
+                                        "nearest_level", "N/A"
+                                    )
+                                    # 各フィボナッチレベルの価格を表示（サポート/レジスタンス分類）
+                                    levels_info = ""
+                                    if "levels" in d1_fib:
+                                        levels = d1_fib["levels"]
+                                        current_price = d1_fib.get("current_price", 0)
+                                        if isinstance(levels, dict):
+                                            support_levels = []
+                                            resistance_levels = []
+
+                                            for (
+                                                level_name,
+                                                level_price,
+                                            ) in levels.items():
+                                                if isinstance(
+                                                    level_price, (int, float)
+                                                ):
+                                                    if level_price < current_price:
+                                                        support_levels.append(
+                                                            f"{level_name}: {level_price:.4f}"
+                                                        )
+                                                    else:
+                                                        resistance_levels.append(
+                                                            f"{level_name}: {level_price:.4f}"
+                                                        )
+
+                                            if support_levels:
+                                                levels_info += f" | サポート: {', '.join(support_levels)}"
+                                            if resistance_levels:
+                                                levels_info += f" | レジスタンス: {', '.join(resistance_levels)}"
+                                    position_info = (
+                                        f" (現在位置: {percentage}%){levels_info}"
+                                    )
+                                d1_summary.append(
+                                    f"Fib High: {swing_high:.4f}, Low: {swing_low:.4f}{position_info}"
+                                )
+
+                    # H4分析サマリー
+                    h4_summary = []
+                    if "H4_FIB" in technical_data:
+                        h4_fib = technical_data["H4_FIB"]
+                        if "error" not in h4_fib:
+                            swing_high = h4_fib.get("swing_high", "N/A")
+                            swing_low = h4_fib.get("swing_low", "N/A")
+                            current_position = h4_fib.get("current_position", {})
+                            if isinstance(swing_high, (int, float)) and isinstance(
+                                swing_low, (int, float)
+                            ):
+                                position_info = ""
+                                if isinstance(current_position, dict):
+                                    percentage = current_position.get(
+                                        "percentage", "N/A"
+                                    )
+                                    # 各フィボナッチレベルの価格を表示（サポート/レジスタンス分類）
+                                    levels_info = ""
+                                    if "levels" in h4_fib:
+                                        levels = h4_fib["levels"]
+                                        current_price = h4_fib.get("current_price", 0)
+                                        if isinstance(levels, dict):
+                                            support_levels = []
+                                            resistance_levels = []
+
+                                            for (
+                                                level_name,
+                                                level_price,
+                                            ) in levels.items():
+                                                if isinstance(
+                                                    level_price, (int, float)
+                                                ):
+                                                    if level_price < current_price:
+                                                        support_levels.append(
+                                                            f"{level_name}: {level_price:.4f}"
+                                                        )
+                                                    else:
+                                                        resistance_levels.append(
+                                                            f"{level_name}: {level_price:.4f}"
+                                                        )
+
+                                            if support_levels:
+                                                levels_info += f" | サポート: {', '.join(support_levels)}"
+                                            if resistance_levels:
+                                                levels_info += f" | レジスタンス: {', '.join(resistance_levels)}"
+                                    position_info = (
+                                        f" (現在位置: {percentage}%){levels_info}"
+                                    )
+                                h4_summary.append(
+                                    f"Fib High: {swing_high:.4f}, Low: {swing_low:.4f}{position_info}"
+                                )
+
+                    # H1分析サマリー
+                    h1_summary = []
+                    if "H1_FIB" in technical_data:
+                        h1_fib = technical_data["H1_FIB"]
+                        if "error" not in h1_fib:
+                            swing_high = h1_fib.get("swing_high", "N/A")
+                            swing_low = h1_fib.get("swing_low", "N/A")
+                            current_position = h1_fib.get("current_position", {})
+                            if isinstance(swing_high, (int, float)) and isinstance(
+                                swing_low, (int, float)
+                            ):
+                                position_info = ""
+                                if isinstance(current_position, dict):
+                                    percentage = current_position.get(
+                                        "percentage", "N/A"
+                                    )
+                                    # 各フィボナッチレベルの価格を表示（サポート/レジスタンス分類）
+                                    levels_info = ""
+                                    if "levels" in h1_fib:
+                                        levels = h1_fib["levels"]
+                                        current_price = h1_fib.get("current_price", 0)
+                                        if isinstance(levels, dict):
+                                            support_levels = []
+                                            resistance_levels = []
+
+                                            for (
+                                                level_name,
+                                                level_price,
+                                            ) in levels.items():
+                                                if isinstance(
+                                                    level_price, (int, float)
+                                                ):
+                                                    if level_price < current_price:
+                                                        support_levels.append(
+                                                            f"{level_name}: {level_price:.4f}"
+                                                        )
+                                                    else:
+                                                        resistance_levels.append(
+                                                            f"{level_name}: {level_price:.4f}"
+                                                        )
+
+                                            if support_levels:
+                                                levels_info += f" | サポート: {', '.join(support_levels)}"
+                                            if resistance_levels:
+                                                levels_info += f" | レジスタンス: {', '.join(resistance_levels)}"
+                                    position_info = (
+                                        f" (現在位置: {percentage}%){levels_info}"
+                                    )
+                                h1_summary.append(
+                                    f"Fib High: {swing_high:.4f}, Low: {swing_low:.4f}{position_info}"
+                                )
+
+                    # M5分析サマリー
+                    m5_summary = []
+                    if "M5_FIB" in technical_data:
+                        m5_fib = technical_data["M5_FIB"]
+                        if "error" not in m5_fib:
+                            swing_high = m5_fib.get("swing_high", "N/A")
+                            swing_low = m5_fib.get("swing_low", "N/A")
+                            current_position = m5_fib.get("current_position", {})
+                            if isinstance(swing_high, (int, float)) and isinstance(
+                                swing_low, (int, float)
+                            ):
+                                position_info = ""
+                                if isinstance(current_position, dict):
+                                    percentage = current_position.get(
+                                        "percentage", "N/A"
+                                    )
+                                    # 各フィボナッチレベルの価格を表示（サポート/レジスタンス分類）
+                                    levels_info = ""
+                                    if "levels" in m5_fib:
+                                        levels = m5_fib["levels"]
+                                        current_price = m5_fib.get("current_price", 0)
+                                        if isinstance(levels, dict):
+                                            support_levels = []
+                                            resistance_levels = []
+
+                                            for (
+                                                level_name,
+                                                level_price,
+                                            ) in levels.items():
+                                                if isinstance(
+                                                    level_price, (int, float)
+                                                ):
+                                                    if level_price < current_price:
+                                                        support_levels.append(
+                                                            f"{level_name}: {level_price:.4f}"
+                                                        )
+                                                    else:
+                                                        resistance_levels.append(
+                                                            f"{level_name}: {level_price:.4f}"
+                                                        )
+
+                                            if support_levels:
+                                                levels_info += f" | サポート: {', '.join(support_levels)}"
+                                            if resistance_levels:
+                                                levels_info += f" | レジスタンス: {', '.join(resistance_levels)}"
+                                    position_info = (
+                                        f" (現在位置: {percentage}%){levels_info}"
+                                    )
+                                m5_summary.append(
+                                    f"Fib High: {swing_high:.4f}, Low: {swing_low:.4f}{position_info}"
+                                )
+
+                    technical_summary = f"""
+D1 (Daily): {', '.join(d1_summary)}
+H4 (4H): {', '.join(h4_summary)}
+H1 (1H): {', '.join(h1_summary)}
+M5 (5M): {', '.join(m5_summary)}
+"""
+                reporter.console.print(f"[cyan]{technical_summary}[/cyan]")
+
+                # テクニカル指標の詳細表示
+                if technical_data:
+                    reporter.console.print("\n🔍 テクニカル指標詳細:")
+                    for key, data in technical_data.items():
+                        if isinstance(data, dict):
+                            reporter.console.print(f"[yellow]{key}:[/yellow] {data}")
+
+                    # フィボナッチデータの詳細表示
+                    reporter.console.print("\n🎯 フィボナッチ分析詳細:")
+                    for key, data in technical_data.items():
+                        if "FIB" in key and isinstance(data, dict):
+                            current_position = data.get("current_position", {})
+                            if isinstance(current_position, dict):
+                                percentage = current_position.get("percentage", "N/A")
+                                nearest_level = current_position.get(
+                                    "nearest_level", "N/A"
+                                )
+                                position = current_position.get("position", "N/A")
+                                reporter.console.print(
+                                    f"[green]{key}:[/green] 現在位置: {percentage}%, "
+                                    f"最寄りレベル: {nearest_level}, 位置: {position}"
+                                )
+                            else:
+                                reporter.console.print(
+                                    f"[green]{key}:[/green] {current_position}"
+                                )
 
                 # 統計情報表示
                 if reporter.notification_manager:
-                    stats = await (
-                        reporter.notification_manager.get_notification_statistics()
-                    )
-                    reporter.console.print("📊 通知統計情報:")
-                    reporter.console.print(f"[yellow]{stats}[/yellow]")
+                    try:
+                        stats = await (
+                            reporter.notification_manager.get_notification_statistics()
+                        )
+                        reporter.console.print("📊 通知統計情報:")
+                        reporter.console.print(f"[yellow]{stats}[/yellow]")
+                    except Exception as e:
+                        # データベース接続エラーの場合は詳細を表示しない
+                        if "Connect call failed" in str(e):
+                            reporter.console.print("📊 統計情報: データベース接続なし")
+                        else:
+                            reporter.console.print(f"⚠️ 統計情報取得エラー: {str(e)}")
 
                 reporter.console.print("✅ テスト完了")
             else:

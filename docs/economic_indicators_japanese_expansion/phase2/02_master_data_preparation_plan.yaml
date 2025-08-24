@@ -1,0 +1,322 @@
+# Phase 2: マスターデータ準備計画書
+# 期間: Week 2 (7日間)
+# 目的: 主要経済指標50件の情報収集・構造化・データベース登録
+
+project:
+  name: "経済指標日本語化システム - Phase 2"
+  phase: "マスターデータ準備"
+  duration: "7日間"
+  start_date: "2025-02-03"
+  end_date: "2025-02-09"
+  priority: "High"
+  status: "Planning"
+
+objectives:
+  - "主要経済指標50件の詳細情報を収集"
+  - "YAML形式でのマスターデータ構造化"
+  - "データベースへの一括登録"
+  - "データ品質チェックと検証"
+
+deliverables:
+  - "主要経済指標50件のマスターデータ"
+  - "YAML形式の構造化データ"
+  - "データベース登録スクリプト"
+  - "データ品質検証レポート"
+  - "翻訳キャッシュの初期データ"
+
+tasks:
+  day1:
+    name: "データ収集計画・設計"
+    duration: "1日"
+    tasks:
+      - name: "経済指標リストの確定"
+        description: "主要経済指標50件の選定と優先順位付け"
+        files:
+          - "data/economic_indicators/master_data/indicators_list.yaml"
+        estimated_hours: 3
+        dependencies: []
+        
+      - name: "データ構造設計"
+        description: "マスターデータの詳細構造とフィールド定義"
+        files:
+          - "data/economic_indicators/master_data/schema.yaml"
+          - "docs/economic_indicators_japanese_expansion/data_schema.md"
+        estimated_hours: 4
+        dependencies: []
+        
+      - name: "収集方法の確定"
+        description: "各指標の情報収集方法とソースの特定"
+        files:
+          - "docs/economic_indicators_japanese_expansion/data_collection_guide.md"
+        estimated_hours: 3
+        dependencies: []
+
+  day2:
+    name: "基本情報収集（日本・米国）"
+    duration: "1日"
+    tasks:
+      - name: "日本経済指標収集"
+        description: "日本の主要経済指標15件の基本情報収集"
+        indicators:
+          - "消費者物価指数（CPI）"
+          - "国内総生産（GDP）"
+          - "雇用統計"
+          - "日銀政策金利"
+          - "貿易収支"
+          - "鉱工業生産指数"
+          - "有効求人倍率"
+          - "家計調査"
+          - "景気動向指数"
+          - "企業物価指数"
+          - "マネーサプライ"
+          - "国際収支"
+          - "建設着工統計"
+          - "住宅着工統計"
+          - "消費者信頼感指数"
+        files:
+          - "data/economic_indicators/master_data/japan_indicators.yaml"
+        estimated_hours: 8
+        dependencies: ["day1"]
+        
+      - name: "米国経済指標収集"
+        description: "米国の主要経済指標15件の基本情報収集"
+        indicators:
+          - "Consumer Price Index (CPI)"
+          - "Gross Domestic Product (GDP)"
+          - "Non-Farm Payrolls"
+          - "Federal Reserve Interest Rate"
+          - "Trade Balance"
+          - "Industrial Production"
+          - "Unemployment Rate"
+          - "Personal Income"
+          - "Leading Economic Index"
+          - "Producer Price Index (PPI)"
+          - "Money Supply"
+          - "Current Account"
+          - "Housing Starts"
+          - "Consumer Confidence"
+          - "ISM Manufacturing Index"
+        files:
+          - "data/economic_indicators/master_data/us_indicators.yaml"
+        estimated_hours: 8
+        dependencies: ["day1"]
+
+  day3:
+    name: "基本情報収集（欧州・その他）"
+    duration: "1日"
+    tasks:
+      - name: "欧州経済指標収集"
+        description: "欧州の主要経済指標10件の基本情報収集"
+        indicators:
+          - "Eurozone CPI"
+          - "Eurozone GDP"
+          - "ECB Interest Rate"
+          - "Eurozone Unemployment"
+          - "Eurozone Industrial Production"
+          - "UK CPI"
+          - "UK GDP"
+          - "Bank of England Interest Rate"
+          - "UK Employment"
+          - "UK Retail Sales"
+        files:
+          - "data/economic_indicators/master_data/europe_indicators.yaml"
+        estimated_hours: 8
+        dependencies: ["day2"]
+        
+      - name: "その他地域経済指標収集"
+        description: "豪州・カナダ等の主要経済指標10件の基本情報収集"
+        indicators:
+          - "Australia CPI"
+          - "Australia GDP"
+          - "RBA Interest Rate"
+          - "Canada CPI"
+          - "Canada GDP"
+          - "Bank of Canada Interest Rate"
+          - "Switzerland CPI"
+          - "Switzerland GDP"
+          - "Swiss National Bank Rate"
+          - "China GDP"
+        files:
+          - "data/economic_indicators/master_data/other_indicators.yaml"
+        estimated_hours: 8
+        dependencies: ["day2"]
+
+  day4:
+    name: "詳細情報・市場影響分析"
+    duration: "1日"
+    tasks:
+      - name: "市場影響度分析"
+        description: "各指標の通貨・株式・債券への影響分析"
+        files:
+          - "data/economic_indicators/master_data/market_impact_analysis.yaml"
+        estimated_hours: 6
+        dependencies: ["day3"]
+        
+      - name: "投資判断情報収集"
+        description: "各指標の良い値・悪い値・サプライズ影響の分析"
+        files:
+          - "data/economic_indicators/master_data/investment_tips.yaml"
+        estimated_hours: 6
+        dependencies: ["day3"]
+        
+      - name: "関連指標・閾値設定"
+        description: "関連指標の特定と閾値の設定"
+        files:
+          - "data/economic_indicators/master_data/related_indicators.yaml"
+          - "data/economic_indicators/master_data/threshold_values.yaml"
+        estimated_hours: 4
+        dependencies: ["day3"]
+
+  day5:
+    name: "データ統合・構造化"
+    duration: "1日"
+    tasks:
+      - name: "YAML形式での統合"
+        description: "全データをYAML形式で統合・構造化"
+        files:
+          - "data/economic_indicators/master_data/indicators.yaml"
+        estimated_hours: 6
+        dependencies: ["day4"]
+        
+      - name: "データ検証・品質チェック"
+        description: "データの整合性・完全性チェック"
+        files:
+          - "scripts/economic_indicator/validate_master_data.py"
+          - "data/economic_indicators/master_data/validation_report.md"
+        estimated_hours: 6
+        dependencies: ["day4"]
+        
+      - name: "翻訳キャッシュ初期データ作成"
+        description: "主要指標の翻訳キャッシュ初期データ作成"
+        files:
+          - "data/economic_indicators/translation_cache/initial_translations.yaml"
+        estimated_hours: 4
+        dependencies: ["day4"]
+
+  day6:
+    name: "データベース登録・テスト"
+    duration: "1日"
+    tasks:
+      - name: "データベース登録スクリプト作成"
+        description: "マスターデータをデータベースに登録するスクリプト"
+        files:
+          - "scripts/economic_indicator/import_master_data.py"
+          - "scripts/economic_indicator/import_translation_cache.py"
+        estimated_hours: 6
+        dependencies: ["day5"]
+        
+      - name: "データベース登録実行"
+        description: "開発環境でのデータベース登録と検証"
+        files:
+          - "scripts/economic_indicator/run_data_import.py"
+        estimated_hours: 4
+        dependencies: ["day5"]
+        
+      - name: "登録データの検証"
+        description: "登録されたデータの正確性・完全性検証"
+        files:
+          - "tests/integration/test_master_data_import.py"
+          - "data/economic_indicators/master_data/import_verification_report.md"
+        estimated_hours: 6
+        dependencies: ["day5"]
+
+  day7:
+    name: "最終検証・ドキュメント"
+    duration: "1日"
+    tasks:
+      - name: "データ品質最終チェック"
+        description: "全データの最終品質チェックと修正"
+        files:
+          - "data/economic_indicators/master_data/final_quality_report.md"
+        estimated_hours: 4
+        dependencies: ["day6"]
+        
+      - name: "パフォーマンステスト"
+        description: "データベースアクセスのパフォーマンステスト"
+        files:
+          - "tests/performance/test_master_data_performance.py"
+        estimated_hours: 4
+        dependencies: ["day6"]
+        
+      - name: "ドキュメント作成"
+        description: "Phase 2の完了ドキュメントとPhase 3への引き継ぎ資料"
+        files:
+          - "docs/economic_indicators_japanese_expansion/phase2/completion_report.md"
+          - "docs/economic_indicators_japanese_expansion/phase2/handover_to_phase3.md"
+        estimated_hours: 4
+        dependencies: ["day6"]
+
+success_criteria:
+  data_quality:
+    - "主要経済指標50件が完全に収集されている"
+    - "各指標の基本情報が100%入力されている"
+    - "市場影響分析が80%以上完了している"
+    - "投資判断情報が70%以上入力されている"
+    
+  data_structure:
+    - "YAML形式で正しく構造化されている"
+    - "データスキーマに準拠している"
+    - "翻訳キャッシュ初期データが作成されている"
+    - "データベースに正常に登録されている"
+    
+  functionality:
+    - "データベースからの取得が正常に動作する"
+    - "検索・フィルタリングが正常に動作する"
+    - "パフォーマンス要件を満たしている"
+    - "データ整合性が保たれている"
+
+risks:
+  technical:
+    - name: "データ収集の困難"
+      impact: "High"
+      mitigation: "複数ソースからの情報収集と専門家レビュー"
+      
+    - name: "データ品質の問題"
+      impact: "Medium"
+      mitigation: "段階的な品質チェックと検証プロセス"
+      
+    - name: "データベース登録エラー"
+      impact: "Medium"
+      mitigation: "段階的登録とロールバック機能"
+
+  operational:
+    - name: "情報ソースの変更"
+      impact: "Low"
+      mitigation: "複数ソースの活用と定期的な更新"
+      
+    - name: "翻訳品質の問題"
+      impact: "Medium"
+      mitigation: "専門家レビューと品質基準の設定"
+
+dependencies:
+  external:
+    - "Phase 1のデータベース基盤完了"
+    - "経済指標情報ソースへのアクセス"
+    - "専門家レビューの実施"
+    
+  internal:
+    - "データ収集チームの準備"
+    - "品質チェック体制の確立"
+    - "データベースアクセス権限"
+
+resources:
+  human:
+    - "データ収集担当者: 1名"
+    - "データ品質管理者: 0.5名"
+    - "専門家レビュアー: 0.5名"
+    - "QAエンジニア: 0.5名"
+    
+  technical:
+    - "経済指標情報ソース"
+    - "YAML編集ツール"
+    - "データベースアクセス"
+    - "品質チェックツール"
+
+estimated_total_hours: 84
+actual_hours: 0
+completion_percentage: 0
+
+next_phase:
+  name: "Phase 3: 基本サービス実装"
+  start_date: "2025-02-10"
+  dependencies: ["Phase 2完了"]

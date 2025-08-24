@@ -125,7 +125,9 @@ class PerformanceMonitoringTestCron:
 
             # 3. データ処理パフォーマンステスト
             processing_performance = await self._test_data_processing_performance()
-            logger.info(f"⚙️ データ処理パフォーマンステスト完了: {processing_performance}")
+            logger.info(
+                f"⚙️ データ処理パフォーマンステスト完了: {processing_performance}"
+            )
 
             # 4. システム健全性チェック
             health_status = await self._check_system_health()
@@ -361,7 +363,9 @@ class PerformanceMonitoringTestCron:
 
             webhook_url = os.getenv("DISCORD_MONITORING_WEBHOOK_URL")
             if not webhook_url:
-                logger.error("❌ DISCORD_MONITORING_WEBHOOK_URL環境変数が設定されていません")
+                logger.error(
+                    "❌ DISCORD_MONITORING_WEBHOOK_URL環境変数が設定されていません"
+                )
                 return
 
             # canary.discord.comをdiscord.comに変更
@@ -424,7 +428,9 @@ class PerformanceMonitoringTestCron:
                 urgency = "high"
                 title = "パフォーマンス監視システムアラート"
 
-                alert_message = f"{status_emoji} **パフォーマンス監視システムアラート**\n\n"
+                alert_message = (
+                    f"{status_emoji} **パフォーマンス監視システムアラート**\n\n"
+                )
                 if test_result.get("alerts"):
                     for alert in test_result["alerts"]:
                         alert_message += f"• {alert['message']} ({alert['severity']})\n"
@@ -439,10 +445,80 @@ class PerformanceMonitoringTestCron:
                 urgency=urgency,
             )
 
-            logger.info(f"📢 パフォーマンス監視システムレポートを送信しました: {test_result['overall_status']}")
+            logger.info(
+                f"📢 パフォーマンス監視システムレポートを送信しました: {test_result['overall_status']}"
+            )
 
         except Exception as e:
             logger.error(f"❌ パフォーマンスレポート送信エラー: {e}")
+            # フォールバック: 直接httpxを使用して送信
+            await self._send_fallback_discord_message(test_result)
+
+    async def _send_fallback_discord_message(self, test_result: Dict[str, Any]):
+        """
+        フォールバックDiscordメッセージ送信
+        """
+        try:
+            import os
+            import httpx
+
+            webhook_url = os.getenv("DISCORD_MONITORING_WEBHOOK_URL")
+            if not webhook_url:
+                logger.error("❌ DISCORD_MONITORING_WEBHOOK_URL環境変数が設定されていません")
+                return
+
+            # canary.discord.comをdiscord.comに変更
+            if "canary.discord.com" in webhook_url:
+                webhook_url = webhook_url.replace("canary.discord.com", "discord.com")
+
+            # システムメトリクスを取得
+            system_metrics = test_result.get("system_metrics", {})
+            health_status = test_result.get("health_status", {})
+
+            # シンプルなメッセージを作成
+            message_data = {
+                "content": "📊 **パフォーマンス監視システムレポート**",
+                "embeds": [
+                    {
+                        "title": "システムリソース状況",
+                        "color": 0x00FF00 if test_result["overall_status"] == "success" else 0xFF0000,
+                        "fields": [
+                            {
+                                "name": "CPU使用率",
+                                "value": f"{system_metrics.get('cpu_percent', 'N/A')}%",
+                                "inline": True,
+                            },
+                            {
+                                "name": "メモリ使用率",
+                                "value": f"{system_metrics.get('memory_percent', 'N/A')}%",
+                                "inline": True,
+                            },
+                            {
+                                "name": "ディスク使用率",
+                                "value": f"{system_metrics.get('disk_usage_percent', 'N/A')}%",
+                                "inline": True,
+                            },
+                            {
+                                "name": "システム健全性",
+                                "value": "健全" if health_status.get("overall_healthy") else "注意",
+                                "inline": True,
+                            },
+                        ],
+                        "footer": {"text": "Performance Monitoring System"},
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                ],
+            }
+
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(webhook_url, json=message_data)
+                if response.status_code == 204:
+                    logger.info("✅ フォールバックDiscordメッセージ送信成功")
+                else:
+                    logger.error(f"❌ フォールバックDiscordメッセージ送信失敗: {response.status_code}")
+
+        except Exception as e:
+            logger.error(f"❌ フォールバックDiscordメッセージ送信エラー: {e}")
 
     async def test_discord_notification(self):
         """
@@ -459,7 +535,12 @@ class PerformanceMonitoringTestCron:
                 logger.error("❌ DISCORD_MONITORING_WEBHOOK_URL環境変数が設定されていません")
                 return False
 
-            from src.infrastructure.messaging.discord_client import DiscordClient
+            # canary.discord.comをdiscord.comに変更
+            if "canary.discord.com" in webhook_url:
+                webhook_url = webhook_url.replace("canary.discord.com", "discord.com")
+
+            from src.infrastructure.messaging.discord_client import \
+                DiscordClient
 
             discord_client = DiscordClient(webhook_url=webhook_url)
 
@@ -507,7 +588,12 @@ class PerformanceMonitoringTestCron:
                 logger.error("❌ DISCORD_MONITORING_WEBHOOK_URL環境変数が設定されていません")
                 return False
 
-            from src.infrastructure.messaging.discord_client import DiscordClient
+            # canary.discord.comをdiscord.comに変更
+            if "canary.discord.com" in webhook_url:
+                webhook_url = webhook_url.replace("canary.discord.com", "discord.com")
+
+            from src.infrastructure.messaging.discord_client import \
+                DiscordClient
 
             discord_client = DiscordClient(webhook_url=webhook_url)
 

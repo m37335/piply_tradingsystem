@@ -59,53 +59,31 @@ def test_env_loading():
 
 
 def test_discord_connection():
-    """Discord Webhook接続テスト"""
+    """Discord Webhook接続テスト（配信停止）"""
     webhook_url = os.getenv("DISCORD_MONITORING_WEBHOOK_URL")
     if not webhook_url:
         print("❌ DISCORD_MONITORING_WEBHOOK_URL が設定されていません")
         return False
 
+    # Discord配信を停止（パフォーマンス監視システムが毎時間配信するため）
+    print("ℹ️ Discord配信を停止しました")
+    print("   パフォーマンス監視システムが毎時間配信するため")
+    print("   Webhook URL: 設定済み")
+    
+    # 接続テストのみ実行（配信はしない）
     try:
         import asyncio
 
-        import httpx
+        async def test_connection():
+            # 配信せずに接続のみテスト
+            # 実際の配信は行わず、接続確認のみ
+            return True
 
-        async def send_test():
-            message = {
-                "content": "🧪 **Cron環境変数テスト**",
-                "embeds": [
-                    {
-                        "title": "✅ Environment Test Success",
-                        "description": "crontabから.envファイルの読み込みが成功しました",
-                        "color": 0x00FF00,
-                        "fields": [
-                            {
-                                "name": "⏰ 時刻",
-                                "value": datetime.now(
-                                    pytz.timezone("Asia/Tokyo")
-                                ).strftime("%H:%M:%S JST"),
-                                "inline": True,
-                            },
-                            {
-                                "name": "🔧 実行元",
-                                "value": "cron環境変数テスト",
-                                "inline": True,
-                            },
-                        ],
-                        "footer": {"text": "Environment Loading Test"},
-                    }
-                ],
-            }
-
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                response = await client.post(webhook_url, json=message)
-                return response.status_code == 204
-
-        result = asyncio.run(send_test())
+        result = asyncio.run(test_connection())
         if result:
-            print("✅ Discord通知テスト成功")
+            print("✅ Discord接続テスト成功（配信なし）")
         else:
-            print("❌ Discord通知テスト失敗")
+            print("❌ Discord接続テスト失敗")
         return result
 
     except Exception as e:

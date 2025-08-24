@@ -147,7 +147,9 @@ class QueryOptimizer:
             analysis["recommendations"].append("ORDER BY句にLIMIT句の追加を検討")
 
         if "like '%" in query_lower:
-            analysis["recommendations"].append("前方一致検索の使用を検討 (LIKE 'pattern%')")
+            analysis["recommendations"].append(
+                "前方一致検索の使用を検討 (LIKE 'pattern%')"
+            )
 
         return analysis
 
@@ -253,7 +255,9 @@ class QueryOptimizer:
                 results["errors"].append(
                     f"{rec.table_name}.{rec.column_name}: {str(e)}"
                 )
-                logger.error(f"インデックス作成失敗: {rec.table_name}.{rec.column_name} - {e}")
+                logger.error(
+                    f"インデックス作成失敗: {rec.table_name}.{rec.column_name} - {e}"
+                )
 
         return results
 
@@ -276,9 +280,7 @@ class QueryOptimizer:
                 size_result = await self.session.execute(
                     text(
                         """
-                    SELECT page_count * page_size as size_bytes
-                    FROM pragma_page_count(), pragma_page_size()
-                    WHERE name = :table_name
+                    SELECT pg_total_relation_size(:table_name) as size_bytes
                 """
                     ),
                     {"table_name": table_name},

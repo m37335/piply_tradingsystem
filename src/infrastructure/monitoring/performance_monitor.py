@@ -1,9 +1,8 @@
 import asyncio
-import sqlite3
 import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import psutil
 from sqlalchemy import text
@@ -123,8 +122,7 @@ class PerformanceMonitor:
             result = await self.session.execute(
                 text(
                     """
-                SELECT page_count * page_size as size_bytes
-                FROM pragma_page_count(), pragma_page_size()
+                SELECT pg_database_size(current_database()) as size_bytes
             """
                 )
             )
@@ -140,7 +138,9 @@ class PerformanceMonitor:
             result = await self.session.execute(
                 text(
                     """
-                SELECT COUNT(*) FROM pragma_database_list()
+                SELECT COUNT(*) 
+                FROM pg_stat_activity 
+                WHERE state = 'active' AND datname = current_database()
             """
                 )
             )
@@ -201,7 +201,7 @@ class PerformanceMonitor:
             SELECT COUNT(*) as count,
                    MAX(timestamp) as latest_timestamp
             FROM price_data
-            WHERE timestamp >= datetime('now', '-1 hour')
+            WHERE timestamp >= NOW() - INTERVAL '1 hour'
         """
             )
         )

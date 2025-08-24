@@ -21,6 +21,7 @@ from ...utils.logging_config import get_presentation_logger, setup_logging_direc
 from .commands import ai_commands, api_commands, config_commands, monitor_commands
 from .commands.alert_config_commands import app as alert_config_app
 from .commands.data import data_app
+from .commands.system_recovery_commands import app as recovery_app
 
 logger = get_presentation_logger()
 console = Console()
@@ -68,6 +69,12 @@ app.add_typer(
     alert_config_app,
     name="alert-config",
     help="🚨 アラート設定管理",
+)
+
+app.add_typer(
+    recovery_app,
+    name="recovery",
+    help="🔧 システム復旧・メンテナンス",
 )
 
 
@@ -133,17 +140,19 @@ def show_welcome():
 🚀 通貨分析システムの管理・運用ツール
 
 [yellow]利用可能なコマンド:[/yellow]
-• [green]api[/green]     - API サーバー管理
-• [green]data[/green]    - データ管理・取得
-• [green]config[/green]  - 設定管理
-• [green]monitor[/green] - 監視・ヘルスチェック
-• [green]ai[/green]      - AI分析・通知
+• [green]api[/green]      - API サーバー管理
+• [green]data[/green]     - データ管理・取得
+• [green]config[/green]   - 設定管理
+• [green]monitor[/green]  - 監視・ヘルスチェック
+• [green]ai[/green]       - AI分析・通知
+• [green]recovery[/green] - システム復旧・メンテナンス
 
 [blue]例:[/blue]
-  [cyan]exchange-analytics api start[/cyan]     # API サーバー起動
-  [cyan]exchange-analytics data fetch[/cyan]    # データ取得
-  [cyan]exchange-analytics ai analyze[/cyan]    # AI分析・Discord通知
-  [cyan]exchange-analytics monitor status[/cyan] # システム状態確認
+  [cyan]exchange-analytics api start[/cyan]        # API サーバー起動
+  [cyan]exchange-analytics data fetch[/cyan]       # データ取得
+  [cyan]exchange-analytics ai analyze[/cyan]       # AI分析・Discord通知
+  [cyan]exchange-analytics monitor status[/cyan]   # システム状態確認
+  [cyan]exchange-analytics recovery auto[/cyan]    # システム自動復旧
 
 詳細: [cyan]exchange-analytics --help[/cyan]""",
         title="🎯 Exchange Analytics CLI",
@@ -164,25 +173,59 @@ def status():
     status_table.add_column("Status", style="bold")
     status_table.add_column("Details", style="green")
 
-    # 各コンポーネントの状態確認
-    components = [
+    # 実際のサービス状態を確認
+    import subprocess
+
+    def check_service(
+        service_name: str, check_command: str, status_pattern: str = "running"
+    ) -> tuple:
+        """サービス状態をチェック"""
+        try:
+            result = subprocess.run(
+                check_command, shell=True, capture_output=True, text=True, timeout=5
+            )
+            is_running = status_pattern in result.stdout.lower()
+            return (
+                "✅ Healthy" if is_running else "❌ Stopped",
+                "Running" if is_running else "Service stopped",
+            )
+        except Exception:
+            return ("🟡 Unknown", "Check failed")
+
+    # 各サービスの状態確認
+    services = [
+        ("Cron Service", *check_service("cron", "service cron status", "running")),
+        (
+            "PostgreSQL",
+            *check_service("postgresql", "service postgresql status", "online"),
+        ),
+        (
+            "Redis Cache",
+            *check_service("redis", "service redis-server status", "running"),
+        ),
+        (
+            "API Server",
+            *check_service("api", "./exchange-analytics api status", "稼働中"),
+        ),
+    ]
+
+    # 静的コンポーネント
+    static_components = [
         ("Domain Layer", "✅ Healthy", "Models & Entities Ready"),
         ("Application Layer", "✅ Healthy", "Services & Use Cases Ready"),
         ("Infrastructure Layer", "✅ Healthy", "DB, Cache, APIs Ready"),
         ("Presentation Layer", "✅ Healthy", "REST API, CLI Ready"),
-        ("Database", "🟡 Check Required", "Connection needed"),
-        ("Redis Cache", "🟡 Check Required", "Connection needed"),
-        ("External APIs", "🟡 Check Required", "API keys needed"),
     ]
 
-    for component, status, details in components:
+    # 全コンポーネントを表示
+    for component, status, details in static_components + services:
         status_table.add_row(component, status, details)
 
     console.print(status_table)
 
     console.print(
         "\n💡 [yellow]Tip:[/yellow] 詳細確認は "
-        "[cyan]exchange-analytics monitor health[/cyan] を実行"
+        "[cyan]exchange-analytics recovery status[/cyan] を実行"
     )
 
 
