@@ -10,7 +10,7 @@
 
 - 経済指標の日本語翻訳・説明機能の提供
 - 投資家向けの経済指標詳細情報の自動配信
-- 学習・理解支援機能の実装
+- 分析・解説機能の実装
 - コスト効率的な運用体制の構築
 
 ### 1.3 背景
@@ -20,13 +20,13 @@
 - 日本語話者にとって指標の意味が理解しにくい
 - 各指標の市場への影響が不明確
 - 投資判断に必要な詳細情報が不足
-- 学習・教育機能が不十分
+- 分析・解説機能が不十分
 
 ### 1.4 期待効果
 
 - **ユーザビリティ向上**: 日本語表示による理解促進
 - **投資判断支援**: 詳細情報による意思決定支援
-- **学習効果**: 経済指標の理解促進
+- **分析効果**: 経済指標の理解促進
 - **コスト削減**: 手動準備による運用コスト最小化
 
 ## 2. システム要件
@@ -44,7 +44,7 @@
 #### 2.1.2 拡張機能
 
 - [ ] ユーザーレベル別の説明調整
-- [ ] 学習進捗管理
+- [ ] 分析レポート管理
 - [ ] 質問応答システム
 - [ ] 経済指標比較機能
 - [ ] パーソナライズされた解説
@@ -94,7 +94,7 @@
 ├─────────────────────────────────────────────────────────────┤
 │                    アプリケーション層                        │
 ├─────────────────────────────────────────────────────────────┤
-│  経済指標翻訳サービス  │  詳細情報サービス  │  学習支援サービス  │
+│  経済指標翻訳サービス  │  詳細情報サービス  │  分析支援サービス  │
 ├─────────────────────────────────────────────────────────────┤
 │                    ドメイン層                                │
 ├─────────────────────────────────────────────────────────────┤
@@ -178,23 +178,17 @@ CREATE TABLE translation_cache (
 );
 ```
 
-#### 3.2.3 ユーザー学習進捗テーブル
+#### 3.2.3 システム設定テーブル
 
 ```sql
-CREATE TABLE user_learning_progress (
+CREATE TABLE system_settings (
     id SERIAL PRIMARY KEY,
-    user_id VARCHAR(100) NOT NULL,
-    indicator_id INTEGER REFERENCES economic_indicators_master(id),
-    learning_level VARCHAR(20) DEFAULT 'beginner',
-    progress_score DECIMAL(3,2) DEFAULT 0.0,
-    last_studied TIMESTAMP,
-    study_count INTEGER DEFAULT 0,
+    setting_key VARCHAR(100) UNIQUE NOT NULL,
+    setting_value TEXT,
+    description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    UNIQUE(user_id, indicator_id),
-    INDEX idx_user_id (user_id),
-    INDEX idx_indicator_id (indicator_id)
+    INDEX idx_setting_key (setting_key)
 );
 ```
 
@@ -232,12 +226,12 @@ CREATE TABLE user_learning_progress (
 - [ ] 詳細情報表示機能実装
 - [ ] 配信テスト・調整
 
-#### 4.2.2 Week 5: 学習機能実装
+#### 4.2.2 Week 5: 分析・解説機能実装
 
-- [ ] ユーザー進捗管理機能
-- [ ] レベル別説明機能
-- [ ] 学習コンテンツ実装
-- [ ] インタラクティブ機能
+- [ ] AI 解説生成機能
+- [ ] 経済指標比較分析機能
+- [ ] 市場影響度分析機能
+- [ ] 統計・レポート機能
 
 #### 4.2.3 Week 6: 品質向上
 
@@ -250,10 +244,10 @@ CREATE TABLE user_learning_progress (
 
 #### 4.3.1 Week 7: 高度機能
 
-- [ ] AI 解説生成機能
-- [ ] 比較分析機能
-- [ ] パーソナライゼーション機能
-- [ ] 統計・分析機能
+- [ ] リアルタイム分析機能
+- [ ] 予測精度向上機能
+- [ ] 自動レポート生成機能
+- [ ] パフォーマンス最適化機能
 
 #### 4.3.2 Week 8: 運用準備
 
@@ -407,7 +401,7 @@ indicators:
 - ユーザーフィードバック反映
 - 定期的な翻訳見直し
 
-### 6.3 学習コンテンツ
+### 6.3 分析コンテンツ
 
 #### 6.3.1 レベル別説明
 
@@ -560,12 +554,12 @@ async def send_enhanced_economic_indicator(
     await discord_client.send_embed(embed)
 ```
 
-### 7.3 学習機能実装
+### 7.3 分析機能実装
 
-#### 7.3.1 LearningService
+#### 7.3.1 AnalysisService
 
 ```python
-class LearningService:
+class AnalysisService:
     def __init__(
         self,
         progress_repo: LearningProgressRepository,
@@ -574,31 +568,29 @@ class LearningService:
         self.progress_repo = progress_repo
         self.info_service = info_service
 
-    async def get_learning_content(
+    async def get_analysis_content(
         self,
-        user_id: str,
         indicator_name: str,
-        level: str = "beginner"
+        analysis_type: str = "basic"
     ) -> Dict[str, Any]:
-        """ユーザーレベルに応じた学習コンテンツを取得"""
+        """経済指標の分析コンテンツを取得"""
 
-        # 進捗確認
-        progress = await self.progress_repo.get_user_progress(user_id, indicator_name)
+        # 基本情報取得
+        basic_info = await self.info_service.get_indicator_info(indicator_name)
 
-        # レベル別コンテンツ取得
-        content = await self.info_service.get_learning_content(
-            indicator_name, level
+        # 分析タイプ別コンテンツ取得
+        analysis_content = await self.info_service.get_analysis_content(
+            indicator_name, analysis_type
         )
 
-        # 進捗更新
-        await self.progress_repo.update_progress(
-            user_id, indicator_name, level
-        )
+        # 市場影響度分析
+        market_impact = await self.info_service.get_market_impact(indicator_name)
 
         return {
-            "content": content,
-            "progress": progress,
-            "next_level": self._get_next_level(level, progress)
+            "basic_info": basic_info,
+            "analysis_content": analysis_content,
+            "market_impact": market_impact,
+            "analysis_type": analysis_type
         }
 ```
 
@@ -843,7 +835,7 @@ logger.info(f"情報取得完了: {info_count}件")
 
 #### 12.3.1 技術革新
 
-- 機械学習の活用
+- AI 分析の活用
 - リアルタイム分析の実現
 - 予測精度の向上
 - 自動化の推進
@@ -898,11 +890,11 @@ logger.info(f"情報取得完了: {info_count}件")
 - 情報有用性: 4.0/5.0 以上
 - 推奨意向: 70%以上
 
-#### 13.3.2 学習効果
+#### 13.3.2 分析効果
 
 - 経済指標理解度向上: 30%以上
 - 投資判断精度向上: 20%以上
-- 学習継続率: 60%以上
+- 分析継続率: 60%以上
 - 知識定着率: 80%以上
 
 ## 14. まとめ
@@ -913,7 +905,7 @@ logger.info(f"情報取得完了: {info_count}件")
 
 - **理解促進**: 日本語表示による経済指標の理解促進
 - **投資支援**: 詳細情報による投資判断支援
-- **学習効果**: 段階的学習による知識向上
+- **分析効果**: 段階的分析による知識向上
 - **利便性**: 使いやすいインターフェース
 
 #### 14.1.2 ビジネス価値
@@ -951,7 +943,7 @@ logger.info(f"情報取得完了: {info_count}件")
 #### 14.3.2 効果確認後の拡張
 
 1. **AI 機能追加**: ChatGPT API 活用
-2. **学習機能実装**: ユーザー進捗管理
+2. **分析機能実装**: 分析レポート管理
 3. **Web UI 開発**: ダッシュボード機能
 4. **収益化機能**: プレミアム・広告機能
 
