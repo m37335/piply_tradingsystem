@@ -75,7 +75,9 @@ class RealtimeMonitor:
         self.console.print("🚀 Exchange Analytics リアルタイム監視開始")
         self.console.print(f"📊 API: {self.api_base}")
         self.console.print(f"⏰ 監視間隔: {interval}秒")
-        self.console.print(f"🚨 Discord通知: {'✅ 有効' if discord_alerts else '❌ 無効'}")
+        self.console.print(
+            f"🚨 Discord通知: {'✅ 有効' if discord_alerts else '❌ 無効'}"
+        )
         self.console.print("⏹️ 停止: Ctrl+C")
         self.console.print()
 
@@ -113,7 +115,7 @@ class RealtimeMonitor:
                 # 異常検知とアラート
                 if discord_alerts:
                     await self._check_and_send_alerts(health_data, current_status)
-                
+
                 # アラートシステムとの連携
                 await self._save_alerts_to_database(health_data, current_status)
 
@@ -123,10 +125,10 @@ class RealtimeMonitor:
                 # API接続失敗
                 if discord_alerts:
                     await self._send_connection_failure_alert()
-                
+
                 # API接続失敗アラートをデータベースに保存
                 await self._save_connection_failure_alert()
-                
+
                 return self._create_error_panel("API接続失敗")
 
         except Exception as e:
@@ -136,7 +138,7 @@ class RealtimeMonitor:
 
     async def _fetch_health_data(self, detailed: bool) -> Optional[Dict[str, Any]]:
         """ヘルスデータ取得"""
-        endpoint = "/api/v1/health/detailed" if detailed else "/api/v1/health"
+        endpoint = "/"  # 正しいエンドポイント
 
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
@@ -205,9 +207,7 @@ class RealtimeMonitor:
         # アラート統計
         content += f"\n🚨 Alert Stats:\n"
         content += f"  Alerts Sent: {self.stats['alerts_sent']}\n"
-        content += (
-            f"  Discord: {'✅ Connected' if self.webhook_url else '❌ Not configured'}\n"
-        )
+        content += f"  Discord: {'✅ Connected' if self.webhook_url else '❌ Not configured'}\n"
 
         return Panel.fit(
             content,
@@ -481,7 +481,7 @@ class RealtimeMonitor:
                 from src.infrastructure.database.repositories.alert_repository_impl import (
                     AlertRepositoryImpl,
                 )
-                
+
                 self.alert_session = await get_async_session()
                 self.alert_repo = AlertRepositoryImpl(self.alert_session)
 
@@ -506,10 +506,10 @@ class RealtimeMonitor:
 
         try:
             severity = "high" if current in ["unhealthy"] else "medium"
-            
+
             # API接続失敗の場合はapi_errorタイプに変更
             alert_type = "api_error" if current == "unhealthy" else "system_resource"
-            
+
             await self.alert_repo.create_alert(
                 alert_type=alert_type,
                 severity=severity,
@@ -518,10 +518,10 @@ class RealtimeMonitor:
                     "previous_status": previous,
                     "current_status": current,
                     "check_count": self.check_count,
-                    "monitor_type": "realtime_health_check"
-                }
+                    "monitor_type": "realtime_health_check",
+                },
             )
-            
+
             self.stats["db_alerts_saved"] += 1
 
         except Exception:
@@ -534,14 +534,14 @@ class RealtimeMonitor:
 
         for component, check_data in checks.items():
             status = check_data.get("status", "unknown")
-            
+
             # 前回と状態が変わった場合のみ保存
             previous_comp_status = self.alert_history.get(component)
 
             if previous_comp_status != status and status in ["degraded", "unhealthy"]:
                 try:
                     severity = "high" if status == "unhealthy" else "medium"
-                    
+
                     await self.alert_repo.create_alert(
                         alert_type="system_resource",
                         severity=severity,
@@ -551,10 +551,10 @@ class RealtimeMonitor:
                             "status": status,
                             "error": check_data.get("error", "No specific error"),
                             "response_time": check_data.get("response_time_ms", 0),
-                            "monitor_type": "realtime_health_check"
-                        }
+                            "monitor_type": "realtime_health_check",
+                        },
                     )
-                    
+
                     self.stats["db_alerts_saved"] += 1
 
                 except Exception:
@@ -569,7 +569,7 @@ class RealtimeMonitor:
                 from src.infrastructure.database.repositories.alert_repository_impl import (
                     AlertRepositoryImpl,
                 )
-                
+
                 self.alert_session = await get_async_session()
                 self.alert_repo = AlertRepositoryImpl(self.alert_session)
 
@@ -582,10 +582,10 @@ class RealtimeMonitor:
                         "api_endpoint": self.api_base,
                         "check_count": self.check_count,
                         "monitor_type": "realtime_health_check",
-                        "error_type": "connection_failure"
-                    }
+                        "error_type": "connection_failure",
+                    },
                 )
-                
+
                 self.stats["db_alerts_saved"] += 1
 
         except Exception:

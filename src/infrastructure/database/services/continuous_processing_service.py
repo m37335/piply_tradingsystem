@@ -20,7 +20,7 @@ from typing import Any, Dict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from scripts.cron.enhanced_unified_technical_calculator import (
+from scripts.cron.advanced_technical.enhanced_unified_technical_calculator import (
     EnhancedUnifiedTechnicalCalculator,
 )
 from src.infrastructure.database.models.price_data_model import PriceDataModel

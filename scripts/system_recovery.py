@@ -87,7 +87,7 @@ class SystemRecoveryManager:
 
             is_running = status_pattern in result.stdout.lower()
             status_message = f"{'✅ 動作中' if is_running else '❌ 停止中'}"
-            recovery_action = f"sudo {start_command}" if not is_running else "不要"
+            recovery_action = f"{start_command}" if not is_running else "不要"
 
             return ServiceStatus(
                 name=service_name,
@@ -102,7 +102,7 @@ class SystemRecoveryManager:
                 name=service_name,
                 is_running=False,
                 status_message="❌ タイムアウト",
-                recovery_action=f"sudo {start_command}",
+                recovery_action=f"{start_command}",
                 priority=1,
             )
         except Exception as e:
@@ -110,7 +110,7 @@ class SystemRecoveryManager:
                 name=service_name,
                 is_running=False,
                 status_message=f"❌ エラー: {str(e)}",
-                recovery_action=f"sudo {start_command}",
+                recovery_action=f"{start_command}",
                 priority=1,
             )
 

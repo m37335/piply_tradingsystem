@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from scripts.cron.enhanced_unified_technical_calculator import (
+from scripts.cron.advanced_technical.enhanced_unified_technical_calculator import (
     EnhancedUnifiedTechnicalCalculator,
 )
 

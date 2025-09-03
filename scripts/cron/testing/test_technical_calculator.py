@@ -30,7 +30,7 @@ async def test_technical_calculation(limit: int = None, diff_only: bool = False)
         diff_only: 差分検知のみ実行するかどうか
     """
     try:
-        from scripts.cron.enhanced_unified_technical_calculator import (
+        from scripts.cron.advanced_technical.enhanced_unified_technical_calculator import (
             EnhancedUnifiedTechnicalCalculator,
         )
 

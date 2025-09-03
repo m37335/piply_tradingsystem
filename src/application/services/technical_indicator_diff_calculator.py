@@ -49,7 +49,7 @@ class TechnicalIndicatorDiffCalculator:
             self.diff_service = DiffDetectionService(self.session)
 
             # テクニカル指標計算器をインポートして初期化
-            from scripts.cron.enhanced_unified_technical_calculator import (
+            from scripts.cron.advanced_technical.enhanced_unified_technical_calculator import (
                 EnhancedUnifiedTechnicalCalculator,
             )
 
@@ -176,7 +176,7 @@ class TechnicalIndicatorDiffCalculator:
 
             calculator_timeframe = timeframe_mapping.get(timeframe, timeframe)
 
-                        # 計算実行
+            # 計算実行
             calculation_result = await self.calculator.calculate_timeframe_indicators(
                 calculator_timeframe, limit=len(uncalculated_data)
             )

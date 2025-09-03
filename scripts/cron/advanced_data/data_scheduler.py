@@ -212,13 +212,24 @@ class DataScheduler:
         try:
             import subprocess
 
-            # Alpha Vantageテストスクリプト実行
+            # 環境変数を設定してAlpha Vantageテストスクリプト実行
+            env = os.environ.copy()
+            # .envファイルから環境変数を読み込み
+            if os.path.exists(".env"):
+                with open(".env", "r") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#"):
+                            key, value = line.split("=", 1)
+                            env[key] = value
+
             result = subprocess.run(
-                ["python", "test_alphavantage.py", "--test", "fx"],
+                ["python", "tests/api/test_alphavantage.py", "--test", "fx"],
                 capture_output=True,
                 text=True,
                 cwd="/app",
                 timeout=30,
+                env=env,
             )
 
             return result.returncode == 0
@@ -257,13 +268,25 @@ class DataScheduler:
         try:
             import subprocess
 
+            # 環境変数を設定してAI分析実行
+            env = os.environ.copy()
+            # .envファイルから環境変数を読み込み
+            if os.path.exists(".env"):
+                with open(".env", "r") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#"):
+                            key, value = line.split("=", 1)
+                            env[key] = value
+
             # 実データAI分析実行
             result = subprocess.run(
-                ["python", "real_ai_discord.py", currency_pair],
+                ["python", "scripts/cron/integrated_ai_discord.py", currency_pair],
                 capture_output=True,
                 text=True,
                 cwd="/app",
                 timeout=60,
+                env=env,
             )
 
             return result.returncode == 0

@@ -31,39 +31,40 @@ app = typer.Typer(
 
 @app.command()
 def analyze(
-    currency_pair: str = typer.Argument("USD/JPY", help="通貨ペア (例: USD/JPY, EUR/USD)"),
-    period: str = typer.Option("1d", "--period", "-p", help="分析期間 (1h, 1d, 1w, 1m)"),
-    discord: bool = typer.Option(True, "--discord/--no-discord", help="Discord通知送信"),
-    real_data: bool = typer.Option(True, "--real/--demo", help="実データ使用"),
+    test: bool = typer.Option(False, "--test", help="テストモード（Discord送信なし）"),
+    no_optimization: bool = typer.Option(
+        False, "--no-optimization", help="最適化機能を無効にする"
+    ),
+    chart: bool = typer.Option(False, "--chart", help="H1チャートを生成する"),
     force: bool = typer.Option(False, "--force", "-f", help="確認をスキップ"),
 ):
     """
-    AI分析レポートを生成
+    統合AI分析レポートを生成（TA-Lib標準版）
 
     Examples:
-        exchange-analytics ai analyze USD/JPY
-        exchange-analytics ai analyze EUR/USD --period 1w
-        exchange-analytics ai analyze GBP/JPY --no-discord
+        exchange-analytics ai analyze
+        exchange-analytics ai analyze --test
+        exchange-analytics ai analyze --no-optimization
+        exchange-analytics ai analyze --chart
     """
-    console.print(f"🤖 AI分析レポート生成...")
-    console.print(f"📊 通貨ペア: {currency_pair}")
-    console.print(f"⏰ 期間: {period}")
-    console.print(f"💬 Discord通知: {'✅ 有効' if discord else '❌ 無効'}")
-    console.print(f"📊 データ: {'🌐 実データ' if real_data else '🧪 デモデータ'}")
+    console.print("🤖 統合AI分析レポート生成（TA-Lib標準版）...")
+    console.print(f"🧪 テストモード: {'✅ 有効' if test else '❌ 無効'}")
+    console.print(f"⚡ 最適化機能: {'❌ 無効' if no_optimization else '✅ 有効'}")
+    console.print(f"📊 チャート生成: {'✅ 有効' if chart else '❌ 無効'}")
+    console.print("📊 TA-Lib標準使用")
 
     if not force:
-        data_type = "実データ" if real_data else "デモデータ"
-        confirm = typer.confirm(f"{currency_pair} の AI分析を{data_type}で実行しますか？")
+        confirm = typer.confirm("統合AI分析を実行しますか？")
         if not confirm:
             console.print("❌ AI分析をキャンセルしました")
             return
 
     # AI分析実行
-    success = _run_ai_analysis(currency_pair, period, discord, real_data)
+    success = _run_ai_analysis(test, no_optimization, chart)
 
     if success:
-        console.print("✅ AI分析レポート生成完了")
-        if discord:
+        console.print("✅ 統合AI分析レポート生成完了")
+        if not test:
             console.print("💬 Discord通知も送信しました")
     else:
         console.print("❌ AI分析に失敗しました")
@@ -72,7 +73,9 @@ def analyze(
 @app.command()
 def reports(
     limit: int = typer.Option(10, "--limit", "-n", help="表示件数"),
-    currency_pair: Optional[str] = typer.Option(None, "--pair", "-p", help="通貨ペアフィルタ"),
+    currency_pair: Optional[str] = typer.Option(
+        None, "--pair", "-p", help="通貨ペアフィルタ"
+    ),
 ):
     """
     AI分析レポート一覧表示
@@ -172,95 +175,86 @@ def discord_test():
 
 @app.command()
 def schedule(
-    currency_pairs: str = typer.Option(
-        "USD/JPY,EUR/USD", "--pairs", "-p", help="通貨ペア (カンマ区切り)"
-    ),
     interval: int = typer.Option(3600, "--interval", "-i", help="実行間隔 (秒)"),
-    period: str = typer.Option("1d", "--period", help="分析期間"),
-    discord: bool = typer.Option(True, "--discord/--no-discord", help="Discord通知"),
+    no_optimization: bool = typer.Option(
+        False, "--no-optimization", help="最適化機能を無効にする"
+    ),
 ):
     """
-    定期AI分析スケジュール設定
+    定期統合AI分析スケジュール設定（TA-Lib標準版）
 
     Examples:
         exchange-analytics ai schedule
-        exchange-analytics ai schedule --pairs "USD/JPY,EUR/USD,GBP/JPY"
-        exchange-analytics ai schedule --interval 7200 --period 1w
+        exchange-analytics ai schedule --interval 7200
+        exchange-analytics ai schedule --no-optimization
     """
-    pairs_list = [pair.strip() for pair in currency_pairs.split(",")]
-
-    console.print("📅 定期AI分析スケジュール設定...")
-    console.print(f"💱 通貨ペア: {', '.join(pairs_list)}")
+    console.print("📅 定期統合AI分析スケジュール設定（TA-Lib標準版）...")
     console.print(f"⏰ 実行間隔: {interval}秒 ({interval//3600}時間)")
-    console.print(f"📊 分析期間: {period}")
-    console.print(f"💬 Discord通知: {'✅ 有効' if discord else '❌ 無効'}")
+    console.print(f"⚡ 最適化機能: {'❌ 無効' if no_optimization else '✅ 有効'}")
+    console.print("📊 TA-Lib標準使用")
 
-    confirm = typer.confirm("定期分析スケジュールを開始しますか？")
+    confirm = typer.confirm("定期統合AI分析スケジュールを開始しますか？")
     if not confirm:
         console.print("❌ スケジュール設定をキャンセルしました")
         return
 
-    console.print("🚀 定期AI分析スケジュール開始...")
+    console.print("🚀 定期統合AI分析スケジュール開始...")
     console.print("⏹️ 停止: Ctrl+C")
 
     try:
         import time
 
         while True:
-            for pair in pairs_list:
-                console.print(f"🤖 定期分析実行: {pair}")
-                success = _run_ai_analysis(pair, period, discord)
+            console.print("🤖 定期統合AI分析実行")
+            success = _run_ai_analysis(False, no_optimization, False)
 
-                if success:
-                    console.print(f"✅ {pair} 分析完了")
-                else:
-                    console.print(f"❌ {pair} 分析失敗")
-
-                time.sleep(5)  # ペア間の間隔
+            if success:
+                console.print("✅ 統合AI分析完了")
+            else:
+                console.print("❌ 統合AI分析失敗")
 
             console.print(f"⏰ 次回実行まで {interval}秒待機...")
             time.sleep(interval)
 
     except KeyboardInterrupt:
-        console.print("\n⏹️ 定期AI分析スケジュールを停止しました")
+        console.print("\n⏹️ 定期統合AI分析スケジュールを停止しました")
 
 
 def _run_ai_analysis(
-    currency_pair: str, period: str, discord: bool, real_data: bool = True
+    test: bool = False,
+    no_optimization: bool = False,
+    chart: bool = False,
 ) -> bool:
-    """AI分析実行"""
+    """統合AI分析実行（TA-Lib標準版）"""
     try:
-        # AI分析統合スクリプト実行
+        # モジュール化されたAI分析スクリプト実行
         import subprocess
 
-        if real_data and discord:
-            # 実データ + Discord配信
-            cmd = ["python", "real_ai_discord.py", currency_pair]
-        elif discord:
-            # デモデータ + Discord配信
-            cmd = [
-                "python",
-                "ai_discord_integration.py",
-                "analyze",
-                currency_pair,
-                period,
-            ]
-        else:
-            # Discord通知なしの場合はAPI直接呼び出し
-            cmd = [
-                "python",
-                "ai_discord_integration.py",
-                "analyze",
-                currency_pair,
-                period,
-            ]
+        # 基本コマンド
+        cmd = ["python", "scripts/cron/integrated_ai_discord/main.py"]
 
-        result = subprocess.run(cmd, capture_output=True, text=True, cwd="/app")
+        # オプション追加
+        if test:
+            # テストモード
+            cmd.append("--test")
+
+        if no_optimization:
+            # 最適化機能無効
+            cmd.append("--no-optimization")
+
+        if chart:
+            # チャート生成
+            cmd.append("--chart")
+
+        console.print(f"🚀 実行コマンド: {' '.join(cmd)}")
+
+        # リアルタイムで出力を表示
+        result = subprocess.run(cmd, cwd="/app")
 
         if result.returncode == 0:
             return True
         else:
-            logger.error(f"AI analysis failed: {result.stderr}")
+            logger.error(f"AI analysis failed with return code: {result.returncode}")
             return False
 
     except Exception as e:
@@ -269,14 +263,13 @@ def _run_ai_analysis(
 
 
 def _send_discord_test() -> bool:
-    """Discord通知テスト"""
+    """Discord通知テスト（モジュール化版）"""
     try:
         import subprocess
 
+        # モジュール化されたスクリプトでテスト実行（リアルタイム出力）
         result = subprocess.run(
-            ["python", "ai_discord_integration.py", "test"],
-            capture_output=True,
-            text=True,
+            ["python", "scripts/cron/integrated_ai_discord/main.py", "--test"],
             cwd="/app",
         )
 

@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 
 sys.path.append("/app")
 
-from scripts.cron.enhanced_unified_technical_calculator import (
+from scripts.cron.advanced_technical.enhanced_unified_technical_calculator import (
     EnhancedUnifiedTechnicalCalculator,
 )
 from src.infrastructure.database.connection import (

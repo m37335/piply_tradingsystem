@@ -17,24 +17,32 @@ from rich.console import Console
 
 # プロジェクトパス追加
 sys.path.append("/app")
+
+# プロジェクト固有のインポート
 from src.infrastructure.analysis.currency_correlation_analyzer import (
     CurrencyCorrelationAnalyzer,
-)
-from src.infrastructure.analysis.technical_indicators import TechnicalIndicatorsAnalyzer
-from src.infrastructure.cache.analysis_cache import AnalysisCacheManager
-from src.infrastructure.cache.cache_manager import CacheManager
-from src.infrastructure.database.connection import get_async_session
+)  # noqa: E402
+from src.infrastructure.analysis.technical_indicators import (
+    TechnicalIndicatorsAnalyzer,
+)  # noqa: E402
+from src.infrastructure.cache.analysis_cache import AnalysisCacheManager  # noqa: E402
+from src.infrastructure.cache.cache_manager import CacheManager  # noqa: E402
+from src.infrastructure.database.connection import get_async_session  # noqa: E402
 from src.infrastructure.database.repositories.analysis_cache_repository_impl import (
     AnalysisCacheRepositoryImpl,
-)
+)  # noqa: E402
 from src.infrastructure.database.repositories.notification_history_repository_impl import (
     NotificationHistoryRepositoryImpl,
-)
-from src.infrastructure.messaging.discord_client import DiscordClient
-from src.infrastructure.messaging.notification_manager import NotificationManager
-from src.infrastructure.optimization.api_rate_limiter import ApiRateLimiter
-from src.infrastructure.optimization.batch_processor import BatchProcessor
-from src.infrastructure.optimization.data_optimizer import DataOptimizer
+)  # noqa: E402
+from src.infrastructure.messaging.discord_client import DiscordClient  # noqa: E402
+from src.infrastructure.messaging.notification_manager import (
+    NotificationManager,
+)  # noqa: E402
+from src.infrastructure.optimization.api_rate_limiter import (
+    ApiRateLimiter,
+)  # noqa: E402
+from src.infrastructure.optimization.batch_processor import BatchProcessor  # noqa: E402
+from src.infrastructure.optimization.data_optimizer import DataOptimizer  # noqa: E402
 
 
 class FibonacciAnalyzer:
@@ -730,7 +738,8 @@ class IntegratedAIDiscordReporter:
                                 signal_line, (int, float)
                             ):
                                 self.console.print(
-                                    f"✅ {tf}: MACD={macd_line:.4f}, Signal={signal_line:.4f}, Hist={histogram:.4f}"
+                                    f"✅ {tf}: MACD={macd_line:.4f}, "
+                                    f"Signal={signal_line:.4f}, Hist={histogram:.4f}"
                                 )
 
                         # ボリンジャーバンド出力
@@ -742,7 +751,8 @@ class IntegratedAIDiscordReporter:
                             middle_band, (int, float)
                         ):
                             self.console.print(
-                                f"✅ {tf}: BB Upper={upper_band:.4f}, Middle={middle_band:.4f}, Lower={lower_band:.4f}"
+                                f"✅ {tf}: BB Upper={upper_band:.4f}, "
+                                f"Middle={middle_band:.4f}, Lower={lower_band:.4f}"
                             )
 
                         # 移動平均線出力
@@ -807,7 +817,8 @@ class IntegratedAIDiscordReporter:
                                     swing_low, (int, float)
                                 ):
                                     self.console.print(
-                                        f"✅ {tf}: Fib High={swing_high:.4f}, Low={swing_low:.4f}"
+                                        f"✅ {tf}: Fib High={swing_high:.4f}, "
+                                        f"Low={swing_low:.4f}"
                                     )
                             else:
                                 self.console.print(f"⚠️ {tf}: フィボナッチ計算エラー")
@@ -1048,7 +1059,7 @@ M5 (5M): {', '.join(m5_summary)}
 あなたはプロFXトレーダーです。
 通貨間の相関性とテクニカル指標を活用した統合分析に基づいて、USD/JPYの「負けないトレード」を目指した売買シナリオを2000文字以内で作成してください。
 特に、上昇トレンドでの押し目買いまたは下降トレンドでの押し目売りを優先し、損切り幅を小さく、リスクリワード比率を1:2以上に設定してください。
-以下のデータを基に、USD/JPYの売買シナリオを分析してください。
+以下のデータを基に、指示に従ってUSD/JPYの売買シナリオを分析してください。
 
 【データ】
 分析時刻: {current_time}
@@ -1076,29 +1087,70 @@ JPY分析: {jpy_analysis.get('direction', 'N/A')} \
 {technical_summary}
 
 【指示】
-以下の5つのセクションで分析してください：
+以下の手順に従って売買シナリオを作成してください：
 
-【相関分析】他通貨の動きから見るUSD/JPY方向性
-【大局観】D1・H4マルチタイムフレーム分析  
-【戦術】H1エントリーゾーン・タイミング分析
-【タイミング】M5エントリーポイント
-  - M5: 精密タイミング
-    * MA20とボリンジャーバンドの短期動向
-    * RSI値による最終エントリー判定
-    * H1のMA20の動向
-    * H1のフィボナッチレベルでの押し目・戻り確認
-    * 過熱感の確認
-【統合シナリオ】具体的価格指示
-    ・エントリー価格: ○○.○○○〜○○.○○○（根拠: M5のMA20とボリンジャーバンドの短期動向・MA20とMA200の長期動向・H1のフィボナッチレベルでの押し目・戻り確認）
-    ・利確目標: ○○.○○○（〇〇pips利益、根拠: MAやD1・H4・H1のフィボナッチレベル、サポート・レジスタンス）
-    ・損切り価格: ○○.○○○（〇〇pips損失、根拠: MAやD1・H4・H1のフィボナッチレベル）
-    ・段階的利確: 第一目標○○.○○○、第二目標○○.○○○
+売買シナリオ構築の手順（USD/JPYメイン）
+① 長期トレンドの方向性を確認（D1）
+・MA200・MA50の位置関係と傾き
+→ 上昇相場なのか、下降相場なのか、レンジなのかを大きく把握。
+・RSI_LONG（70期間）
+→ 過熱感（買われすぎ・売られすぎ）を確認。
+・フィボナッチ90日（D1）
+→ 長期的な押し目・戻りの候補ゾーンを把握。
+👉 この段階で「基本的なバイアス（LONG/SHORT/NEUTRAL）」を設定。
 
-**重要**:
-- 現在価格での即座エントリーではなく、押し目・戻りを待つ
-- リスクリワード比率1:2以上
-- 具体的な価格とpips数を明記
-- フィボナッチレベルを「サポートライン」「レジスタンスライン」として説明
+② 中期の環境認識（H4）
+・移動平均線（MA50・MA20）
+→ トレンド方向とクロスの有無を確認。
+・MACD（H4）
+→ ゴールデンクロスなら上昇継続、デッドクロスなら反落警戒。
+・通貨相関（USD強弱・JPY強弱）
+→ 両方が噛み合っていればシナリオの信頼度UP。
+👉 「順張りで攻める」か「逆張りで反転を狙う」かをここで決定。
+
+③ 短期シナリオ設計（H1）
+・MA20 + フィボ24時間
+→ 押し目買い/戻り売りの水準を具体化。
+・RSI_MEDIUM（50期間）・RSI_SHORT（30期間）
+
+→ エントリータイミングを検出（ダイバージェンスがあれば強いシグナル）。
+・ボリンジャーバンド（H1）
+→ バンド幅が拡大ならトレンド継続、収縮ならブレイク待ち。
+👉 ここで「どこで入るか（価格帯）」と「利確・損切り候補」を明示。
+
+④ 精密エントリー（M5）
+・ボリンジャーバンド（M5）
+→ バンドウォークなら順張り、反発なら逆張りスキャル。
+・フィボ48期間（M5）
+→ 短期の押し目・戻りを可視化。
+・RSI30（M5）
+→ オシレーターで直近の過熱感を確認。
+👉 ここで実際のエントリータイミングを決定（指値 or 成行）。
+
+⑤ シナリオとしてまとめる
+・基本バイアス（LONG/SHORT/NEUTRAL）
+→ 日足/H4のトレンドと通貨強弱で決定
+・エントリーポイント
+→ H1フィボ38.2% or 61.8%、RSI反発で確認
+・利確ポイント
+→ 固定 +30pips（2回で60pips/日目標）
+→ 直近高値/安値、ボリバン上限/下限で調整
+・損切りポイント
+→ 直近スイングの外側（20〜30pips）
+→ リスクリワード最低 1:1.5 を確保
+
+※シナリオ分岐
+ロングシナリオ：押し目買い条件が揃ったら
+ショートシナリオ：戻り売り条件が揃ったら
+どちらも崩れたら：その日はノートレ
+
+⑥ AI分析レポートイメージ例（USD/JPY）
+・【基本バイアス】：LONG（D1で上昇トレンド、USD強・JPY弱）
+・【エントリー候補】：H1フィボ38.2%（例：150.20付近）
+・【利確】：+30pips（150.50付近）
+・【損切り】：直近安値の下（149.90付近）
+・【オルタナティブ】：150.80で頭打ち＆RSI70反落なら戻り売り（+30pips狙い）
+・【売買シナリオ分析】：売買シナリオ構築の手順①～⑤を組み合わせて作成。
 """
 
         try:
@@ -1234,6 +1286,10 @@ JPY分析: {jpy_analysis.get('direction', 'N/A')} \
         # AI分析結果をそのまま使用（フィールド分割で処理）
         analysis_summary = analysis
 
+        # デバッグ用：分析結果の長さをログ出力
+        self.console.print(f"🔍 AI分析結果の長さ: {len(analysis_summary)}文字")
+        self.console.print(f"🔍 AI分析結果の先頭100文字: {analysis_summary[:100]}...")
+
         # 分析結果を複数のフィールドに分割
         fields = [
             {
@@ -1334,6 +1390,25 @@ JPY分析: {jpy_analysis.get('direction', 'N/A')} \
                         "inline": False,
                     }
                 )
+
+            # セクションが見つからない場合は、分析結果全体を分割して追加
+            if not sections:
+                self.console.print(
+                    "⚠️ セクションが見つからないため、分析結果全体を分割して追加"
+                )
+                # 分析結果を1024文字ずつに分割
+                chunks = [
+                    analysis_summary[i : i + 1024]
+                    for i in range(0, len(analysis_summary), 1024)
+                ]
+                for i, chunk in enumerate(chunks):
+                    fields.append(
+                        {
+                            "name": f"🎯 AI分析結果 (Part {i+1})",
+                            "value": chunk,
+                            "inline": False,
+                        }
+                    )
         else:
             # 短い場合は1つのフィールドに
             fields.append(
@@ -1578,22 +1653,31 @@ async def main():
                                                 ):
                                                     if level_price < current_price:
                                                         support_levels.append(
-                                                            f"{level_name}: {level_price:.4f}"
+                                                            f"{level_name}: "
+                                                            f"{level_price:.4f}"
                                                         )
                                                     else:
                                                         resistance_levels.append(
-                                                            f"{level_name}: {level_price:.4f}"
+                                                            f"{level_name}: "
+                                                            f"{level_price:.4f}"
                                                         )
 
                                             if support_levels:
-                                                levels_info += f" | サポート: {', '.join(support_levels)}"
+                                                levels_info += (
+                                                    f" | サポート: "
+                                                    f"{', '.join(support_levels)}"
+                                                )
                                             if resistance_levels:
-                                                levels_info += f" | レジスタンス: {', '.join(resistance_levels)}"
+                                                levels_info += (
+                                                    f" | レジスタンス: "
+                                                    f"{', '.join(resistance_levels)}"
+                                                )
                                     position_info = (
                                         f" (現在位置: {percentage}%){levels_info}"
                                     )
                                 d1_summary.append(
-                                    f"Fib High: {swing_high:.4f}, Low: {swing_low:.4f}{position_info}"
+                                    f"Fib High: {swing_high:.4f}, "
+                                    f"Low: {swing_low:.4f}{position_info}"
                                 )
 
                     # H4分析サマリー
@@ -1630,22 +1714,31 @@ async def main():
                                                 ):
                                                     if level_price < current_price:
                                                         support_levels.append(
-                                                            f"{level_name}: {level_price:.4f}"
+                                                            f"{level_name}: "
+                                                            f"{level_price:.4f}"
                                                         )
                                                     else:
                                                         resistance_levels.append(
-                                                            f"{level_name}: {level_price:.4f}"
+                                                            f"{level_name}: "
+                                                            f"{level_price:.4f}"
                                                         )
 
                                             if support_levels:
-                                                levels_info += f" | サポート: {', '.join(support_levels)}"
+                                                levels_info += (
+                                                    f" | サポート: "
+                                                    f"{', '.join(support_levels)}"
+                                                )
                                             if resistance_levels:
-                                                levels_info += f" | レジスタンス: {', '.join(resistance_levels)}"
+                                                levels_info += (
+                                                    f" | レジスタンス: "
+                                                    f"{', '.join(resistance_levels)}"
+                                                )
                                     position_info = (
                                         f" (現在位置: {percentage}%){levels_info}"
                                     )
                                 h4_summary.append(
-                                    f"Fib High: {swing_high:.4f}, Low: {swing_low:.4f}{position_info}"
+                                    f"Fib High: {swing_high:.4f}, "
+                                    f"Low: {swing_low:.4f}{position_info}"
                                 )
 
                     # H1分析サマリー
@@ -1682,22 +1775,31 @@ async def main():
                                                 ):
                                                     if level_price < current_price:
                                                         support_levels.append(
-                                                            f"{level_name}: {level_price:.4f}"
+                                                            f"{level_name}: "
+                                                            f"{level_price:.4f}"
                                                         )
                                                     else:
                                                         resistance_levels.append(
-                                                            f"{level_name}: {level_price:.4f}"
+                                                            f"{level_name}: "
+                                                            f"{level_price:.4f}"
                                                         )
 
                                             if support_levels:
-                                                levels_info += f" | サポート: {', '.join(support_levels)}"
+                                                levels_info += (
+                                                    f" | サポート: "
+                                                    f"{', '.join(support_levels)}"
+                                                )
                                             if resistance_levels:
-                                                levels_info += f" | レジスタンス: {', '.join(resistance_levels)}"
+                                                levels_info += (
+                                                    f" | レジスタンス: "
+                                                    f"{', '.join(resistance_levels)}"
+                                                )
                                     position_info = (
                                         f" (現在位置: {percentage}%){levels_info}"
                                     )
                                 h1_summary.append(
-                                    f"Fib High: {swing_high:.4f}, Low: {swing_low:.4f}{position_info}"
+                                    f"Fib High: {swing_high:.4f}, "
+                                    f"Low: {swing_low:.4f}{position_info}"
                                 )
 
                     # M5分析サマリー
@@ -1734,22 +1836,31 @@ async def main():
                                                 ):
                                                     if level_price < current_price:
                                                         support_levels.append(
-                                                            f"{level_name}: {level_price:.4f}"
+                                                            f"{level_name}: "
+                                                            f"{level_price:.4f}"
                                                         )
                                                     else:
                                                         resistance_levels.append(
-                                                            f"{level_name}: {level_price:.4f}"
+                                                            f"{level_name}: "
+                                                            f"{level_price:.4f}"
                                                         )
 
                                             if support_levels:
-                                                levels_info += f" | サポート: {', '.join(support_levels)}"
+                                                levels_info += (
+                                                    f" | サポート: "
+                                                    f"{', '.join(support_levels)}"
+                                                )
                                             if resistance_levels:
-                                                levels_info += f" | レジスタンス: {', '.join(resistance_levels)}"
+                                                levels_info += (
+                                                    f" | レジスタンス: "
+                                                    f"{', '.join(resistance_levels)}"
+                                                )
                                     position_info = (
                                         f" (現在位置: {percentage}%){levels_info}"
                                     )
                                 m5_summary.append(
-                                    f"Fib High: {swing_high:.4f}, Low: {swing_low:.4f}{position_info}"
+                                    f"Fib High: {swing_high:.4f}, "
+                                    f"Low: {swing_low:.4f}{position_info}"
                                 )
 
                     technical_summary = f"""
@@ -1861,5 +1972,7 @@ if __name__ == "__main__":
                 print("✅ エラー通知をDiscordに送信しました")
         except Exception as notify_error:
             print(f"⚠️ エラー通知送信失敗: {notify_error}")
+
+        exit(1)
 
         exit(1)
