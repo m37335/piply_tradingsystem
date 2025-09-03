@@ -1,0 +1,283 @@
+# 経済指標日本語化システム マスタープロジェクト計画書 (並行開発版)
+# 期間: 10週間 (2025-01-27 ～ 2025-04-06)
+# 目的: 既存investpy経済カレンダーシステムに日本語化・詳細情報拡張機能を統合
+
+project:
+  name: "経済指標日本語化・詳細情報拡張システム (並行開発版)"
+  total_duration: "10週間 (70日間)"
+  start_date: "2025-01-27"
+  end_date: "2025-04-06"
+  go_live_date: "2025-04-07"
+  priority: "High"
+  status: "Planning"
+  budget: "¥0 (既存システム活用)"
+  strategy: "並行開発 → 段階的移行"
+
+overview:
+  description: "既存のinvestpy経済カレンダーシステムを維持しながら、制約準拠の新システムを並行構築し、段階的に移行する"
+  
+  key_features:
+    - "経済指標の日本語翻訳表示"
+    - "詳細な市場影響分析"
+    - "AI解説生成機能"
+    - "Discord統合配信"
+    - "既存PostgreSQLデータベース統合"
+    - "制約準拠アーキテクチャ (400行以内)"
+    
+  business_value:
+    - "ユーザビリティ向上: 日本語表示による理解促進"
+    - "投資判断支援: 詳細情報による意思決定支援"
+    - "分析効果: 経済指標の理解促進"
+    - "コスト削減: 手動準備による運用コスト最小化"
+    - "保守性向上: 制約準拠による高品質コード"
+
+phases:
+  phase1:
+    name: "新システム基盤構築"
+    duration: "Week 1-3 (21日間)"
+    start_date: "2025-01-27"
+    end_date: "2025-02-16"
+    priority: "Critical"
+    estimated_hours: 210
+    deliverables:
+      - "新規データベーステーブル3個"
+      - "エンティティ・モデル・リポジトリクラス (制約準拠)"
+      - "マイグレーションスクリプト3個"
+      - "単体テストスイート"
+    dependencies: []
+    risks:
+      - "既存データベースとの競合"
+      - "パフォーマンス問題"
+      - "データ整合性問題"
+
+  phase2:
+    name: "新機能実装"
+    duration: "Week 4-6 (21日間)"
+    start_date: "2025-02-17"
+    end_date: "2025-03-09"
+    priority: "High"
+    estimated_hours: 252
+    deliverables:
+      - "翻訳サービス (制約準拠)"
+      - "詳細情報機能 (制約準拠)"
+      - "AI分析機能 (制約準拠)"
+      - "Discord統合機能 (制約準拠)"
+    dependencies: ["Phase 1完了"]
+    risks:
+      - "外部API制限・障害"
+      - "機能統合の複雑性"
+      - "パフォーマンス問題"
+
+  phase3:
+    name: "統合・テスト"
+    duration: "Week 7-8 (14日間)"
+    start_date: "2025-03-10"
+    end_date: "2025-03-23"
+    priority: "High"
+    estimated_hours: 168
+    deliverables:
+      - "新統合スクリプト (制約準拠)"
+      - "統合テストスイート"
+      - "パフォーマンステスト"
+      - "品質チェックレポート"
+    dependencies: ["Phase 2完了"]
+    risks:
+      - "統合の複雑性"
+      - "テスト工数の増大"
+      - "品質基準の達成"
+
+  phase4:
+    name: "段階的移行"
+    duration: "Week 9-10 (14日間)"
+    start_date: "2025-03-24"
+    end_date: "2025-04-06"
+    priority: "Critical"
+    estimated_hours: 140
+    deliverables:
+      - "並行稼働システム"
+      - "段階的移行完了"
+      - "既存システム停止"
+      - "移行完了レポート"
+    dependencies: ["Phase 3完了"]
+    risks:
+      - "移行中の障害"
+      - "データ整合性問題"
+      - "サービス継続性"
+
+technical_architecture:
+  existing_system:
+    - "既存スクリプト: そのまま維持・稼働継続"
+    - "economic_indicators_discord.py (51,166行)"
+    - "weekly_economic_indicators_discord.py (24,336行)"
+    - "economic_calendar_cache_manager.py (14,575行)"
+    
+  new_system:
+    - "制約準拠アーキテクチャ (全ファイル400行以内)"
+    - "ドメイン駆動設計 (DDD)"
+    - "依存性注入 (DI)"
+    - "単一責任原則 (SRP)"
+    
+  database:
+    - "既存PostgreSQLデータベース統合"
+    - "新規テーブル3個追加"
+    - "段階的マイグレーション戦略"
+    
+  services:
+    - "翻訳サービス（マスターデータ・キャッシュ・API）"
+    - "情報取得サービス"
+    - "AI分析サービス"
+    - "Discord統合サービス"
+    
+  external_integrations:
+    - "Google Translate API"
+    - "OpenAI GPT-4 API"
+    - "Discord Webhook API"
+    - "既存investpyシステム"
+
+  performance_requirements:
+    - "翻訳処理: 1秒以内"
+    - "情報取得: 500ms以内"
+    - "Discord配信: 5秒以内"
+    - "AI分析: 30秒以内"
+
+resources:
+  human_resources:
+    total_estimated_hours: 770
+    team_composition:
+      - "バックエンド開発者: 1名 (フルタイム)"
+      - "データ収集担当者: 0.5名 (Phase 2)"
+      - "AI統合担当者: 0.5名 (Phase 2)"
+      - "Discord統合担当者: 0.5名 (Phase 2)"
+      - "品質管理担当者: 0.5名 (Phase 3)"
+      - "運用担当者: 0.5名 (Phase 4)"
+      - "QAエンジニア: 0.5名 (全Phase)"
+      
+  technical_resources:
+    - "PostgreSQL 15 (既存)"
+    - "Redis 7 (新規追加)"
+    - "Google Cloud Translate API"
+    - "OpenAI GPT-4 API"
+    - "Discord Webhook API"
+    - "Docker環境 (既存)"
+
+success_metrics:
+  technical_metrics:
+    - "システム稼働率: 99.5%以上"
+    - "翻訳精度: 95%以上"
+    - "情報正確性: 98%以上"
+    - "エラー率: 1%以下"
+    - "ファイルサイズ: 全ファイル400行以内"
+    
+  business_metrics:
+    - "ユーザー満足度: 4.0/5.0以上"
+    - "経済指標理解度向上: 30%以上"
+    - "投資判断精度向上: 20%以上"
+    - "運用コスト削減: 50%以上"
+    - "移行成功率: 100%"
+    
+  quality_metrics:
+    - "テストカバレッジ: 95%以上"
+    - "コード品質: Linterエラー0件"
+    - "ドキュメント完成度: 100%"
+    - "セキュリティ脆弱性: 0件"
+
+risk_management:
+  high_risk_items:
+    - "並行稼働の複雑性"
+    - "段階的移行のリスク"
+    - "外部API制限・障害"
+    - "データ品質・精度問題"
+    - "制約準拠の達成"
+    
+  mitigation_strategies:
+    - "段階的実装と十分なテスト"
+    - "適切なエラーハンドリングとフォールバック"
+    - "品質チェック機能と専門家レビュー"
+    - "段階的移行とロールバック戦略"
+    - "継続的な監視と制御"
+
+dependencies:
+  external_dependencies:
+    - "既存PostgreSQLデータベースの稼働"
+    - "Google Translate APIのアクセス権限"
+    - "OpenAI APIのアクセス権限"
+    - "Discord APIのアクセス権限"
+    - "既存investpyシステムの稼働"
+    
+  internal_dependencies:
+    - "既存システムの理解と分析"
+    - "開発チームの準備"
+    - "テスト環境の準備"
+    - "運用チームの準備"
+
+deliverables_summary:
+  code:
+    - "新規ソースコード: ~80ファイル (制約準拠)"
+    - "設定ファイル: ~20ファイル"
+    - "テストコード: ~40ファイル"
+    - "スクリプト: ~15ファイル"
+    
+  documentation:
+    - "技術仕様書: 1冊"
+    - "APIドキュメント: 1冊"
+    - "運用マニュアル: 1冊"
+    - "統合ガイド: 1冊"
+    - "移行ガイド: 1冊"
+    
+  data:
+    - "マスターデータ: 50件"
+    - "翻訳キャッシュ: 初期データ"
+    - "設定データ: 各種設定ファイル"
+
+project_management:
+  methodology: "アジャイル開発 (2週間スプリント) + 並行開発"
+  tools:
+    - "Git (バージョン管理)"
+    - "Docker (環境管理)"
+    - "pytest (テスト)"
+    - "GitHub (コード管理)"
+    
+  communication:
+    - "日次進捗報告"
+    - "週次レビュー"
+    - "Phase完了時の成果物レビュー"
+    - "リスク・課題の随時共有"
+    - "移行進捗の定期報告"
+
+migration_strategy:
+  parallel_operation:
+    - "既存システム: 稼働継続"
+    - "新システム: 並行稼働"
+    - "段階的移行: 10% → 30% → 50% → 80% → 100%"
+    
+  monitoring:
+    - "機能比較: 既存vs新システム"
+    - "パフォーマンス監視"
+    - "エラー率監視"
+    - "ユーザー満足度評価"
+    
+  rollback:
+    - "即座ロールバック: 重大問題時"
+    - "段階的ロールバック: 軽微問題時"
+    - "部分ロールバック: 特定機能のみ"
+
+post_implementation:
+  maintenance:
+    - "定期メンテナンス: 週次"
+    - "データ更新: 月次"
+    - "品質監視: 継続的"
+    - "パフォーマンス監視: 継続的"
+    
+  future_enhancements:
+    - "Web UI開発"
+    - "モバイルアプリ開発"
+    - "多言語対応拡充"
+    - "AI機能強化"
+
+project_status:
+  overall_progress: 0
+  current_phase: "Planning"
+  next_milestone: "Phase 1開始"
+  estimated_completion: "2025-04-06"
+  go_live_readiness: "Not Ready"
+  migration_readiness: "Not Ready"

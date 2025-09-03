@@ -1,0 +1,105 @@
+# アラート設定ファイル
+# Exchange Analytics System - Alert Configuration
+
+# レート閾値アラート設定
+rate_threshold_alerts:
+  enabled: true
+  currency_pairs:
+    USD/JPY:
+      upper_threshold: 151.00
+      lower_threshold: 140.00
+      check_interval_minutes: 5
+      severity: "high"
+    EUR/USD:
+      upper_threshold: 1.1500
+      lower_threshold: 1.0500
+      check_interval_minutes: 5
+      severity: "medium"
+
+# パターン検出アラート設定
+pattern_detection_alerts:
+  enabled: true
+  confidence_threshold: 0.80  # 80%以上の信頼度でアラート
+  patterns:
+    reversal:
+      enabled: true
+      severity: "high"
+      min_confidence: 0.85
+    continuation:
+      enabled: true
+      severity: "medium"
+      min_confidence: 0.80
+    divergence:
+      enabled: true
+      severity: "high"
+      min_confidence: 0.90
+
+# システムリソースアラート設定
+system_resource_alerts:
+  enabled: true
+  cpu_usage:
+    warning_threshold: 70
+    critical_threshold: 90
+    severity: "medium"
+  memory_usage:
+    warning_threshold: 80
+    critical_threshold: 95
+    severity: "high"
+  disk_usage:
+    warning_threshold: 85
+    critical_threshold: 95
+    severity: "medium"
+
+# API エラーアラート設定
+api_error_alerts:
+  enabled: true
+  rate_limit_threshold: 5  # 5分間に5回以上のエラーでアラート
+  timeout_threshold: 3     # 3分間に3回以上のタイムアウトでアラート
+  severity: "medium"
+
+# データ取得エラーアラート設定
+data_fetch_alerts:
+  enabled: true
+  consecutive_failures: 3  # 3回連続失敗でアラート
+  severity: "high"
+  timeframes:
+    - "5m"
+    - "1h"
+    - "4h"
+    - "1d"
+
+# 通知設定
+notification_settings:
+  email:
+    enabled: false
+    recipients: []
+  discord:
+    enabled: true
+    # デフォルトのWebhook URL（後方互換性のため）
+    webhook_url: "${DISCORD_WEBHOOK_URL}"
+    channel_id: "${DISCORD_CHANNEL_ID}"
+    # アラートタイプ別のWebhook URL設定
+    alert_type_webhooks:
+      # システム系アラート（リソース監視、API エラー等）
+      system_resource: "${DISCORD_MONITORING_WEBHOOK_URL}"
+      api_error: "${DISCORD_MONITORING_WEBHOOK_URL}"
+      data_fetch_error: "${DISCORD_MONITORING_WEBHOOK_URL}"
+      # 為替系アラート（レート閾値、パターン検出等）
+      rate_threshold: "${DISCORD_WEBHOOK_URL}"
+      pattern_detection: "${DISCORD_WEBHOOK_URL}"
+      # デフォルト（設定されていないアラートタイプ用）
+      default: "${DISCORD_WEBHOOK_URL}"
+  slack:
+    enabled: false
+    webhook_url: ""
+
+# アラート管理設定
+alert_management:
+  auto_resolve:
+    enabled: true
+    resolve_after_hours: 24  # 24時間後に自動解決
+  escalation:
+    enabled: true
+    escalation_after_hours: 2  # 2時間後にエスカレーション
+  retention:
+    keep_resolved_days: 30  # 解決済みアラートを30日間保持

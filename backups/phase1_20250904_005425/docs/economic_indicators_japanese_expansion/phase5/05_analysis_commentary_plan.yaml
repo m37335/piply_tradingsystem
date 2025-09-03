@@ -1,0 +1,283 @@
+# Phase 5: 分析・解説機能実装計画書
+# 期間: Week 5 (7日間)
+# 目的: AI解説生成機能・経済指標比較分析機能・市場影響度分析機能の実装
+
+project:
+  name: "経済指標日本語化システム - Phase 5"
+  phase: "分析・解説機能実装"
+  duration: "7日間"
+  start_date: "2025-02-24"
+  end_date: "2025-03-02"
+  priority: "Medium"
+  status: "Planning"
+
+objectives:
+  - "AI解説生成機能の実装"
+  - "経済指標比較分析機能の実装"
+  - "市場影響度分析機能の実装"
+  - "統計・レポート機能の実装"
+  - "分析品質管理機能の実装"
+
+deliverables:
+  - "AI分析サービス（EconomicAnalysisService）"
+  - "比較分析機能（ComparisonAnalyzer）"
+  - "市場影響分析機能（MarketImpactAnalyzer）"
+  - "レポート生成機能（ReportGenerator）"
+  - "分析品質管理機能"
+
+tasks:
+  day1:
+    name: "AI分析基盤実装"
+    duration: "1日"
+    tasks:
+      - name: "AI分析サービス設計"
+        description: "AI分析サービスの基本設計とインターフェース定義"
+        files:
+          - "src/domain/services/analysis/economic_analysis_service.py"
+          - "src/domain/services/analysis/comparison_analyzer.py"
+          - "src/domain/services/analysis/report_generator.py"
+        estimated_hours: 6
+        dependencies: []
+        
+      - name: "OpenAI統合実装"
+        description: "OpenAI APIとの統合実装"
+        files:
+          - "src/infrastructure/external/ai/openai_analysis_client.py"
+          - "src/infrastructure/external/ai/analysis_prompt_builder.py"
+          - "src/infrastructure/external/ai/analysis_response_parser.py"
+        estimated_hours: 8
+        dependencies: []
+        
+      - name: "AI設定管理実装"
+        description: "AI分析関連の設定管理機能実装"
+        files:
+          - "src/infrastructure/config/ai/ai_analysis_config.py"
+        estimated_hours: 2
+        dependencies: []
+
+  day2:
+    name: "AI解説生成機能実装"
+    duration: "1日"
+    tasks:
+      - name: "解説生成エンジン実装"
+        description: "経済指標解説の自動生成エンジン実装"
+        files:
+          - "src/domain/services/analysis/commentary_generator.py"
+        estimated_hours: 8
+        dependencies: ["day1"]
+        
+      - name: "プロンプトテンプレート作成"
+        description: "AI分析用のプロンプトテンプレート作成"
+        files:
+          - "config/ai/analysis_prompts.yaml"
+          - "config/ai/commentary_templates.yaml"
+        estimated_hours: 6
+        dependencies: ["day1"]
+        
+      - name: "解説品質管理機能実装"
+        description: "生成された解説の品質管理機能実装"
+        files:
+          - "src/domain/services/analysis/commentary_quality_manager.py"
+        estimated_hours: 2
+        dependencies: ["day1"]
+
+  day3:
+    name: "比較分析機能実装"
+    duration: "1日"
+    tasks:
+      - name: "指標比較分析機能実装"
+        description: "複数経済指標の比較分析機能実装"
+        files:
+          - "src/domain/services/analysis/comparison_analyzer.py"
+        estimated_hours: 8
+        dependencies: ["day2"]
+        
+      - name: "時系列分析機能実装"
+        description: "時系列データの分析機能実装"
+        files:
+          - "src/domain/services/analysis/time_series_analyzer.py"
+        estimated_hours: 6
+        dependencies: ["day2"]
+        
+      - name: "相関分析機能実装"
+        description: "指標間の相関分析機能実装"
+        files:
+          - "src/domain/services/analysis/correlation_analyzer.py"
+        estimated_hours: 2
+        dependencies: ["day2"]
+
+  day4:
+    name: "市場影響分析機能実装"
+    duration: "1日"
+    tasks:
+      - name: "市場影響度評価機能実装"
+        description: "経済指標の市場影響度を評価する機能実装"
+        files:
+          - "src/domain/services/analysis/market_impact_evaluator.py"
+        estimated_hours: 8
+        dependencies: ["day3"]
+        
+      - name: "投資戦略分析機能実装"
+        description: "投資戦略に基づく分析機能実装"
+        files:
+          - "src/domain/services/analysis/investment_strategy_analyzer.py"
+        estimated_hours: 6
+        dependencies: ["day3"]
+        
+      - name: "リスク評価機能実装"
+        description: "経済指標に基づくリスク評価機能実装"
+        files:
+          - "src/domain/services/analysis/risk_evaluator.py"
+        estimated_hours: 2
+        dependencies: ["day3"]
+
+  day5:
+    name: "レポート生成機能実装"
+    duration: "1日"
+    tasks:
+      - name: "レポート生成エンジン実装"
+        description: "分析レポートの自動生成エンジン実装"
+        files:
+          - "src/domain/services/analysis/report_generator.py"
+        estimated_hours: 8
+        dependencies: ["day4"]
+        
+      - name: "レポートテンプレート作成"
+        description: "各種レポートのテンプレート作成"
+        files:
+          - "data/economic_indicators/analysis_reports/templates/"
+          - "config/ai/report_templates.yaml"
+        estimated_hours: 6
+        dependencies: ["day4"]
+        
+      - name: "レポート管理機能実装"
+        description: "生成されたレポートの管理機能実装"
+        files:
+          - "src/domain/services/analysis/report_manager.py"
+        estimated_hours: 2
+        dependencies: ["day4"]
+
+  day6:
+    name: "ユースケース・テスト実装"
+    duration: "1日"
+    tasks:
+      - name: "分析ユースケース実装"
+        description: "分析関連のユースケース実装"
+        files:
+          - "src/application/use_cases/analysis/generate_analysis_report.py"
+          - "src/application/use_cases/analysis/compare_indicators.py"
+          - "src/application/use_cases/analysis/create_investment_summary.py"
+        estimated_hours: 8
+        dependencies: ["day5"]
+        
+      - name: "単体テスト実装"
+        description: "分析機能の単体テスト実装"
+        files:
+          - "tests/unit/domain/test_economic_analysis_service.py"
+          - "tests/unit/domain/test_comparison_analyzer.py"
+          - "tests/unit/infrastructure/test_openai_analysis_client.py"
+        estimated_hours: 8
+        dependencies: ["day5"]
+
+  day7:
+    name: "統合テスト・ドキュメント"
+    duration: "1日"
+    tasks:
+      - name: "統合テスト実装"
+        description: "分析機能の統合テスト実装"
+        files:
+          - "tests/integration/test_analysis_workflow.py"
+          - "tests/integration/test_report_generation.py"
+        estimated_hours: 6
+        dependencies: ["day6"]
+        
+      - name: "パフォーマンステスト実装"
+        description: "分析機能のパフォーマンステスト実装"
+        files:
+          - "tests/performance/test_ai_analysis_performance.py"
+        estimated_hours: 4
+        dependencies: ["day6"]
+        
+      - name: "ドキュメント作成"
+        description: "Phase 5の完了ドキュメントとPhase 6への引き継ぎ資料"
+        files:
+          - "docs/economic_indicators_japanese_expansion/phase5/completion_report.md"
+          - "docs/economic_indicators_japanese_expansion/phase5/handover_to_phase6.md"
+        estimated_hours: 4
+        dependencies: ["day6"]
+
+success_criteria:
+  functionality:
+    - "AI解説生成機能が正常に動作する"
+    - "比較分析機能が正常に動作する"
+    - "市場影響分析機能が正常に動作する"
+    - "レポート生成機能が正常に動作する"
+    
+  performance:
+    - "AI分析が30秒以内で完了する"
+    - "比較分析が10秒以内で完了する"
+    - "レポート生成が1分以内で完了する"
+    - "API呼び出しが適切に制限されている"
+    
+  quality:
+    - "生成された解説の品質が高い"
+    - "分析結果の正確性が保たれている"
+    - "レポートの可読性が高い"
+    - "テストカバレッジが90%以上である"
+
+risks:
+  technical:
+    - name: "OpenAI API制限・障害"
+      impact: "High"
+      mitigation: "適切なエラーハンドリングとフォールバック機能"
+      
+    - name: "分析精度の問題"
+      impact: "Medium"
+      mitigation: "品質チェック機能と手動調整機能"
+      
+    - name: "パフォーマンス問題"
+      impact: "Medium"
+      mitigation: "効率的なアルゴリズムとキャッシュ戦略"
+
+  operational:
+    - name: "API利用料金の増大"
+      impact: "Medium"
+      mitigation: "適切なレート制限とキャッシュ活用"
+      
+    - name: "分析品質の問題"
+      impact: "Medium"
+      mitigation: "品質チェック機能と専門家レビュー"
+
+dependencies:
+  external:
+    - "Phase 4のDiscord統合完了"
+    - "OpenAI APIのアクセス権限"
+    - "分析データソースへのアクセス"
+    
+  internal:
+    - "Phase 3の基本サービス実装完了"
+    - "マスターデータの準備完了"
+    - "テスト環境の準備完了"
+
+resources:
+  human:
+    - "バックエンド開発者: 1名"
+    - "AI統合担当者: 0.5名"
+    - "データ分析担当者: 0.5名"
+    - "QAエンジニア: 0.5名"
+    
+  technical:
+    - "OpenAI GPT-4 API"
+    - "PostgreSQL 15"
+    - "pandas"
+    - "numpy"
+    - "pytest"
+
+estimated_total_hours: 82
+actual_hours: 0
+completion_percentage: 0
+
+next_phase:
+  name: "Phase 6: 品質向上"
+  start_date: "2025-03-03"
+  dependencies: ["Phase 5完了"]

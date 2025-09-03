@@ -1,0 +1,286 @@
+# investpy 経済カレンダーシステム プロジェクト概要
+# 期間: 8-10週間
+# 目的: ChatGPTによるドル円予測機能付き経済カレンダーシステムの構築
+
+project:
+  name: "investpy 経済カレンダーシステム"
+  description: "investpyを使用した経済カレンダーデータ取得とChatGPTによるドル円予測レポート生成システム"
+  total_duration: "8-10週間"
+  total_estimated_hours: 320-400
+  priority: "High"
+  status: "Planning"
+
+objectives:
+  - "investpyライブラリを使用した経済カレンダーデータの定期取得"
+  - "重要な経済イベントのDiscord自動通知"
+  - "ChatGPTによるドル円予測レポートの自動生成"
+  - "データの差分検出とアラート機能"
+  - "本番環境での安定稼働"
+
+phases:
+  phase1:
+    name: "基盤構築"
+    duration: "1-2週間"
+    estimated_hours: 30-40
+    priority: "Critical"
+    dependencies: []
+    key_deliverables:
+      - "プロジェクト構造の作成"
+      - "依存関係の設定"
+      - "開発環境の構築"
+      - "コード品質管理の設定"
+    file: "phase1_foundation.yaml"
+
+  phase2:
+    name: "ドメインエンティティ実装"
+    duration: "1週間"
+    estimated_hours: 35-45
+    priority: "Critical"
+    dependencies: ["phase1"]
+    key_deliverables:
+      - "経済イベントエンティティ"
+      - "AIレポートエンティティ"
+      - "バリデーション機能"
+      - "ファクトリパターン"
+    file: "phase2_domain_entities.yaml"
+
+  phase3:
+    name: "インフラストラクチャ実装"
+    duration: "1-2週間"
+    estimated_hours: 45-55
+    priority: "Critical"
+    dependencies: ["phase2"]
+    key_deliverables:
+      - "データベースモデルとマイグレーション"
+      - "外部APIクライアント"
+      - "設定管理システム"
+      - "キャッシュ機能"
+    file: "phase3_infrastructure.yaml"
+
+  phase4:
+    name: "ドメインサービス実装"
+    duration: "1-2週間"
+    estimated_hours: 50-60
+    priority: "Critical"
+    dependencies: ["phase3"]
+    key_deliverables:
+      - "Investpyサービス"
+      - "通知サービス"
+      - "データ分析サービス"
+      - "AI分析サービス"
+    file: "phase4_domain_services.yaml"
+
+  phase5:
+    name: "アプリケーション層実装"
+    duration: "1-2週間"
+    estimated_hours: 40-50
+    priority: "Critical"
+    dependencies: ["phase4"]
+    key_deliverables:
+      - "ユースケース実装"
+      - "スケジューラー実装"
+      - "アプリケーションロジック統合"
+      - "エラーハンドリング"
+    file: "phase5_application_layer.yaml"
+
+  phase6:
+    name: "スケジューリングとデプロイメント"
+    duration: "1週間"
+    estimated_hours: 35-45
+    priority: "High"
+    dependencies: ["phase5"]
+    key_deliverables:
+      - "crontab設定"
+      - "Docker環境"
+      - "本番デプロイメント準備"
+      - "監視・ログ機能"
+    file: "phase6_scheduling_and_deployment.yaml"
+
+  phase7:
+    name: "テストと検証"
+    duration: "1週間"
+    estimated_hours: 30-40
+    priority: "High"
+    dependencies: ["phase6"]
+    key_deliverables:
+      - "包括的なテストスイート"
+      - "システム統合テスト"
+      - "パフォーマンステスト"
+      - "セキュリティテスト"
+    file: "phase7_testing_and_validation.yaml"
+
+  phase8:
+    name: "本番稼働と最適化"
+    duration: "1週間"
+    estimated_hours: 35-45
+    priority: "High"
+    dependencies: ["phase7"]
+    key_deliverables:
+      - "本番環境稼働開始"
+      - "システム監視設定"
+      - "パフォーマンス最適化"
+      - "継続的改善体制"
+    file: "phase8_go_live_and_optimization.yaml"
+
+technology_stack:
+  backend:
+    - "Python 3.11"
+    - "FastAPI"
+    - "SQLAlchemy"
+    - "PostgreSQL"
+    - "Redis"
+  
+  external_apis:
+    - "investpy (経済カレンダーデータ)"
+    - "OpenAI GPT-4 (AI分析)"
+    - "Discord Webhook (通知)"
+  
+  infrastructure:
+    - "Docker"
+    - "crontab"
+    - "PostgreSQL"
+    - "Redis"
+  
+  testing:
+    - "pytest"
+    - "pytest-asyncio"
+    - "pytest-cov"
+  
+  code_quality:
+    - "black"
+    - "flake8"
+    - "mypy"
+    - "isort"
+    - "pylint"
+
+key_features:
+  data_acquisition:
+    - "investpyによる経済カレンダーデータ取得"
+    - "主要国の経済指標（日本、米国、ユーロ圏、英国、豪州、カナダ）"
+    - "週次・日次・リアルタイム取得"
+    - "タイムゾーン処理（UTC/JST）"
+  
+  ai_analysis:
+    - "ChatGPTによるドル円予測レポート"
+    - "各国の経済指標がドル円に与える影響分析"
+    - "事前・事後・予測値変更分析"
+    - "信頼度スコア計算"
+    - "JSONB形式での予測データ保存"
+  
+  notification:
+    - "Discord自動通知"
+    - "国別・重要度別の色分け"
+    - "埋め込みメッセージ"
+    - "クールダウン機能"
+    - "国別の通知設定"
+  
+  monitoring:
+    - "包括的なログ管理"
+    - "パフォーマンス監視"
+    - "エラー監視"
+    - "アラート機能"
+
+success_metrics:
+  functional:
+    - "経済カレンダーデータの正常取得"
+    - "AI分析レポートの生成"
+    - "Discord通知の送信"
+    - "データの差分検出"
+  
+  performance:
+    - "データ取得時間 < 30秒"
+    - "AI分析時間 < 60秒"
+    - "通知送信時間 < 10秒"
+    - "システム稼働率 > 99%"
+  
+  quality:
+    - "テストカバレッジ > 95%"
+    - "AI分析精度 > 70%"
+    - "エラー率 < 1%"
+    - "セキュリティ基準の満足"
+
+risks:
+  technical:
+    - name: "investpyライブラリの不安定性"
+      impact: "High"
+      mitigation: "適切なエラーハンドリングとフォールバック機能"
+    
+    - name: "OpenAI APIの制限"
+      impact: "Medium"
+      mitigation: "レート制限とコスト管理機能"
+    
+    - name: "外部APIの変更"
+      impact: "Medium"
+      mitigation: "抽象化とインターフェース分離"
+    
+    - name: "多国データの処理負荷"
+      impact: "Medium"
+      mitigation: "効率的なデータ処理とキャッシュ機能"
+  
+  operational:
+    - name: "本番環境での問題"
+      impact: "High"
+      mitigation: "段階的なデプロイメントとロールバック機能"
+    
+    - name: "パフォーマンス問題"
+      impact: "Medium"
+      mitigation: "継続的な監視と最適化"
+    
+    - name: "セキュリティ問題"
+      impact: "High"
+      mitigation: "適切なセキュリティ設定と監視"
+
+deliverables:
+  code:
+    - "完全なソースコード"
+    - "設定ファイル"
+    - "Docker設定"
+    - "デプロイメントスクリプト"
+  
+  documentation:
+    - "技術仕様書"
+    - "APIドキュメント"
+    - "運用マニュアル"
+    - "トラブルシューティングガイド"
+  
+  testing:
+    - "単体テストスイート"
+    - "統合テストスイート"
+    - "E2Eテストスイート"
+    - "パフォーマンステスト"
+  
+  deployment:
+    - "本番環境設定"
+    - "監視システム"
+    - "バックアップ戦略"
+    - "セキュリティ設定"
+
+team_requirements:
+  roles:
+    - "プロジェクトマネージャー"
+    - "バックエンド開発者"
+    - "DevOpsエンジニア"
+    - "QAエンジニア"
+  
+  skills:
+    - "Python開発"
+    - "データベース設計"
+    - "API統合"
+    - "Docker/Kubernetes"
+    - "監視・ログ管理"
+
+timeline:
+  week1_2: "基盤構築"
+  week3: "ドメインエンティティ実装"
+  week4_5: "インフラストラクチャ実装"
+  week6_7: "ドメインサービス実装"
+  week8_9: "アプリケーション層実装"
+  week10: "スケジューリングとデプロイメント"
+  week11: "テストと検証"
+  week12: "本番稼働と最適化"
+
+next_steps:
+  - "Phase 1の詳細計画確認"
+  - "開発環境のセットアップ"
+  - "チーム体制の確立"
+  - "リスク対策の詳細化"

@@ -1,0 +1,251 @@
+# Phase 5: アプリケーション層実装計画書
+# 期間: 1-2週間
+# 目的: ユースケースとスケジューラーの実装
+
+phase:
+  name: "アプリケーション層実装"
+  description: "ユースケース、スケジューラー、アプリケーションロジックの実装"
+  duration: "1-2週間"
+  priority: "Critical"
+  dependencies: ["phase4_domain_services"]
+
+objectives:
+  - "ユースケースの実装"
+  - "スケジューラーの実装"
+  - "アプリケーションロジックの統合"
+  - "エラーハンドリングの実装"
+  - "テストの実装"
+
+tasks:
+  fetch_use_cases:
+    name: "データ取得ユースケースの実装"
+    description: "経済カレンダーデータ取得のユースケース実装"
+    estimated_hours: 8
+    dependencies: []
+    deliverables:
+      - "src/application/use_cases/fetch/fetch_economic_calendar.py"
+      - "src/application/use_cases/fetch/fetch_today_events.py"
+      - "src/application/use_cases/fetch/fetch_weekly_events.py"
+    acceptance_criteria:
+      - "経済カレンダーデータの取得が正常に動作する"
+      - "当日イベントの取得が正常に動作する"
+      - "週間イベントの取得が正常に動作する"
+      - "エラーハンドリングが適切に実装されている"
+      - "単体テストが作成されている"
+
+  analysis_use_cases:
+    name: "データ分析ユースケースの実装"
+    description: "データ分析と変更検出のユースケース実装"
+    estimated_hours: 6
+    dependencies: []
+    deliverables:
+      - "src/application/use_cases/analysis/detect_changes.py"
+      - "src/application/use_cases/analysis/analyze_forecast_changes.py"
+      - "src/application/use_cases/analysis/calculate_surprises.py"
+    acceptance_criteria:
+      - "変更検出が正常に動作する"
+      - "予測値変更分析が正常に動作する"
+      - "サプライズ計算が正常に動作する"
+      - "分析結果が適切に出力される"
+      - "単体テストが作成されている"
+
+  notification_use_cases:
+    name: "通知ユースケースの実装"
+    description: "Discord通知のユースケース実装"
+    estimated_hours: 8
+    dependencies: []
+    deliverables:
+      - "src/application/use_cases/notification/send_notifications.py"
+      - "src/application/use_cases/notification/send_event_notifications.py"
+      - "src/application/use_cases/notification/send_ai_report_notifications.py"
+    acceptance_criteria:
+      - "通知送信が正常に動作する"
+      - "イベント通知が正常に動作する"
+      - "AIレポート通知が正常に動作する"
+      - "通知ルールが適切に適用される"
+      - "単体テストが作成されている"
+
+  ai_report_use_cases:
+    name: "AIレポートユースケースの実装"
+    description: "AI分析レポート生成のユースケース実装"
+    estimated_hours: 10
+    dependencies: []
+    deliverables:
+      - "src/application/use_cases/ai_report/generate_ai_report.py"
+      - "src/application/use_cases/ai_report/generate_pre_event_report.py"
+      - "src/application/use_cases/ai_report/generate_post_event_report.py"
+      - "src/application/use_cases/ai_report/manage_ai_reports.py"
+    acceptance_criteria:
+      - "AIレポート生成が正常に動作する"
+      - "事前レポート生成が正常に動作する"
+      - "事後レポート生成が正常に動作する"
+      - "レポート管理が正常に動作する"
+      - "単体テストが作成されている"
+
+  base_scheduler:
+    name: "基底スケジューラーの実装"
+    description: "スケジューラーの基底クラスと共通機能"
+    estimated_hours: 4
+    dependencies: []
+    deliverables:
+      - "src/application/interfaces/schedulers/base/base_scheduler.py"
+      - "src/application/interfaces/schedulers/base/scheduler_config.py"
+    acceptance_criteria:
+      - "基底スケジューラーが適切に実装されている"
+      - "共通機能が正常に動作する"
+      - "設定管理が適切に実装されている"
+      - "エラーハンドリングが実装されている"
+      - "単体テストが作成されている"
+
+  weekly_scheduler:
+    name: "週次スケジューラーの実装"
+    description: "週次データ取得スケジューラーの実装"
+    estimated_hours: 4
+    dependencies: ["base_scheduler", "fetch_use_cases"]
+    deliverables:
+      - "src/application/interfaces/schedulers/weekly/weekly_scheduler.py"
+      - "src/application/interfaces/schedulers/weekly/weekly_scheduler_config.py"
+    acceptance_criteria:
+      - "週次スケジューラーが正常に動作する"
+      - "翌週データの取得が正常に動作する"
+      - "スケジュール設定が適切に実装されている"
+      - "エラーハンドリングが実装されている"
+      - "単体テストが作成されている"
+
+  daily_scheduler:
+    name: "日次スケジューラーの実装"
+    description: "日次データ取得スケジューラーの実装"
+    estimated_hours: 4
+    dependencies: ["base_scheduler", "fetch_use_cases"]
+    deliverables:
+      - "src/application/interfaces/schedulers/daily/daily_scheduler.py"
+      - "src/application/interfaces/schedulers/daily/daily_scheduler_config.py"
+    acceptance_criteria:
+      - "日次スケジューラーが正常に動作する"
+      - "当日データの再取得が正常に動作する"
+      - "スケジュール設定が適切に実装されている"
+      - "エラーハンドリングが実装されている"
+      - "単体テストが作成されている"
+
+  realtime_scheduler:
+    name: "リアルタイムスケジューラーの実装"
+    description: "リアルタイム監視スケジューラーの実装"
+    estimated_hours: 6
+    dependencies: ["base_scheduler", "analysis_use_cases", "notification_use_cases"]
+    deliverables:
+      - "src/application/interfaces/schedulers/realtime/realtime_scheduler.py"
+      - "src/application/interfaces/schedulers/realtime/realtime_scheduler_config.py"
+    acceptance_criteria:
+      - "リアルタイムスケジューラーが正常に動作する"
+      - "重要イベントの監視が正常に動作する"
+      - "直前・直後のチェックが正常に動作する"
+      - "スケジュール設定が適切に実装されている"
+      - "単体テストが作成されている"
+
+  application_tests:
+    name: "アプリケーション層のテスト実装"
+    description: "ユースケースとスケジューラーの包括的なテスト"
+    estimated_hours: 10
+    dependencies: ["fetch_use_cases", "analysis_use_cases", "notification_use_cases", "ai_report_use_cases"]
+    deliverables:
+      - "tests/unit/application/use_cases/fetch/test_fetch_use_cases.py"
+      - "tests/unit/application/use_cases/analysis/test_analysis_use_cases.py"
+      - "tests/unit/application/use_cases/notification/test_notification_use_cases.py"
+      - "tests/unit/application/use_cases/ai_report/test_ai_report_use_cases.py"
+      - "tests/unit/application/interfaces/schedulers/test_schedulers.py"
+    acceptance_criteria:
+      - "すべてのユースケースがテストされている"
+      - "すべてのスケジューラーがテストされている"
+      - "統合テストが実装されている"
+      - "エッジケースがテストされている"
+      - "テストカバレッジが90%以上"
+
+  error_handling:
+    name: "アプリケーション層のエラーハンドリング"
+    description: "ユースケースとスケジューラーでの包括的なエラーハンドリング"
+    estimated_hours: 4
+    dependencies: ["fetch_use_cases", "analysis_use_cases", "notification_use_cases", "ai_report_use_cases"]
+    deliverables:
+      - "ユースケース固有のエラーハンドリング"
+      - "スケジューラー固有のエラーハンドリング"
+      - "エラー回復機能"
+    acceptance_criteria:
+      - "適切な例外処理が実装されている"
+      - "エラー回復機能が動作する"
+      - "エラーログが適切に出力される"
+      - "ユーザーフレンドリーなエラーメッセージ"
+
+  performance_optimization:
+    name: "アプリケーション層のパフォーマンス最適化"
+    description: "ユースケースとスケジューラーのパフォーマンス最適化"
+    estimated_hours: 4
+    dependencies: ["fetch_use_cases", "analysis_use_cases", "notification_use_cases", "ai_report_use_cases"]
+    deliverables:
+      - "非同期処理の最適化"
+      - "メモリ使用量の最適化"
+      - "実行時間の最適化"
+    acceptance_criteria:
+      - "非同期処理が適切に実装されている"
+      - "メモリ使用量が最適化されている"
+      - "実行時間が改善されている"
+      - "パフォーマンステストが実装されている"
+
+  integration_tests:
+    name: "アプリケーション層の統合テスト"
+    description: "ユースケースとスケジューラーの統合テスト"
+    estimated_hours: 6
+    dependencies: ["application_tests"]
+    deliverables:
+      - "tests/integration/application/test_use_cases_integration.py"
+      - "tests/integration/application/test_schedulers_integration.py"
+      - "tests/integration/application/test_end_to_end.py"
+    acceptance_criteria:
+      - "ユースケース間の連携がテストされている"
+      - "スケジューラー間の連携がテストされている"
+      - "エンドツーエンドテストが実装されている"
+      - "統合テストが正常に動作する"
+
+  application_documentation:
+    name: "アプリケーション層のドキュメント作成"
+    description: "ユースケースとスケジューラーのドキュメント"
+    estimated_hours: 3
+    dependencies: ["fetch_use_cases", "analysis_use_cases", "notification_use_cases", "ai_report_use_cases"]
+    deliverables:
+      - "ユースケースAPIドキュメント"
+      - "スケジューラー設定ドキュメント"
+      - "使用例とサンプルコード"
+    acceptance_criteria:
+      - "APIドキュメントが作成されている"
+      - "設定ドキュメントが作成されている"
+      - "使用例が適切に記載されている"
+      - "ドキュメントが最新の状態に保たれている"
+
+risks:
+  - name: "ユースケースの複雑性"
+    description: "ユースケースが複雑になりすぎる"
+    mitigation: "段階的な実装と継続的なリファクタリング"
+    probability: "Medium"
+    impact: "Medium"
+
+  - name: "スケジューラーの競合"
+    description: "複数のスケジューラーが競合する"
+    mitigation: "適切なスケジュール設計と競合回避機能"
+    probability: "Low"
+    impact: "High"
+
+  - name: "パフォーマンス問題"
+    description: "アプリケーション層でのパフォーマンス問題"
+    mitigation: "継続的なパフォーマンス監視と最適化"
+    probability: "Medium"
+    impact: "Medium"
+
+success_criteria:
+  - "すべてのユースケースが正常に動作する"
+  - "すべてのスケジューラーが正常に動作する"
+  - "単体テストのカバレッジが90%以上"
+  - "統合テストが正常に動作する"
+  - "エラーハンドリングが適切に実装されている"
+  - "パフォーマンスが要件を満たしている"
+  - "ドキュメントが適切に作成されている"
+
+next_phase: "phase6_scheduling_and_deployment"

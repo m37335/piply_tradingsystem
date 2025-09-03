@@ -1,0 +1,255 @@
+# Phase 1: データベース基盤構築計画書
+# 期間: Week 1 (7日間)
+# 目的: 既存PostgreSQLデータベースに経済指標日本語化システムの基盤を構築
+
+project:
+  name: "経済指標日本語化システム - Phase 1"
+  phase: "データベース基盤構築"
+  duration: "7日間"
+  start_date: "2025-01-27"
+  end_date: "2025-02-02"
+  priority: "Critical"
+  status: "Planning"
+
+objectives:
+  - "既存PostgreSQLデータベースに新規テーブルを追加"
+  - "エンティティ・モデル・リポジトリの実装"
+  - "マイグレーションスクリプトの作成と実行"
+  - "基本CRUD機能のテスト実装"
+
+deliverables:
+  - "新規データベーステーブル3個"
+  - "エンティティ・モデル・リポジトリクラス"
+  - "マイグレーションスクリプト3個"
+  - "単体テストスイート"
+  - "データベース接続・設定ファイル"
+
+tasks:
+  day1:
+    name: "プロジェクト初期化・設計"
+    duration: "1日"
+    tasks:
+      - name: "プロジェクト構造の確認"
+        description: "既存のsrc/フォルダ構造を確認し、新規フォルダを作成"
+        files:
+          - "src/domain/entities/economic_indicator/"
+          - "src/domain/repositories/economic_indicator/"
+          - "src/infrastructure/database/models/economic_indicator/"
+        estimated_hours: 2
+        dependencies: []
+        
+      - name: "データベース設計の詳細化"
+        description: "新規テーブルの詳細設計と既存テーブルとの関連性を定義"
+        files:
+          - "docs/economic_indicators_japanese_expansion/database_design.md"
+        estimated_hours: 4
+        dependencies: []
+        
+      - name: "開発環境のセットアップ"
+        description: "PostgreSQL接続設定と開発環境の準備"
+        files:
+          - "config/economic_indicator/database_config.py"
+          - ".env.development"
+        estimated_hours: 2
+        dependencies: []
+
+  day2:
+    name: "エンティティ実装"
+    duration: "1日"
+    tasks:
+      - name: "EconomicIndicatorエンティティ実装"
+        description: "経済指標マスターデータのエンティティクラスを実装"
+        files:
+          - "src/domain/entities/economic_indicator/economic_indicator.py"
+          - "src/domain/entities/economic_indicator/economic_indicator_validator.py"
+          - "src/domain/entities/economic_indicator/economic_indicator_factory.py"
+        estimated_hours: 6
+        dependencies: ["day1"]
+        
+      - name: "TranslationCacheエンティティ実装"
+        description: "翻訳キャッシュのエンティティクラスを実装"
+        files:
+          - "src/domain/entities/translation/translation_cache.py"
+          - "src/domain/entities/translation/translation_cache_validator.py"
+        estimated_hours: 4
+        dependencies: ["day1"]
+
+  day3:
+    name: "データベースモデル実装"
+    duration: "1日"
+    tasks:
+      - name: "EconomicIndicatorModel実装"
+        description: "SQLAlchemyモデルとマッパーを実装"
+        files:
+          - "src/infrastructure/database/models/economic_indicator/economic_indicator_model.py"
+          - "src/infrastructure/database/models/economic_indicator/economic_indicator_mapper.py"
+        estimated_hours: 6
+        dependencies: ["day2"]
+        
+      - name: "TranslationCacheModel実装"
+        description: "翻訳キャッシュのSQLAlchemyモデルを実装"
+        files:
+          - "src/infrastructure/database/models/translation/translation_cache_model.py"
+          - "src/infrastructure/database/models/translation/translation_cache_mapper.py"
+        estimated_hours: 4
+        dependencies: ["day2"]
+
+  day4:
+    name: "リポジトリ実装"
+    duration: "1日"
+    tasks:
+      - name: "EconomicIndicatorRepository実装"
+        description: "経済指標マスターデータのリポジトリインターフェースと実装"
+        files:
+          - "src/domain/repositories/economic_indicator/economic_indicator_repository.py"
+          - "src/domain/repositories/economic_indicator/economic_indicator_repository_impl.py"
+          - "src/infrastructure/database/repositories/sql/sql_economic_indicator_repository.py"
+        estimated_hours: 8
+        dependencies: ["day3"]
+        
+      - name: "TranslationCacheRepository実装"
+        description: "翻訳キャッシュのリポジトリインターフェースと実装"
+        files:
+          - "src/domain/repositories/translation/translation_cache_repository.py"
+          - "src/domain/repositories/translation/translation_cache_repository_impl.py"
+          - "src/infrastructure/database/repositories/sql/sql_translation_cache_repository.py"
+        estimated_hours: 6
+        dependencies: ["day3"]
+
+  day5:
+    name: "マイグレーションスクリプト作成"
+    duration: "1日"
+    tasks:
+      - name: "マイグレーションスクリプト001作成"
+        description: "新規テーブル作成のマイグレーションスクリプト"
+        files:
+          - "src/infrastructure/database/migrations/versions/001_create_economic_indicators_tables.sql"
+        estimated_hours: 4
+        dependencies: ["day4"]
+        
+      - name: "マイグレーションスクリプト002作成"
+        description: "既存テーブル拡張のマイグレーションスクリプト"
+        files:
+          - "src/infrastructure/database/migrations/versions/002_extend_existing_tables.sql"
+        estimated_hours: 3
+        dependencies: ["day4"]
+        
+      - name: "マイグレーションスクリプト003作成"
+        description: "データ移行のマイグレーションスクリプト"
+        files:
+          - "src/infrastructure/database/migrations/versions/003_migrate_existing_data.sql"
+        estimated_hours: 3
+        dependencies: ["day4"]
+
+  day6:
+    name: "マイグレーション実行・テスト"
+    duration: "1日"
+    tasks:
+      - name: "マイグレーション実行"
+        description: "開発環境でのマイグレーション実行と検証"
+        files:
+          - "scripts/economic_indicator/run_migrations.py"
+        estimated_hours: 4
+        dependencies: ["day5"]
+        
+      - name: "基本CRUD機能テスト実装"
+        description: "エンティティ・モデル・リポジトリの単体テスト"
+        files:
+          - "tests/unit/domain/test_economic_indicator_entity.py"
+          - "tests/unit/infrastructure/test_sql_economic_indicator_repository.py"
+          - "tests/unit/infrastructure/test_sql_translation_cache_repository.py"
+        estimated_hours: 6
+        dependencies: ["day5"]
+
+  day7:
+    name: "統合テスト・ドキュメント"
+    duration: "1日"
+    tasks:
+      - name: "統合テスト実行"
+        description: "全体的な統合テストとパフォーマンステスト"
+        files:
+          - "tests/integration/test_database_integration.py"
+        estimated_hours: 4
+        dependencies: ["day6"]
+        
+      - name: "ドキュメント作成"
+        description: "Phase 1の完了ドキュメントとPhase 2への引き継ぎ資料"
+        files:
+          - "docs/economic_indicators_japanese_expansion/phase1/completion_report.md"
+          - "docs/economic_indicators_japanese_expansion/phase1/handover_to_phase2.md"
+        estimated_hours: 4
+        dependencies: ["day6"]
+
+success_criteria:
+  database:
+    - "新規テーブル3個が正常に作成されている"
+    - "既存テーブルとの関連性が正しく設定されている"
+    - "インデックスが適切に作成されている"
+    - "制約が正しく設定されている"
+    
+  code_quality:
+    - "全ファイルが400行以内である"
+    - "Linterエラーが0件である"
+    - "型ヒントが100%付与されている"
+    - "テストカバレッジが95%以上である"
+    
+  functionality:
+    - "基本CRUD操作が正常に動作する"
+    - "マイグレーションが正常に実行される"
+    - "ロールバックが正常に動作する"
+    - "パフォーマンス要件を満たしている"
+
+risks:
+  technical:
+    - name: "既存データベースとの競合"
+      impact: "High"
+      mitigation: "段階的マイグレーションとロールバック戦略"
+      
+    - name: "パフォーマンス問題"
+      impact: "Medium"
+      mitigation: "適切なインデックス設計とクエリ最適化"
+      
+    - name: "データ整合性問題"
+      impact: "High"
+      mitigation: "外部キー制約とバリデーション"
+
+  operational:
+    - name: "開発環境の不整合"
+      impact: "Medium"
+      mitigation: "環境設定ファイルの統一"
+      
+    - name: "テスト環境の問題"
+      impact: "Low"
+      mitigation: "独立したテストデータベースの使用"
+
+dependencies:
+  external:
+    - "PostgreSQL 15の稼働"
+    - "既存データベースのアクセス権限"
+    - "開発環境のセットアップ完了"
+    
+  internal:
+    - "既存システムの理解"
+    - "データベース設計の承認"
+    - "開発チームの準備"
+
+resources:
+  human:
+    - "バックエンド開発者: 1名"
+    - "データベース管理者: 0.5名"
+    - "QAエンジニア: 0.5名"
+    
+  technical:
+    - "PostgreSQL 15"
+    - "SQLAlchemy 2.0"
+    - "pytest"
+    - "Alembic"
+
+estimated_total_hours: 70
+actual_hours: 0
+completion_percentage: 0
+
+next_phase:
+  name: "Phase 2: マスターデータ準備"
+  start_date: "2025-02-03"
+  dependencies: ["Phase 1完了"]

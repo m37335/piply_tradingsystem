@@ -1,0 +1,220 @@
+# Phase 4: ドメインサービス実装計画書
+# 期間: 1-2週間
+# 目的: ビジネスロジックを実装するドメインサービスの構築
+
+phase:
+  name: "ドメインサービス実装"
+  description: "ビジネスロジックを実装するドメインサービスの構築"
+  duration: "1-2週間"
+  priority: "Critical"
+  dependencies: ["phase3_infrastructure"]
+
+objectives:
+  - "Investpyサービスの実装"
+  - "通知サービスの実装"
+  - "データ分析サービスの実装"
+  - "AI分析サービスの実装"
+  - "サービス間の連携実装"
+
+tasks:
+  investpy_service:
+    name: "Investpyサービスの実装"
+    description: "経済カレンダーデータ取得のメインサービス"
+    estimated_hours: 10
+    dependencies: []
+    deliverables:
+      - "src/domain/services/investpy/investpy_service.py"
+      - "src/domain/services/investpy/investpy_data_processor.py"
+      - "src/domain/services/investpy/investpy_timezone_handler.py"
+      - "src/domain/services/investpy/investpy_validator.py"
+    acceptance_criteria:
+      - "経済カレンダーデータの取得が正常に動作する"
+      - "データ処理が適切に実装されている"
+      - "タイムゾーン変換が正確に動作する"
+      - "データ検証が実装されている"
+      - "エラーハンドリングが適切に実装されている"
+      - "単体テストが作成されている"
+
+  notification_service:
+    name: "通知サービスの実装"
+    description: "Discord通知のメインサービス（多国対応）"
+    estimated_hours: 14
+    dependencies: []
+    deliverables:
+      - "src/domain/services/notification/notification_service.py"
+      - "src/domain/services/notification/discord_message_builder.py"
+      - "src/domain/services/notification/notification_rule_engine.py"
+      - "src/domain/services/notification/notification_cooldown_manager.py"
+    acceptance_criteria:
+      - "Discord通知の送信が正常に動作する"
+      - "国別のメッセージビルダーが適切に実装されている"
+      - "通知ルールエンジンが正常に動作する"
+      - "クールダウン管理が実装されている"
+      - "国別の埋め込みメッセージの作成が適切"
+      - "国別の通知設定が実装されている"
+      - "単体テストが作成されている"
+
+  data_analysis_service:
+    name: "データ分析サービスの実装"
+    description: "データ分析と変更検出のメインサービス"
+    estimated_hours: 8
+    dependencies: []
+    deliverables:
+      - "src/domain/services/data_analysis/data_analysis_service.py"
+      - "src/domain/services/data_analysis/forecast_change_detector.py"
+      - "src/domain/services/data_analysis/surprise_calculator.py"
+      - "src/domain/services/data_analysis/event_filter.py"
+    acceptance_criteria:
+      - "予測値変更の検出が正常に動作する"
+      - "サプライズ計算が正確に実装されている"
+      - "イベントフィルタリングが適切に動作する"
+      - "データ分析アルゴリズムが正確"
+      - "単体テストが作成されている"
+
+  ai_analysis_service:
+    name: "AI分析サービスの実装"
+    description: "ChatGPTを使用したドル円予測分析サービス（多国対応）"
+    estimated_hours: 20
+    dependencies: []
+    deliverables:
+      - "src/domain/services/ai_analysis/ai_analysis_service.py"
+      - "src/domain/services/ai_analysis/openai_prompt_builder.py"
+      - "src/domain/services/ai_analysis/usd_jpy_prediction_parser.py"
+      - "src/domain/services/ai_analysis/confidence_score_calculator.py"
+      - "src/domain/services/ai_analysis/ai_report_generator.py"
+    acceptance_criteria:
+      - "AIレポート生成が正常に動作する"
+      - "多国の経済指標に対応したプロンプト作成が実装されている"
+      - "予測データ解析が正確に動作する"
+      - "信頼度スコア計算が実装されている"
+      - "レポート生成機能が適切に実装されている"
+      - "国別の分析精度が適切に実装されている"
+      - "単体テストが作成されている"
+
+  domain_repositories:
+    name: "ドメインリポジトリの実装"
+    description: "ドメイン層のリポジトリインターフェースと実装"
+    estimated_hours: 8
+    dependencies: []
+    deliverables:
+      - "src/domain/repositories/economic_calendar/economic_calendar_repository.py"
+      - "src/domain/repositories/economic_calendar/economic_calendar_repository_impl.py"
+      - "src/domain/repositories/notification/discord_notification_repository.py"
+      - "src/domain/repositories/notification/notification_log_repository.py"
+      - "src/domain/repositories/ai_report/ai_report_repository.py"
+      - "src/domain/repositories/ai_report/ai_report_repository_impl.py"
+    acceptance_criteria:
+      - "リポジトリインターフェースが適切に定義されている"
+      - "実装クラスが正常に動作する"
+      - "データアクセスが適切に抽象化されている"
+      - "エラーハンドリングが実装されている"
+      - "単体テストが作成されている"
+
+  service_integration:
+    name: "サービス間の連携実装"
+    description: "各サービス間の連携と依存性注入の実装"
+    estimated_hours: 6
+    dependencies: ["investpy_service", "notification_service", "data_analysis_service", "ai_analysis_service"]
+    deliverables:
+      - "サービス間の連携ロジック"
+      - "依存性注入の設定"
+      - "サービスファクトリの実装"
+    acceptance_criteria:
+      - "サービス間の連携が正常に動作する"
+      - "依存性注入が適切に実装されている"
+      - "サービスファクトリが正常に動作する"
+      - "循環依存が発生していない"
+      - "統合テストが作成されている"
+
+  service_tests:
+    name: "ドメインサービスのテスト実装"
+    description: "すべてのドメインサービスに対する包括的なテスト"
+    estimated_hours: 12
+    dependencies: ["investpy_service", "notification_service", "data_analysis_service", "ai_analysis_service"]
+    deliverables:
+      - "tests/unit/domain/services/investpy/test_investpy_service.py"
+      - "tests/unit/domain/services/notification/test_notification_service.py"
+      - "tests/unit/domain/services/data_analysis/test_data_analysis_service.py"
+      - "tests/unit/domain/services/ai_analysis/test_ai_analysis_service.py"
+      - "tests/unit/domain/repositories/test_repositories.py"
+    acceptance_criteria:
+      - "すべてのサービスがテストされている"
+      - "モックを使用した適切なテストが実装されている"
+      - "エッジケースがテストされている"
+      - "統合テストが実装されている"
+      - "テストカバレッジが90%以上"
+
+  error_handling:
+    name: "エラーハンドリングの実装"
+    description: "サービス層での包括的なエラーハンドリング"
+    estimated_hours: 4
+    dependencies: ["investpy_service", "notification_service", "data_analysis_service", "ai_analysis_service"]
+    deliverables:
+      - "サービス固有のエラーハンドリング"
+      - "エラー回復機能"
+      - "エラーログ機能"
+    acceptance_criteria:
+      - "適切な例外処理が実装されている"
+      - "エラー回復機能が動作する"
+      - "エラーログが適切に出力される"
+      - "ユーザーフレンドリーなエラーメッセージ"
+
+  performance_monitoring:
+    name: "パフォーマンス監視の実装"
+    description: "サービス層でのパフォーマンス監視機能"
+    estimated_hours: 3
+    dependencies: ["service_integration"]
+    deliverables:
+      - "パフォーマンスメトリクス収集"
+      - "実行時間監視"
+      - "リソース使用量監視"
+    acceptance_criteria:
+      - "パフォーマンスメトリクスが収集される"
+      - "実行時間が監視される"
+      - "リソース使用量が監視される"
+      - "パフォーマンスアラートが実装されている"
+
+  service_documentation:
+    name: "サービスドキュメントの作成"
+    description: "ドメインサービスのAPIドキュメントと使用例"
+    estimated_hours: 4
+    dependencies: ["service_integration"]
+    deliverables:
+      - "サービスAPIドキュメント"
+      - "使用例とサンプルコード"
+      - "トラブルシューティングガイド"
+    acceptance_criteria:
+      - "APIドキュメントが作成されている"
+      - "使用例が適切に記載されている"
+      - "トラブルシューティングガイドが作成されている"
+      - "ドキュメントが最新の状態に保たれている"
+
+risks:
+  - name: "サービス間の複雑な依存関係"
+    description: "サービス間の依存関係が複雑になりすぎる"
+    mitigation: "依存性注入とインターフェース分離の徹底"
+    probability: "Medium"
+    impact: "High"
+
+  - name: "AI分析の精度問題"
+    description: "ChatGPT分析の精度が期待に満たない"
+    mitigation: "継続的なプロンプト改善と精度検証"
+    probability: "High"
+    impact: "Medium"
+
+  - name: "外部APIの不安定性"
+    description: "InvestpyやOpenAI APIの不安定性"
+    mitigation: "適切なフォールバック機能とリトライ機能"
+    probability: "High"
+    impact: "Medium"
+
+success_criteria:
+  - "すべてのドメインサービスが正常に動作する"
+  - "サービス間の連携が適切に実装されている"
+  - "単体テストのカバレッジが90%以上"
+  - "エラーハンドリングが適切に実装されている"
+  - "パフォーマンスが要件を満たしている"
+  - "ドキュメントが適切に作成されている"
+  - "AI分析機能が期待通りの精度で動作する"
+
+next_phase: "phase5_application_layer"
