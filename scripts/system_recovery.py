@@ -11,7 +11,6 @@ System Recovery Program for Exchange Analytics
 - PostgreSQL データベース
 - Redis キャッシュサーバー
 - API サーバー
-- データスケジューラー
 - パフォーマンス監視システム
 """
 
@@ -178,42 +177,6 @@ class SystemRecoveryManager:
                 priority=2,
             )
 
-    def check_data_scheduler(self) -> ServiceStatus:
-        """データスケジューラー状態チェック"""
-        try:
-            result = subprocess.run(
-                "ps aux | grep data_scheduler | grep -v grep",
-                shell=True,
-                capture_output=True,
-                text=True,
-                timeout=5,
-            )
-
-            is_running = result.stdout.strip() != ""
-            status_message = f"{'✅ 動作中' if is_running else '❌ 停止中'}"
-
-            if is_running:
-                recovery_action = "不要"
-            else:
-                recovery_action = "cd /app && export $(cat .env | grep -v '^#' | xargs) && export PYTHONPATH=/app && nohup python scripts/cron/advanced_data/data_scheduler.py > /app/logs/data_scheduler.log 2>&1 &"
-
-            return ServiceStatus(
-                name="Data Scheduler",
-                is_running=is_running,
-                status_message=status_message,
-                recovery_action=recovery_action,
-                priority=3,
-            )
-
-        except Exception as e:
-            return ServiceStatus(
-                name="Data Scheduler",
-                is_running=False,
-                status_message=f"❌ エラー: {str(e)}",
-                recovery_action="手動起動が必要",
-                priority=3,
-            )
-
     def check_performance_monitor(self) -> ServiceStatus:
         """パフォーマンス監視システム状態チェック"""
         try:
@@ -263,24 +226,13 @@ class SystemRecoveryManager:
         self.recovery_log.append(f"{datetime.now()}: {service.name} 復旧開始")
 
         try:
-            if service.name == "Data Scheduler":
-                # データスケジューラーは特別な処理
-                result = subprocess.run(
-                    service.recovery_action,
-                    shell=True,
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                    cwd=project_root,
-                )
-            else:
-                result = subprocess.run(
-                    service.recovery_action,
-                    shell=True,
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                )
+            result = subprocess.run(
+                service.recovery_action,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
 
             if result.returncode == 0:
                 self.logger.info(f"✅ {service.name}: 復旧成功")
@@ -309,7 +261,6 @@ class SystemRecoveryManager:
             self.check_postgresql_service(),
             self.check_redis_service(),
             self.check_api_server(),
-            self.check_data_scheduler(),
             self.check_performance_monitor(),
         ]
 
@@ -338,7 +289,7 @@ class SystemRecoveryManager:
             )
             self.logger.warning("   - パフォーマンス監視システム（定期実行停止）")
             self.logger.warning("   - APIサーバー自動起動（定期チェック停止）")
-            self.logger.warning("   - データ取得スケジューラー（定期実行停止）")
+            self.logger.warning("   - データ取得システム（定期実行停止）")
             self.logger.warning("   - 経済指標配信システム（定期配信停止）")
 
             if auto_recover:

@@ -40,7 +40,6 @@ try:
     from src.infrastructure.scheduler.technical_indicator_scheduler import (
         TechnicalIndicatorScheduler,
     )
-    from src.infrastructure.scheduler.usdjpy_data_scheduler import USDJPYDataScheduler
     from src.utils.logging_config import get_infrastructure_logger
 except ImportError as e:
     print(f"Import error: {e}")
@@ -220,12 +219,6 @@ class ProductionStartup:
         logger.info("Starting schedulers...")
 
         try:
-            # データ取得スケジューラー
-            data_scheduler = USDJPYDataScheduler()
-            await data_scheduler.start()
-            self.schedulers["data_scheduler"] = data_scheduler
-            self.startup_stats["schedulers_started"] += 1
-
             # テクニカル指標スケジューラー
             indicator_scheduler = TechnicalIndicatorScheduler()
             await indicator_scheduler.start()
@@ -489,7 +482,7 @@ python scripts/deployment/production_startup.py
 
 ### データ取得（手動）
 ```bash
-python scripts/cron/usdjpy_data_cron.py --once
+python scripts/cron/simple_data_fetcher.py
 ```
 
 ### テクニカル分析（手動）

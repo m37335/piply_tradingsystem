@@ -128,10 +128,7 @@ def manual():
 [bold cyan]4. API サーバー復旧[/bold cyan]
    [code]./exchange-analytics api start --background[/code]
 
-[bold cyan]5. データスケジューラー復旧[/bold cyan]
-   [code]cd /app && export $(cat .env | grep -v '^#' | xargs) && export PYTHONPATH=/app && nohup python scripts/cron/advanced_data/data_scheduler.py > /app/logs/data_scheduler.log 2>&1 &[/code]
-
-[bold cyan]6. パフォーマンス監視システム復旧[/bold cyan]
+[bold cyan]5. パフォーマンス監視システム復旧[/bold cyan]
    [code]cd /app && export $(cat .env | grep -v '^#' | xargs) && export PYTHONPATH=/app && timeout 120 python scripts/cron/testing/performance_monitoring_test_cron.py[/code]
 
 [yellow]💡 ヒント:[/yellow] 各ステップ実行後、状態確認をお勧めします。
