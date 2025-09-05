@@ -1,1 +1,0 @@
-scripts/cron/data_scheduler.py

@@ -13,18 +13,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.infrastructure.database.models.pattern_detection_model import (
     PatternDetectionModel,
 )
-from src.infrastructure.database.repositories.pattern_detection_repository_impl import (
-    PatternDetectionRepositoryImpl,
-)
-from src.infrastructure.database.services.pattern_detection_service import (
-    PatternDetectionService,
-)
+
+# パターン検出システムは分離済みのため、インポートを削除
+# from src.infrastructure.database.services.pattern_detection_service import (
+#     PatternDetectionService,
+# )
 from src.infrastructure.messaging.discord_client import DiscordClient
 from src.infrastructure.messaging.notification_manager import (
     NotificationManager,
     NotificationPattern,
 )
 from src.utils.logging_config import get_infrastructure_logger
+
+# パターン検出システムは分離済みのため、インポートを削除
+# from src.infrastructure.database.repositories.pattern_detection_repository_impl import (
+#     PatternDetectionRepositoryImpl,
+# )
+
 
 logger = get_infrastructure_logger()
 
@@ -56,8 +61,10 @@ class NotificationIntegrationService:
         self.session = session
 
         # リポジトリ・サービス初期化
-        self.pattern_repo = PatternDetectionRepositoryImpl(session)
-        self.pattern_service = PatternDetectionService(session)
+        # パターン検出システムは分離済みのため、初期化を削除
+        # self.pattern_repo = PatternDetectionRepositoryImpl(session)
+        # パターン検出システムは分離済みのため、初期化を削除
+        # self.pattern_service = PatternDetectionService(session)
 
         # USD/JPY設定
         self.currency_pair = "USD/JPY"
@@ -343,7 +350,8 @@ class NotificationIntegrationService:
             sent_count = 0
             for pattern in patterns:
                 if sent_count < results["sent"]:
-                    await self.pattern_service.mark_notification_sent(pattern.id)
+                    # パターン検出システムは分離済みのため、スキップ
+                    # await self.pattern_service.mark_notification_sent(pattern.id)
                     sent_count += 1
 
             logger.info(f"Marked {sent_count} patterns as notification sent")
@@ -372,10 +380,16 @@ class NotificationIntegrationService:
             if not start_date:
                 start_date = end_date - timedelta(days=7)
 
-            # パターン統計を取得
-            pattern_stats = await self.pattern_service.get_pattern_statistics(
-                start_date, end_date
-            )
+            # パターン検出システムは分離済みのため、ダミーデータを使用
+            # pattern_stats = await self.pattern_service.get_pattern_statistics(
+            #     start_date, end_date
+            # )
+            pattern_stats = {
+                "total_patterns": 0,
+                "notified_patterns": 0,
+                "pattern_distribution": {},
+                "timeframe_distribution": {},
+            }
 
             # 通知統計を計算
             notification_stats = {

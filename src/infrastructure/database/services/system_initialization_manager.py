@@ -25,9 +25,6 @@ from typing import Any, Dict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.infrastructure.database.services.continuous_processing_service import (
-    ContinuousProcessingService,
-)
 from src.infrastructure.database.services.initial_data_loader_service import (
     InitialDataLoaderService,
 )
@@ -52,7 +49,6 @@ class SystemInitializationManager:
     def __init__(self, session: AsyncSession):
         self.session = session
         self.initial_loader = InitialDataLoaderService(session)
-        self.continuous_service = ContinuousProcessingService(session)
         self.monitor = ContinuousProcessingMonitor()
 
         # 初期化状態
