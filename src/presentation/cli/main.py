@@ -55,8 +55,8 @@ app.add_typer(
 
 app.add_typer(
     monitor_commands.app,
-    name="monitor",
-    help="📊 監視・ヘルスチェック",
+    name="system",
+    help="📊 システム監視・ヘルスチェック\n\nExamples:\n  exchange-analytics system health\n  exchange-analytics system status\n  exchange-analytics system logs",
 )
 
 app.add_typer(
