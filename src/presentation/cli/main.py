@@ -20,6 +20,7 @@ from rich.table import Table
 from ...utils.logging_config import get_presentation_logger, setup_logging_directories
 from .commands import ai_commands, api_commands, config_commands, monitor_commands
 from .commands.alert_config_commands import app as alert_config_app
+from .commands.crontab_commands import app as crontab_app
 from .commands.data import data_app
 from .commands.system_recovery_commands import app as recovery_app
 
@@ -75,6 +76,12 @@ app.add_typer(
     recovery_app,
     name="recovery",
     help="🔧 システム復旧・メンテナンス",
+)
+
+app.add_typer(
+    crontab_app,
+    name="crontab",
+    help="⏰ Crontab管理・設定",
 )
 
 

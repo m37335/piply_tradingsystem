@@ -345,14 +345,6 @@ Exchange Analytics CLI は、通貨分析システムの管理・運用を行う
 ./exchange-analytics ai reports --pair USD/JPY
 ```
 
-### 4. 定期統合 AI 分析スケジュール設定
-
-```bash
-./exchange-analytics ai schedule [OPTIONS]
-```
-
-**機能**: 定期統合 AI 分析スケジュール設定（TA-Lib 標準版）
-
 ---
 
 ## 設定管理コマンド

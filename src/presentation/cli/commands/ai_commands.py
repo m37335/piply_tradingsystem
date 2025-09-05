@@ -173,53 +173,6 @@ def discord_test():
         console.print("❌ Discord通知テスト失敗")
 
 
-@app.command()
-def schedule(
-    interval: int = typer.Option(3600, "--interval", "-i", help="実行間隔 (秒)"),
-    no_optimization: bool = typer.Option(
-        False, "--no-optimization", help="最適化機能を無効にする"
-    ),
-):
-    """
-    定期統合AI分析スケジュール設定（TA-Lib標準版）
-
-    Examples:
-        exchange-analytics ai schedule
-        exchange-analytics ai schedule --interval 7200
-        exchange-analytics ai schedule --no-optimization
-    """
-    console.print("📅 定期統合AI分析スケジュール設定（TA-Lib標準版）...")
-    console.print(f"⏰ 実行間隔: {interval}秒 ({interval//3600}時間)")
-    console.print(f"⚡ 最適化機能: {'❌ 無効' if no_optimization else '✅ 有効'}")
-    console.print("📊 TA-Lib標準使用")
-
-    confirm = typer.confirm("定期統合AI分析スケジュールを開始しますか？")
-    if not confirm:
-        console.print("❌ スケジュール設定をキャンセルしました")
-        return
-
-    console.print("🚀 定期統合AI分析スケジュール開始...")
-    console.print("⏹️ 停止: Ctrl+C")
-
-    try:
-        import time
-
-        while True:
-            console.print("🤖 定期統合AI分析実行")
-            success = _run_ai_analysis(False, no_optimization, False)
-
-            if success:
-                console.print("✅ 統合AI分析完了")
-            else:
-                console.print("❌ 統合AI分析失敗")
-
-            console.print(f"⏰ 次回実行まで {interval}秒待機...")
-            time.sleep(interval)
-
-    except KeyboardInterrupt:
-        console.print("\n⏹️ 定期統合AI分析スケジュールを停止しました")
-
-
 def _run_ai_analysis(
     test: bool = False,
     no_optimization: bool = False,
