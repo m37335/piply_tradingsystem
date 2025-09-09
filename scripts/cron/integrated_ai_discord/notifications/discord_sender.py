@@ -4,10 +4,11 @@ Discord Sender Module
 統合分析結果をDiscordに送信する機能
 """
 
-import httpx
 import os
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict
+
+import httpx
 from rich.console import Console
 
 
@@ -38,12 +39,14 @@ class DiscordSender:
         current_change = usdjpy_forecast.get("current_change_percent", 0)
         strategy_bias = usdjpy_forecast.get("strategy_bias", "NEUTRAL")
         forecast_confidence = usdjpy_forecast.get("forecast_confidence", 0)
-        
-        # テクニカル分析結果を取得
-        technical_bias = usdjpy_forecast.get("technical_bias", {})
-        technical_trend = technical_bias.get("trend_type", "N/A")
-        macd_value = technical_bias.get("macd_value", "N/A")
-        rsi_value = technical_bias.get("rsi_value", "N/A")
+
+        # H1テクニカル分析結果を取得
+        h1_technical_data = correlation_data.get("h1_technical_data", {})
+        h1_technical_trend = h1_technical_data.get("trend_type", "N/A")
+        h1_macd_value = h1_technical_data.get("macd_value", "N/A")
+        h1_rsi_value = h1_technical_data.get("rsi_value", "N/A")
+        h1_atr_value = h1_technical_data.get("atr_value", "N/A")
+        h1_adx_value = h1_technical_data.get("adx_value", "N/A")
         timeframe_priority = usdjpy_forecast.get("timeframe_priority", "N/A")
 
         # 色設定（戦略バイアスに基づく）
@@ -105,18 +108,28 @@ class DiscordSender:
                 "inline": True,
             },
             {
-                "name": "📊 テクニカル",
-                "value": f"**{technical_trend}**",
+                "name": "📊 H1テクニカル",
+                "value": f"**{h1_technical_trend}**",
                 "inline": True,
             },
             {
-                "name": "📈 MACD",
-                "value": f"**{macd_value}**",
+                "name": "📈 H1 MACD",
+                "value": f"**{h1_macd_value}**",
                 "inline": True,
             },
             {
-                "name": "📉 RSI",
-                "value": f"**{rsi_value}**",
+                "name": "📉 H1 RSI",
+                "value": f"**{h1_rsi_value}**",
+                "inline": True,
+            },
+            {
+                "name": "📊 H1 ATR",
+                "value": f"**{h1_atr_value}**",
+                "inline": True,
+            },
+            {
+                "name": "📈 H1 ADX",
+                "value": f"**{h1_adx_value}**",
                 "inline": True,
             },
             {
@@ -217,8 +230,8 @@ class DiscordSender:
             "content": f"{trend_emoji} **🎯 USD/JPY統合相関戦略**",
             "embeds": [
                 {
-                    "title": "🔗 Integrated Currency Correlation Strategy",
-                    "description": "通貨間相関性を活用したUSD/JPY売買シナリオ",
+                    "title": "🔗 H1時間軸特化 USD/JPY戦略",
+                    "description": "H1時間軸に特化したUSD/JPY売買シナリオ",
                     "color": color,
                     "fields": fields,
                     "footer": {
@@ -276,9 +289,7 @@ class DiscordSender:
 
             async with httpx.AsyncClient(
                 timeout=timeout_config,
-                limits=httpx.Limits(
-                    max_keepalive_connections=3, max_connections=5
-                ),
+                limits=httpx.Limits(max_keepalive_connections=3, max_connections=5),
             ) as client:
                 response = await client.post(self.discord_webhook, json=embed_data)
                 if response.status_code == 204:
@@ -292,7 +303,9 @@ class DiscordSender:
             self.console.print(f"⚠️ エラー通知送信失敗: {str(e)}")
             return False
 
-    async def send_chart_to_discord(self, chart_file_path: str, currency_pair: str) -> bool:
+    async def send_chart_to_discord(
+        self, chart_file_path: str, currency_pair: str
+    ) -> bool:
         """チャート画像をDiscordに送信"""
         try:
             if not self.discord_webhook:
@@ -300,7 +313,9 @@ class DiscordSender:
                 return False
 
             if not os.path.exists(chart_file_path):
-                self.console.print(f"⚠️ チャートファイルが見つかりません: {chart_file_path}")
+                self.console.print(
+                    f"⚠️ チャートファイルが見つかりません: {chart_file_path}"
+                )
                 return False
 
             self.console.print(f"📊 {currency_pair} チャートDiscord配信中...")
@@ -308,36 +323,41 @@ class DiscordSender:
             # ファイルサイズを確認（Discordの制限: 8MB）
             file_size = os.path.getsize(chart_file_path)
             if file_size > 8 * 1024 * 1024:  # 8MB
-                self.console.print(f"⚠️ ファイルサイズが大きすぎます: {file_size / 1024 / 1024:.2f}MB")
+                self.console.print(
+                    f"⚠️ ファイルサイズが大きすぎます: {file_size / 1024 / 1024:.2f}MB"
+                )
                 return False
 
             # ファイル名を取得
             file_name = os.path.basename(chart_file_path)
 
             # ファイルを読み込み
-            with open(chart_file_path, 'rb') as f:
-                files = {
-                    'file': (file_name, f, 'image/png')
-                }
+            with open(chart_file_path, "rb") as f:
+                files = {"file": (file_name, f, "image/png")}
 
                 # メッセージデータ
                 data = {
-                    'content': f"📊 **{currency_pair} H1チャート** - {datetime.now(self.jst).strftime('%Y-%m-%d %H:%M JST')}"
+                    "content": (
+                        f"📊 **{currency_pair} H1専用チャート** - "
+                        f"{datetime.now(self.jst).strftime('%Y-%m-%d %H:%M JST')}"
+                    )
                 }
 
                 # Discordに送信
                 async with httpx.AsyncClient(timeout=30.0) as client:
                     response = await client.post(
-                        self.discord_webhook,
-                        data=data,
-                        files=files
+                        self.discord_webhook, data=data, files=files
                     )
 
                     if response.status_code in [200, 204]:
-                        self.console.print(f"✅ {currency_pair} チャートDiscord配信成功")
+                        self.console.print(
+                            f"✅ {currency_pair} チャートDiscord配信成功"
+                        )
                         return True
                     else:
-                        self.console.print(f"❌ チャート配信失敗: {response.status_code}")
+                        self.console.print(
+                            f"❌ チャート配信失敗: {response.status_code}"
+                        )
                         self.console.print(f"レスポンス: {response.text}")
                         return False
 

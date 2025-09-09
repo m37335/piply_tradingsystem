@@ -333,8 +333,45 @@ class IntegratedAIDiscordReporter:
                         )
                         indicators_data[f"{tf}_FIB"] = fib_result
 
+                        # ATR(14)計算
+                        atr_result = self.technical_analyzer.calculate_atr(
+                            hist_data, tf, period=14
+                        )
+                        indicators_data[f"{tf}_ATR"] = atr_result
+
+                        # ADX(14)計算
+                        adx_result = self.technical_analyzer.calculate_adx(
+                            hist_data, tf, period=14
+                        )
+                        indicators_data[f"{tf}_ADX"] = adx_result
+
+                        # H1のMACD計算を追加
+                        if tf == "H1":
+                            try:
+                                macd_result = self.technical_analyzer.calculate_macd(
+                                    hist_data, tf
+                                )
+                                indicators_data[f"{tf}_MACD"] = macd_result
+                                self.console.print(f"✅ H1: MACD計算成功")
+                            except Exception as e:
+                                self.console.print(f"❌ H1: MACD計算失敗 - {e}")
+                                indicators_data[f"{tf}_MACD"] = {"current_value": None}
+
                         # 結果出力
                         self._log_technical_results(tf, indicators_data)
+
+                        # H1データのデバッグ出力
+                        if tf == "H1":
+                            self.console.print(
+                                f"🔍 H1 indicators_data: {list(indicators_data.keys())}"
+                            )
+                            for key, value in indicators_data.items():
+                                if isinstance(value, dict) and "current_value" in value:
+                                    self.console.print(
+                                        f"🔍 {key}: {value.get('current_value', 'N/A')}"
+                                    )
+                                elif key == "H1_MACD":
+                                    self.console.print(f"🔍 {key}: {value}")
 
                     else:
                         self.console.print(f"❌ {tf}: 履歴データ取得失敗")
@@ -465,6 +502,26 @@ class IntegratedAIDiscordReporter:
             else:
                 self.console.print(f"⚠️ {tf}: フィボナッチ計算エラー")
 
+        # ATR出力
+        if f"{tf}_ATR" in indicators_data:
+            atr_data = indicators_data[f"{tf}_ATR"]
+            if "error" not in atr_data:
+                atr_value = atr_data.get("current_value", "N/A")
+                if isinstance(atr_value, (int, float)):
+                    self.console.print(f"✅ {tf}: ATR(14)={atr_value:.4f}")
+            else:
+                self.console.print(f"⚠️ {tf}: ATR計算エラー")
+
+        # ADX出力
+        if f"{tf}_ADX" in indicators_data:
+            adx_data = indicators_data[f"{tf}_ADX"]
+            if "error" not in adx_data:
+                adx_value = adx_data.get("current_value", "N/A")
+                if isinstance(adx_value, (int, float)):
+                    self.console.print(f"✅ {tf}: ADX(14)={adx_value:.1f}")
+            else:
+                self.console.print(f"⚠️ {tf}: ADX計算エラー")
+
     def _log_moving_averages(self, tf: str, indicators_data: Dict[str, Any]):
         """移動平均線結果をログ出力"""
         if tf == "D1":
@@ -518,8 +575,42 @@ class IntegratedAIDiscordReporter:
         indicators_data[f"{tf}_RSI_MEDIUM"] = rsi_medium_result
         indicators_data[f"{tf}_RSI_SHORT"] = rsi_short_result
 
-        # 他の指標も同様に計算
-        # ... (省略)
+        # MACD計算（D1のみ）
+        if tf == "D1" and len(hist_data) >= 40:
+            macd_result = self.technical_analyzer.calculate_macd(hist_data, tf)
+            indicators_data[f"{tf}_MACD"] = macd_result
+
+        # ボリンジャーバンド計算
+        bb_result = self.technical_analyzer.calculate_bollinger_bands(hist_data, tf)
+        indicators_data[f"{tf}_BB"] = bb_result
+
+        # 移動平均線計算
+        if tf == "D1":
+            ma_long_result = self.technical_analyzer.calculate_moving_averages(
+                hist_data, tf, ma_type="SMA", period=200
+            )
+            ma_medium_result = self.technical_analyzer.calculate_moving_averages(
+                hist_data, tf, ma_type="SMA", period=50
+            )
+            indicators_data[f"{tf}_MA_LONG"] = ma_long_result
+            indicators_data[f"{tf}_MA_MEDIUM"] = ma_medium_result
+        elif tf in ["H4", "H1", "M5"]:
+            ma_short_result = self.technical_analyzer.calculate_moving_averages(
+                hist_data, tf, ma_type="SMA", period=20
+            )
+            indicators_data[f"{tf}_MA_SHORT"] = ma_short_result
+
+        # フィボナッチ分析
+        fib_result = self.fibonacci_analyzer.calculate_fibonacci_analysis(hist_data, tf)
+        indicators_data[f"{tf}_FIB"] = fib_result
+
+        # ATR(14)計算
+        atr_result = self.technical_analyzer.calculate_atr(hist_data, tf, period=14)
+        indicators_data[f"{tf}_ATR"] = atr_result
+
+        # ADX(14)計算
+        adx_result = self.technical_analyzer.calculate_adx(hist_data, tf, period=14)
+        indicators_data[f"{tf}_ADX"] = adx_result
 
     async def generate_and_send_integrated_report(self) -> bool:
         """統合相関分析レポート生成・配信"""
@@ -542,6 +633,12 @@ class IntegratedAIDiscordReporter:
                 self.console.print("❌ 通貨相関分析失敗")
                 return False
 
+            # H1専用のテクニカルデータを追加
+            self.console.print("🔍 H1データ抽出開始...")
+            h1_technical_data = self._extract_h1_technical_data(technical_data)
+            correlation_data["h1_technical_data"] = h1_technical_data
+            self.console.print(f"🔍 H1データ抽出完了: {h1_technical_data}")
+
             # 相関分析結果を表示
             self.correlation_analyzer.display_correlation_analysis(correlation_data)
 
@@ -553,6 +650,9 @@ class IntegratedAIDiscordReporter:
                 await self.ai_strategy_generator.generate_integrated_analysis(
                     correlation_data, technical_data
                 )
+            )
+            self.console.print(
+                f"🔍 分析結果の状態: {type(analysis_result)} - {bool(analysis_result)}"
             )
             if not analysis_result:
                 self.console.print("❌ 統合AI分析生成失敗")
@@ -761,3 +861,58 @@ class IntegratedAIDiscordReporter:
         except Exception as e:
             self.error_handler.log_error(e, f"{currency_pair} H4チャート生成")
             return None
+
+    def _extract_h1_technical_data(
+        self, technical_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """H1専用のテクニカルデータを抽出"""
+        h1_data = technical_data.get("H1", {})
+
+        # H1データを直接検索
+        h1_data = {}
+        for key, value in technical_data.items():
+            if key.startswith("H1_"):
+                h1_data[key] = value
+
+        # H1のテクニカル指標を抽出
+        h1_technical = {
+            "trend_type": "N/A",
+            "macd_value": "N/A",
+            "rsi_value": "N/A",
+            "atr_value": "N/A",
+            "adx_value": "N/A",
+        }
+
+        # MACD
+        h1_macd = h1_data.get("H1_MACD", {})
+        if h1_macd and h1_macd.get("macd_line") is not None:
+            h1_technical["macd_value"] = f"{h1_macd['macd_line']:.3f}"
+
+        # RSI
+        h1_rsi = h1_data.get("H1_RSI_LONG", {})
+        if h1_rsi and h1_rsi.get("current_value") is not None:
+            h1_technical["rsi_value"] = f"{h1_rsi['current_value']:.1f}"
+
+        # ATR
+        h1_atr = h1_data.get("H1_ATR", {})
+        if h1_atr and h1_atr.get("current_value") is not None:
+            h1_technical["atr_value"] = f"{h1_atr['current_value']:.3f}"
+
+        # ADX
+        h1_adx = h1_data.get("H1_ADX", {})
+        if h1_adx and h1_adx.get("current_value") is not None:
+            h1_technical["adx_value"] = f"{h1_adx['current_value']:.1f}"
+
+        # トレンド判定（MACDとRSIに基づく）
+        if h1_technical["macd_value"] != "N/A" and h1_technical["rsi_value"] != "N/A":
+            macd_val = float(h1_technical["macd_value"])
+            rsi_val = float(h1_technical["rsi_value"])
+
+            if macd_val > 0 and rsi_val > 50:
+                h1_technical["trend_type"] = "上昇トレンド"
+            elif macd_val < 0 and rsi_val < 50:
+                h1_technical["trend_type"] = "下降トレンド"
+            else:
+                h1_technical["trend_type"] = "レンジ相場"
+
+        return h1_technical

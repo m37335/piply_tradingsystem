@@ -57,180 +57,19 @@ class AIStrategyGenerator:
         # テクニカル指標データを文字列化（プロンプト用に簡潔化）
         technical_summary = ""
         if technical_data:
-            # D1分析サマリー
-            d1_summary = []
-            if "D1_MA_LONG" in technical_data:
-                ma_long = technical_data["D1_MA_LONG"].get("ma_long", "N/A")
-                if isinstance(ma_long, (int, float)):
-                    d1_summary.append(f"MA200: {ma_long:.4f}")
 
-            if "D1_MA_MEDIUM" in technical_data:
-                ma_medium = technical_data["D1_MA_MEDIUM"].get("ma_medium", "N/A")
-                if isinstance(ma_medium, (int, float)):
-                    d1_summary.append(f"MA50: {ma_medium:.4f}")
-
-            if "D1_RSI_LONG" in technical_data:
-                rsi_long = technical_data["D1_RSI_LONG"].get("current_value", "N/A")
-                if isinstance(rsi_long, (int, float)):
-                    d1_summary.append(f"RSI70: {rsi_long:.1f}")
-
-            if "D1_MACD" in technical_data:
-                macd_line = technical_data["D1_MACD"].get("macd_line", "N/A")
-                if isinstance(macd_line, (int, float)):
-                    d1_summary.append(f"MACD: {macd_line:.4f}")
-
-            if "D1_BB" in technical_data:
-                bb_upper = technical_data["D1_BB"].get("upper_band", "N/A")
-                bb_lower = technical_data["D1_BB"].get("lower_band", "N/A")
-                if isinstance(bb_upper, (int, float)) and isinstance(
-                    bb_lower, (int, float)
-                ):
-                    d1_summary.append(
-                        f"BB Upper: {bb_upper:.4f}, Lower: {bb_lower:.4f}"
-                    )
-
-            # フィボナッチ分析サマリー（D1）
-            if "D1_FIB" in technical_data:
-                d1_fib = technical_data["D1_FIB"]
-                if "error" not in d1_fib:
-                    swing_high = d1_fib.get("swing_high", "N/A")
-                    swing_low = d1_fib.get("swing_low", "N/A")
-                    current_position = d1_fib.get("current_position", {})
-                    if isinstance(swing_high, (int, float)) and isinstance(
-                        swing_low, (int, float)
-                    ):
-                        position_info = ""
-                        if isinstance(current_position, dict):
-                            percentage = current_position.get("percentage", "N/A")
-                            nearest_level = current_position.get("nearest_level", "N/A")
-                            position_info = (
-                                f" (現在位置: {percentage}%, 最寄り: {nearest_level})"
-                            )
-                        d1_summary.append(
-                            f"Fib High: {swing_high:.4f}, "
-                            f"Low: {swing_low:.4f}{position_info}"
-                        )
-
-            # H4分析サマリー
-            h4_summary = []
-            if "H4_MA_MEDIUM" in technical_data:
-                h4_ma_medium = technical_data["H4_MA_MEDIUM"].get("ma_medium", "N/A")
-                if isinstance(h4_ma_medium, (int, float)):
-                    h4_summary.append(f"MA50: {h4_ma_medium:.4f}")
-
-            if "H4_RSI_LONG" in technical_data:
-                h4_rsi_long = technical_data["H4_RSI_LONG"].get("current_value", "N/A")
-                if isinstance(h4_rsi_long, (int, float)):
-                    h4_summary.append(f"RSI70: {h4_rsi_long:.1f}")
-
-            # フィボナッチ分析サマリー（H4）
-            if "H4_FIB" in technical_data:
-                h4_fib = technical_data["H4_FIB"]
-                if "error" not in h4_fib:
-                    swing_high = h4_fib.get("swing_high", "N/A")
-                    swing_low = h4_fib.get("swing_low", "N/A")
-                    current_position = h4_fib.get("current_position", {})
-                    if isinstance(swing_high, (int, float)) and isinstance(
-                        swing_low, (int, float)
-                    ):
-                        position_info = ""
-                        if isinstance(current_position, dict):
-                            percentage = current_position.get("percentage", "N/A")
-                            nearest_level = current_position.get("nearest_level", "N/A")
-                            position_info = (
-                                f" (現在位置: {percentage}%, 最寄り: {nearest_level})"
-                            )
-                        h4_summary.append(
-                            f"Fib High: {swing_high:.4f}, "
-                            f"Low: {swing_low:.4f}{position_info}"
-                        )
-
-            # H1分析サマリー
-            h1_summary = []
-            if "H1_MA_SHORT" in technical_data:
-                h1_ma_short = technical_data["H1_MA_SHORT"].get("ma_short", "N/A")
-                if isinstance(h1_ma_short, (int, float)):
-                    h1_summary.append(f"MA20: {h1_ma_short:.4f}")
-
-            if "H1_RSI_LONG" in technical_data:
-                h1_rsi_long = technical_data["H1_RSI_LONG"].get("current_value", "N/A")
-                if isinstance(h1_rsi_long, (int, float)):
-                    h1_summary.append(f"RSI70: {h1_rsi_long:.1f}")
-
-            # フィボナッチ分析サマリー（H1）
-            if "H1_FIB" in technical_data:
-                h1_fib = technical_data["H1_FIB"]
-                if "error" not in h1_fib:
-                    swing_high = h1_fib.get("swing_high", "N/A")
-                    swing_low = h1_fib.get("swing_low", "N/A")
-                    current_position = h1_fib.get("current_position", {})
-                    if isinstance(swing_high, (int, float)) and isinstance(
-                        swing_low, (int, float)
-                    ):
-                        position_info = ""
-                        if isinstance(current_position, dict):
-                            percentage = current_position.get("percentage", "N/A")
-                            nearest_level = current_position.get("nearest_level", "N/A")
-                            position_info = (
-                                f" (現在位置: {percentage}%, 最寄り: {nearest_level})"
-                            )
-                        h1_summary.append(
-                            f"Fib High: {swing_high:.4f}, "
-                            f"Low: {swing_low:.4f}{position_info}"
-                        )
-
-            # M5分析サマリー
-            m5_summary = []
-            if "M5_MA_SHORT" in technical_data:
-                m5_ma_short = technical_data["M5_MA_SHORT"].get("ma_short", "N/A")
-                if isinstance(m5_ma_short, (int, float)):
-                    m5_summary.append(f"MA20: {m5_ma_short:.4f}")
-
-            if "M5_RSI_LONG" in technical_data:
-                m5_rsi_long = technical_data["M5_RSI_LONG"].get("current_value", "N/A")
-                if isinstance(m5_rsi_long, (int, float)):
-                    m5_summary.append(f"RSI70: {m5_rsi_long:.1f}")
-
-            # フィボナッチ分析サマリー（M5）
-            if "M5_FIB" in technical_data:
-                m5_fib = technical_data["M5_FIB"]
-                if "error" not in m5_fib:
-                    swing_high = m5_fib.get("swing_high", "N/A")
-                    swing_low = m5_fib.get("swing_low", "N/A")
-                    current_position = m5_fib.get("current_position", {})
-                    if isinstance(swing_high, (int, float)) and isinstance(
-                        swing_low, (int, float)
-                    ):
-                        position_info = ""
-                        if isinstance(current_position, dict):
-                            percentage = current_position.get("percentage", "N/A")
-                            nearest_level = current_position.get("nearest_level", "N/A")
-                            position_info = (
-                                f" (現在位置: {percentage}%, 最寄り: {nearest_level})"
-                            )
-                        m5_summary.append(
-                            f"Fib High: {swing_high:.4f}, "
-                            f"Low: {swing_low:.4f}{position_info}"
-                        )
-
-            # 統合サマリー
-            technical_summary = f"""
-【テクニカルデータ詳細】
-D1 (Daily): {', '.join(d1_summary) if d1_summary else 'データなし'}
-H4 (4H): {', '.join(h4_summary) if h4_summary else 'データなし'}
-H1 (1H): {', '.join(h1_summary) if h1_summary else 'データなし'}
-M5 (5M): {', '.join(m5_summary) if m5_summary else 'データなし'}
-
-**上記のテクニカルデータの具体的な数値を必ず使用して分析してください**
-"""
+            # 詳細テクニカルサマリーを作成
+            technical_summary = self._create_detailed_technical_summary(technical_data)
 
         # 統合分析プロンプト作成
         prompt = f"""
 あなたはプロFXトレーダーです。
-通貨間の相関性とテクニカル指標を活用した統合分析に基づいて、USD/JPYの「負けないトレード」を目指した売買シナリオを作成してください。
+通貨相関とテクニカル指標を統合して、USD/JPYの「負けないトレード」を目指した売買シナリオを作成してください。  
 
-**重要**: 以下に提供されるテクニカルデータの具体的な数値を必ず使用して分析してください。
-「詳細なし」や「N/A」ではなく、実際の数値で具体的な分析を行ってください。
+【必須条件】  
+- 提供された数値データを必ず用いること（N/Aや詳細なしは禁止）。  
+- 大局 → 戦術 → 執行 → リスク管理の順で一貫した分析を行うこと。  
+- 出力は必ず番号付きリスト（1〜9）。
 
 以下のデータを基に、指示に従ってUSD/JPYの包括的なテクニカル分析を含む売買シナリオを分析してください。
 
@@ -259,200 +98,79 @@ JPY分析: {jpy_analysis.get('direction', 'N/A')} \
 (MACD: {usdjpy_forecast.get('technical_bias', {}).get('macd_value', 'N/A')}, \
 RSI: {usdjpy_forecast.get('technical_bias', {}).get('rsi_value', 'N/A')})
 
-{correlation_data}
-
 {technical_summary}
 
-【指示】
-与えられたデータを元に、以下の為替トレード売買シナリオ構築プロセスに従って、売買シナリオを作成してください：
+**上記のテクニカルデータの具体的な数値を必ず使用して分析してください**
 
-為替トレード売買シナリオ構築プロセス
-1. 大局認識（戦略フレームの決定）
-時間軸：D1（日足）
-・**移動平均線：SMA200・SMA50の傾きと位置関係**で「長期トレンド」を判定
-SMA200 > 価格 → 長期下落圧力
-SMA50がSMA200を下抜け → デッドクロス → 売り優勢
-・**MACD（D1限定）**
-MACD < 0 & デッドクロス → 下落バイアス
-MACD > 0 & ゴールデンクロス → 上昇バイアス
-・**RSI（長期：70/30）**
-70以上 → 過熱買い圏
-30以下 → 過熱売り圏
-・**フィボナッチ（90日）**
-現在値が 61.8% or 38.2% に位置 → 大局のサポレジを特定
-・**MACD × RSI トレンド評価基準**
-1. 強い上昇トレンド
-   - MACD > 0（大きくプラス、上昇傾き）
-   - RSI > 60〜70
-   - 評価：上昇方向が強い、順張り買い有効
-   - 戦略：押し目買い、ブレイク狙い
-2. 弱い上昇トレンド
-   - MACD > 0（小幅プラス）
-   - RSI 50〜60
-   - 評価：上昇優勢だが勢い不足、レンジ上抜け待ち
-   - 戦略：小ロット買い、慎重に追随
-3. 中立（レンジ）
-   - MACD ≈ 0（±0.1以内）
-   - RSI 45〜55
-   - 評価：明確な方向感なし、もみ合い
-   - 戦略：ノートレ or レンジ逆張り
-4. 弱い下降トレンド
-   - MACD < 0（小幅マイナス）
-   - RSI 40〜45
-   - 評価：下落寄りだが勢い不足、方向感待ち
-   - 戦略：戻り売り準備、慎重に
-5. 強い下降トレンド
-   - MACD < 0（大きくマイナス、下降傾き）
-   - RSI < 40〜30
-   - 評価：下落方向が強い、順張り売り有効
-   - 戦略：戻り売り、ブレイク狙い
-6. 売られすぎ／買われすぎ局面
-   - MACDの方向問わず
-   - RSI > 70（買われすぎ） or RSI < 30（売られすぎ）
-   - 評価：トレンド加速か反転の分岐点
-   - 戦略：利確、逆張り短期狙い
+【目的】
+一日のトレードで 6%の利益達成 を最優先目標とする。
+勝率と再現性を重視し、最も実現性の高いシナリオを構築する。
+大局 → 戦術 → 執行 → リスク管理 の順で一貫したロジックを維持する。
 
-👉 この段階で「基本は買い目線か売り目線か」を決定
+1. 大局認識（D1・H4）
+SMA・MACDを最優先指標とする。
+RSI・ADX・ATRは補強指標として使用。
+大局方向（上昇/下降/レンジ）を明確に判定。
+大局方向と一致するシナリオを「優先シナリオ」として提示し、逆方向は「補助シナリオ」として補足する。
 
-2. 中期の方向性とシナリオ候補
-時間軸：H4（4時間足）
-・**SMA20・SMA50の位置関係**
-SMA20 < SMA50 & 価格も下 → 下落トレンド確認
-逆なら上昇トレンド
-・**ボリンジャーバンド（20,2）**
-バンドウォーク中 → トレンド継続
-バンド収縮 → ブレイク待ち
-・**RSI（14, 70/30）**
-30割れ → 下落トレンド中の利確・反発候補
-50下回り継続 → 弱気継続
-・**フィボ（7日）**
-38.2%戻し → 押し目 or 戻り目ゾーン
-61.8%戻し → 最終反発ゾーン
-👉 ここで「売りならどの戻りを叩くか／買いならどの押し目を拾うか」を決める
+2. 戦術レベル（H1）
+サポート＆レジスタンスは必ず現在価格から±50pips以内を選ぶこと。それ以外の水準は提示してはならない。
+フィボナッチ38.2%・50%・61.8%・78.6%を重視。
+MA20・MA50・ボリンジャーバンド下限/上限との合流点を優先する。
+RSI30-50で反発 → ロング条件。
+RSI50以下で割れ → ショート条件。
 
-3. 戦術レベル（短期ゾーン特定）
-時間軸：H1（1時間足）
-・**直近高値・安値の水平ライン**を引く（サポレジ）
-・**RSI（14）**でダイバージェンス有無をチェック
-価格は安値更新してるのにRSIは下げてない → 反発サイン
-・**ボリンジャーバンド**で±2σタッチ→反発かブレイク狙い
-👉 H1で「ゾーン」を決める（例：147.60で売り、147.30割れで追随など）
+3. 執行レベル（M5）
+ローソク足パターン（包み足・ピンバー）で反発/突破を確認。
+RSI短期の反転、ATR/ADXでトレンド強度を確認。
+条件が揃わない場合はエントリーを見送る。
 
-4. 執行レベル（エントリー/イグジットの判断）
-時間軸：M5（5分足）
-・**エントリー条件（重要）**
-戻り売り：H1で決めたレジスタンスゾーン到達 → M5で上ヒゲ＋陰線確認
-押し目買い：サポートゾーン到達 → M5で下ヒゲ＋陽線確認
-・**RSI短期（30以下・70以上）**で反発タイミングを精査
-・**移動平均SMA20（M5）**を短期のトレンドガイドに使う
-👉 ここで具体的にエントリーする
+4. リスク管理
+損切り：必ず15〜20pipsに設定する。
+利確：必ず40〜50pipsの範囲に設定する。
+→ これによりリスクリワード比は必ず1:2以上になる。
+利確・損切りを提示した後にRR比を計算し、明示する。
+トレード回数：1日2〜3回以内。
 
-**重要**: 単純な価格到達ではなく、M5での具体的なローソク足パターン確認が必要
+5. 通貨相関
+USD/JPY基軸。
+EUR/USD・GBP/USDとの逆相関を確認。
+相関は補助的に扱い、優先はテクニカル分析。
 
-5. リスク管理（中期トレード重視）
-・**損切り**：直近の高値/安値の外側に置く（15-20pips程度）
-・**利確**：30-50pipsを基本とする中期トレード
-・**RR比（リスクリワード）**1:2以上を目標
-・**トレーリングストップ**：20pips程度の利益が出たら10pips程度に調整
+6. 出力形式
+出力は必ず番号付きリスト（1〜9）で提示すること。
+1. 大局認識：方向性と根拠（優先シナリオを明示）
+2. テクニカル状況：MACD・RSI・ATR・ADXの値と解釈
+3. サポート&レジスタンス：現在価格から±50pips以内の水準を提示
+4. 押し目分析：反発/突破の可能性と根拠
+5. ロングシナリオ（優先/補助を明示）：エントリー価格・利確（40〜50pips）・損切り（15〜20pips）・RR比・根拠
+6. ショートシナリオ（優先/補助を明示）：エントリー価格・利確（40〜50pips）・損切り（15〜20pips）・RR比・根拠
+7. 6%利益達成可能性：
+   ・口座残高を円建てで想定し、残高×6%＝必要利益（円）を算出すること
+   ・1ロット=1万通貨の場合と1ロット=10万通貨の場合の両方を仮定し、それぞれ必要pips数やロット数を計算すること
+   ・必ずレバレッジ25倍を考慮した具体例を含めること
+8. 直近の値動き予測：現在価格から上昇しやすいのか、下落しやすいのかを短期足の指標から推定し、簡潔に示すこと
+9. 結論：現時点で最も実行可能性が高い方向（ロング or ショート）を一つ選び、理由を添えて提示すること。
+   ・優先シナリオ＝推奨シナリオ
+   ・補助シナリオ＝条件が揃った場合のみ検討する
 
-6. 通貨相関で補強
-USD/JPYをメインに、EUR/USD・GBP/USDでドルの強弱を確認
-EUR/JPY・GBP/JPYで円の強弱をクロスチェック
-👉 「ドルが弱いのか／円が強いのか」を切り分けてシナリオの信頼度を補強
-
-7. 時間軸優先度分析（重要）
-・**中短期（H4/H1）の現在の値動きを最優先**
-・**長期（D1）は参考情報として扱う**
-・**両者の関係性を分析**：
-  - 一致している場合：強いトレンド
-  - 乖離している場合：中短期優先、長期は参考
-  - 中立の場合：レンジ相場
-・**トレード判断**：
-  - 中短期上昇 → 短期買い優先
-  - 中短期下落 → 短期売り優先
-  - 長期シナリオは参考情報として扱う
-
-【出力形式】
-売買シナリオ出力フォーマット
-1. 大局認識（環境認識）
-時間軸：日足（D1）・4時間足（H4）
-トレンド方向（上昇／下降／レンジ）
-**必ず提供されたテクニカルデータの具体的な数値を使用してください**
-- MACD: 提供されたMACD値を明記
-- SMA200/50の位置関係: 提供されたMA200、MA50の値と現在価格の関係を具体的に分析
-- フィボナッチ主要レベル: 提供されたFib High/Lowの値を使用
-
-2. 現在のテクニカル状況
-**提供されたテクニカルデータの具体的な数値を必ず使用してください**
-- RSI: 提供されたRSI値を明記し、状態を分析
-- ボリンジャーバンド: 提供されたBB Upper/Lowerの値と現在価格の位置関係を具体的に分析
-- 移動平均線との関係: 提供されたMA20、MA50、MA200の値と現在価格の関係を具体的に分析
-- ローソク足パターン: 価格データから分析
-
-3. 時間軸別分析（重要）
-✅ 中短期（H4/H1）の現在の値動き
-- 上昇/下落/中立の判断と具体的な根拠
-- 連続陽線/陰線、SMA位置関係、RSI動向など
-
-✅ 長期（D1）の将来シナリオ
-- 上昇/下落/中立の可能性と具体的な根拠
-- フィボナッチ、長期RSI、MA200/50との関係など
-
-✅ 時間軸の関係性
-- 一致/乖離/中立の判断
-- トレード優先度の決定理由
-
-✅ トレード判断
-- 中短期の方向性に基づく具体的な方針
-- 長期シナリオの参考としての扱い方
-
-4. サポート & レジスタンス
-**提供されたデータの具体的な数値を使用してください**
-- 水平ライン: 直近高値・安値の具体的な価格
-- 移動平均線: 提供されたMA20、MA50、MA200の具体的な価格
-- フィボナッチレベル: 提供されたFib High/Lowから計算された具体的な価格
-- 心理的節目: 147.00、148.00など
-
-5. シナリオ分岐
-シナリオ①（本命）：具体的な価格で記述
-シナリオ②（サブ）：具体的な価格で記述
-条件を「もし〜なら」で明確に書く
-
-6. エントリーポイント
-具体的な価格帯
-根拠（提供されたテクニカルデータの具体的な数値を参照）
-
-**M5（5分足）でのエントリー条件**
-- 戻り売り：H1レジスタンスゾーン到達後、M5で上ヒゲ＋陰線確認
-- 押し目買い：H1サポートゾーン到達後、M5で下ヒゲ＋陽線確認
-- RSI短期（30以下・70以上）での反発タイミング確認
-- M5 SMA20との位置関係確認
-- 具体的なエントリータイミングの説明
-
-7. 利確・損切り
-利確目標：30-50pipsを基本とする中期トレード（具体的な価格とpips数を必ず明記）
-損切りライン：15-20pips程度（具体的な価格とpips数を必ず明記）
-リスクリワード比（RRR）：最低 1:2 を目標
-
-8. 通貨相関チェック
-USD/JPY と EUR/USD・GBP/USD の相関
-クロス円（EUR/JPY・GBP/JPY）で JPY 強弱確認
-→ シナリオの信頼度補強
-
-【重要】
-- 提供されたテクニカルデータの具体的な数値を必ず使用してください
-- 「詳細なし」や「N/A」ではなく、実際の数値で分析してください
-- 各指標の具体的な値と現在価格の関係を明確に説明してください
+【数値表記ルール】
+・価格は必ず小数点第3位まで表示する（例：147.000）。
+・必ず価格とpips数を明記すること。
+・フィボナッチは時間足を明示し、具体的な数値を使用すること。
+・数値は下3桁程度に簡略化する（例：MACD=0.089, RSI=50.5）。
+・中期トレード（40-50pips利確、15-20pips損切り）を基本とする。
+・ショートシナリオでは「価格差の符号」と「損益の符号」が逆になるため、括弧内で両方を表記すること。
+  例：
+  - ロングTP：価格差 +40.0 pips ／ 損益 +40 pips
+  - ロングSL：価格差 -20.0 pips ／ 損益 -20 pips
+  - ショートTP：価格差 -40.0 pips ／ 損益 +40 pips
+  - ショートSL：価格差 +20.0 pips ／ 損益 -20 pips
 
 【制約】
-・合計1000文字以内
-・数値を明確に表示。ただし、小数点以下は3桁まで表示。価格（例：145.230）とpips数を必ず明記。
-・実行可能な指示を優先
-・エントリー条件は自然な文章で記述（箇条書き禁止）
-・中期トレード（30-50pips）を基本とする
-・損切りは15-20pips程度に設定
-・**M5での具体的なローソク足パターン確認を必ず含める**
-・単純な価格到達ではなく、M5でのエントリー条件を明確に説明
+・合計1000文字以内。
+・実行可能な指示を優先する。
+
 """
 
         try:
@@ -461,57 +179,381 @@ USD/JPY と EUR/USD・GBP/USD の相関
                 "Content-Type": "application/json",
             }
 
+            # プロンプトの長さを確認
+            prompt_length = len(prompt)
+            self.console.print(f"🔍 プロンプト長: {prompt_length}文字")
+
+            # プロンプト内容をファイルに出力（デバッグ用）
+            with open("/tmp/current_prompt.txt", "w", encoding="utf-8") as f:
+                f.write(prompt)
+            self.console.print(
+                "🔍 プロンプト内容を /tmp/current_prompt.txt に出力しました"
+            )
+
+            # GPT-4oのChat Completions API設定
             payload = {
-                "model": "gpt-4",
+                "model": "gpt-4o",
                 "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 2000,  # 統合分析対応（トークン制限緩和）
-                "temperature": 0.7,
+                "max_tokens": 2000,  # GPT-4oではmax_tokensを使用
+                "temperature": 0.7,  # GPT-4oではtemperatureを設定可能
+                "stop": ["<END>"],  # ストップシーケンスを設定
             }
 
             # crontab環境でのネットワーク接続問題に対応
             timeout_config = httpx.Timeout(
                 connect=10.0,  # 接続タイムアウト
-                read=60.0,  # 読み取りタイムアウト
+                read=120.0,  # 読み取りタイムアウト（GPT-5対応で延長）
                 write=10.0,  # 書き込みタイムアウト
                 pool=10.0,  # プールタイムアウト
             )
+
+            # 自動リトライ機能（finish_reason: "length"対策）
+            token_limits = [1500, 2000, 2500]  # GPT-4o用のトークン制限
 
             async with httpx.AsyncClient(
                 timeout=timeout_config,
                 limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
             ) as client:
-                response = await client.post(
-                    self.openai_url, headers=headers, json=payload
-                )
+                for i, max_tokens in enumerate(token_limits):
+                    # トークン制限を更新
+                    payload["max_tokens"] = max_tokens
+                    self.console.print(
+                        f"🔄 試行 {i+1}/{len(token_limits)}: max_tokens={max_tokens}"
+                    )
 
-                if response.status_code == 200:
-                    data = response.json()
-                    analysis = data["choices"][0]["message"]["content"].strip()
-                    self.console.print("✅ 統合AI分析生成成功")
-                    return analysis
-                else:
-                    self.console.print(f"❌ OpenAI APIエラー: {response.status_code}")
-                    self.console.print(f"エラー詳細: {response.text}")
-                    return None
+                    response = await client.post(
+                        self.openai_url, headers=headers, json=payload
+                    )
+
+                    if response.status_code == 200:
+                        data = response.json()
+                        self.console.print(f"🔍 GPT-4o応答データ: {data}")
+
+                        # Chat Completions APIの応答形式
+                        choice = data.get("choices", [{}])[0]
+                        finish_reason = choice.get("finish_reason", "unknown")
+                        analysis = choice.get("message", {}).get("content", "").strip()
+
+                        self.console.print(f"📝 finish_reason: {finish_reason}")
+                        self.console.print(f"📝 分析結果の長さ: {len(analysis)}文字")
+
+                        if finish_reason == "length":
+                            self.console.print(
+                                "⚠️ トークン制限に達しました。再試行します..."
+                            )
+                            continue  # 次のトークン制限で再試行
+                        elif len(analysis) == 0:
+                            error_msg = (
+                                f"⚠️ GPT-4o応答が空です。finish_reason: {finish_reason}"
+                            )
+                            self.console.print(error_msg)
+                            return f"エラー: {error_msg}"
+                        else:
+                            self.console.print("✅ 統合AI分析生成成功")
+                            return analysis
+                    else:
+                        self.console.print(
+                            f"❌ OpenAI APIエラー: {response.status_code}"
+                        )
+                        self.console.print(f"エラー詳細: {response.text}")
+                        return f"エラー: OpenAI APIエラー {response.status_code}"
+
+                # すべての試行でlengthが返された場合
+                return "エラー: 出力が長すぎます。max_tokensをさらに増やしてください。"
 
         except httpx.ReadTimeout as e:
-            self.console.print(f"⚠️ OpenAI APIタイムアウト: {str(e)}")
-            self.console.print("📝 サンプル分析を生成します")
-            return self._generate_sample_integrated_scenario(correlation_data)
+            error_msg = f"⚠️ OpenAI APIタイムアウト: {str(e)}"
+            self.console.print(error_msg)
+            return f"エラー: {error_msg}"
         except httpx.ConnectTimeout as e:
-            self.console.print(f"⚠️ OpenAI API接続タイムアウト: {str(e)}")
-            self.console.print("📝 サンプル分析を生成します")
-            return self._generate_sample_integrated_scenario(correlation_data)
+            error_msg = f"⚠️ OpenAI API接続タイムアウト: {str(e)}"
+            self.console.print(error_msg)
+            return f"エラー: {error_msg}"
         except httpx.RequestError as e:
-            self.console.print(f"⚠️ OpenAI APIリクエストエラー: {str(e)}")
-            self.console.print("📝 サンプル分析を生成します")
-            return self._generate_sample_integrated_scenario(correlation_data)
+            error_msg = f"⚠️ OpenAI APIリクエストエラー: {str(e)}"
+            self.console.print(error_msg)
+            return f"エラー: {error_msg}"
         except Exception as e:
             error_details = traceback.format_exc()
-            self.console.print(f"❌ 統合AI分析生成エラー: {str(e)}")
+            error_msg = f"❌ 統合AI分析生成エラー: {str(e)}"
+            self.console.print(error_msg)
             self.console.print(f"詳細: {error_details}")
-            self.console.print("📝 サンプル分析を生成します")
-            return self._generate_sample_integrated_scenario(correlation_data)
+            return f"エラー: {error_msg}"
+
+    def _create_detailed_technical_summary(self, technical_data: Dict[str, Any]) -> str:
+        """各時間足の全指標を詳細にサマリー化"""
+        summary_parts = []
+
+        for timeframe in ["D1", "H4", "H1", "M5"]:
+            tf_summary = self._extract_timeframe_details(technical_data, timeframe)
+            if tf_summary:
+                summary_parts.append(
+                    f"{timeframe} ({self._get_timeframe_name(timeframe)}): {tf_summary}"
+                )
+
+        return f"""
+【テクニカルデータ詳細】
+{chr(10).join(summary_parts) if summary_parts else 'データなし'}
+
+**上記のテクニカルデータの具体的な数値を必ず使用して分析してください**
+"""
+
+    def _get_timeframe_name(self, timeframe: str) -> str:
+        """時間足の日本語名を取得"""
+        names = {"D1": "Daily", "H4": "4H", "H1": "1H", "M5": "5M"}
+        return names.get(timeframe, timeframe)
+
+    def _extract_timeframe_details(
+        self, technical_data: Dict[str, Any], timeframe: str
+    ) -> str:
+        """特定時間足の詳細情報を抽出"""
+        details = []
+
+        # MACD詳細
+        macd_details = self._extract_macd_details(technical_data, timeframe)
+        if macd_details:
+            details.append(macd_details)
+
+        # RSI詳細
+        rsi_details = self._extract_rsi_details(technical_data, timeframe)
+        if rsi_details:
+            details.append(rsi_details)
+
+        # ボリンジャーバンド詳細
+        bb_details = self._extract_bb_details(technical_data, timeframe)
+        if bb_details:
+            details.append(bb_details)
+
+        # 移動平均線詳細
+        ma_details = self._extract_ma_details(technical_data, timeframe)
+        if ma_details:
+            details.append(ma_details)
+
+        # ATR/ADX詳細
+        atr_adx_details = self._extract_atr_adx_details(technical_data, timeframe)
+        if atr_adx_details:
+            details.append(atr_adx_details)
+
+        # フィボナッチ詳細
+        fib_details = self._extract_fib_details(technical_data, timeframe)
+        if fib_details:
+            details.append(fib_details)
+
+        return ", ".join(details) if details else None
+
+    def _extract_macd_details(
+        self, technical_data: Dict[str, Any], timeframe: str
+    ) -> str:
+        """MACDの詳細情報を抽出"""
+        macd_key = f"{timeframe}_MACD"
+        if macd_key not in technical_data:
+            return None
+
+        macd_data = technical_data[macd_key]
+        if "error" in macd_data:
+            return None
+
+        macd_line = macd_data.get("macd_line")
+        signal_line = macd_data.get("signal_line")
+        histogram = macd_data.get("histogram")
+
+        if macd_line is None or signal_line is None:
+            return None
+
+        # クロス状態の判定
+        cross_status = ""
+        if histogram is not None:
+            if histogram > 0:
+                cross_status = "（ゴールデンクロス）"
+            elif histogram < 0:
+                cross_status = "（デッドクロス）"
+            else:
+                cross_status = "（クロス中）"
+
+        # トレンド方向の判定
+        trend_direction = ""
+        if macd_line > signal_line:
+            trend_direction = "上昇"
+        elif macd_line < signal_line:
+            trend_direction = "下降"
+        else:
+            trend_direction = "中立"
+
+        histogram_str = f"{histogram:.4f}" if histogram is not None else "N/A"
+        return (
+            f"MACD: {macd_line:.4f}, シグナル: {signal_line:.4f}, "
+            f"ヒストグラム: {histogram_str}, {trend_direction}{cross_status}"
+        )
+
+    def _extract_rsi_details(
+        self, technical_data: Dict[str, Any], timeframe: str
+    ) -> str:
+        """RSIの詳細情報を抽出"""
+        rsi_key = f"{timeframe}_RSI_LONG"
+        if rsi_key not in technical_data:
+            return None
+
+        rsi_data = technical_data[rsi_key]
+        if "error" in rsi_data:
+            return None
+
+        current_value = rsi_data.get("current_value")
+        if current_value is None:
+            return None
+
+        # 過買い/過売り判定
+        status = ""
+        if current_value >= 70:
+            status = "（過買い）"
+        elif current_value <= 30:
+            status = "（過売り）"
+        elif current_value > 50:
+            status = "（強気）"
+        elif current_value < 50:
+            status = "（弱気）"
+        else:
+            status = "（中立）"
+
+        return f"RSI: {current_value:.1f}{status}"
+
+    def _extract_bb_details(
+        self, technical_data: Dict[str, Any], timeframe: str
+    ) -> str:
+        """ボリンジャーバンドの詳細情報を抽出"""
+        bb_key = f"{timeframe}_BB"
+        if bb_key not in technical_data:
+            return None
+
+        bb_data = technical_data[bb_key]
+        if "error" in bb_data:
+            return None
+
+        upper_band = bb_data.get("upper_band")
+        lower_band = bb_data.get("lower_band")
+        middle_band = bb_data.get("middle_band")
+
+        if upper_band is None or lower_band is None or middle_band is None:
+            return None
+
+        # バンド幅の計算
+        band_width = upper_band - lower_band
+
+        return (
+            f"BB: 上限{upper_band:.4f}, 中線{middle_band:.4f}, "
+            f"下限{lower_band:.4f}, 幅{band_width:.4f}"
+        )
+
+    def _extract_ma_details(
+        self, technical_data: Dict[str, Any], timeframe: str
+    ) -> str:
+        """移動平均線の詳細情報を抽出"""
+        ma_details = []
+
+        # 短期MA
+        ma_short_key = f"{timeframe}_MA_SHORT"
+        if ma_short_key in technical_data:
+            ma_short = technical_data[ma_short_key].get("ma_short")
+            if ma_short is not None:
+                ma_details.append(f"MA20: {ma_short:.4f}")
+
+        # 中期MA
+        ma_medium_key = f"{timeframe}_MA_MEDIUM"
+        if ma_medium_key in technical_data:
+            ma_medium = technical_data[ma_medium_key].get("ma_medium")
+            if ma_medium is not None:
+                ma_details.append(f"MA50: {ma_medium:.4f}")
+
+        # 長期MA
+        ma_long_key = f"{timeframe}_MA_LONG"
+        if ma_long_key in technical_data:
+            ma_long = technical_data[ma_long_key].get("ma_long")
+            if ma_long is not None:
+                ma_details.append(f"MA200: {ma_long:.4f}")
+
+        return ", ".join(ma_details) if ma_details else None
+
+    def _extract_atr_adx_details(
+        self, technical_data: Dict[str, Any], timeframe: str
+    ) -> str:
+        """ATR/ADXの詳細情報を抽出"""
+        details = []
+
+        # ATR
+        atr_key = f"{timeframe}_ATR"
+        if atr_key in technical_data:
+            atr_value = technical_data[atr_key].get("current_value")
+            if atr_value is not None:
+                details.append(f"ATR(14): {atr_value:.4f}")
+
+        # ADX
+        adx_key = f"{timeframe}_ADX"
+        if adx_key in technical_data:
+            adx_value = technical_data[adx_key].get("current_value")
+            if adx_value is not None:
+                # トレンド強度の判定
+                strength = ""
+                if adx_value >= 25:
+                    strength = "（強いトレンド）"
+                elif adx_value >= 20:
+                    strength = "（中程度のトレンド）"
+                else:
+                    strength = "（弱いトレンド）"
+                details.append(f"ADX(14): {adx_value:.1f}{strength}")
+
+        return ", ".join(details) if details else None
+
+    def _extract_fib_details(
+        self, technical_data: Dict[str, Any], timeframe: str
+    ) -> str:
+        """フィボナッチの詳細情報を抽出"""
+        fib_key = f"{timeframe}_FIB"
+        if fib_key not in technical_data:
+            return None
+
+        fib_data = technical_data[fib_key]
+        if "error" in fib_data:
+            return None
+
+        swing_high = fib_data.get("swing_high")
+        swing_low = fib_data.get("swing_low")
+        current_position = fib_data.get("current_position", {})
+        levels = fib_data.get("levels", {})
+
+        if swing_high is None or swing_low is None:
+            return None
+
+        # フィボナッチレベルの詳細情報
+        fib_levels = []
+        if isinstance(levels, dict):
+            # レベルを順序付きで表示
+            level_order = [
+                "0.0%",
+                "23.6%",
+                "38.2%",
+                "50.0%",
+                "61.8%",
+                "78.6%",
+                "100.0%",
+            ]
+            for level in level_order:
+                if level in levels:
+                    price = levels[level]
+                    fib_levels.append(f"{level}={price:.4f}")
+
+        # 現在位置の情報
+        position_info = ""
+        if isinstance(current_position, dict):
+            percentage = current_position.get("percentage", "N/A")
+            nearest_level = current_position.get("nearest_level", "N/A")
+            position_info = f" (現在位置: {percentage}%, 最寄り: {nearest_level})"
+
+        # フィボナッチレベルの情報を組み立て
+        fib_info = f"Fib: 高値{swing_high:.4f}, 安値{swing_low:.4f}"
+        if fib_levels:
+            fib_info += f", レベル: {', '.join(fib_levels)}"
+        fib_info += position_info
+
+        return fib_info
 
     def _generate_sample_integrated_scenario(
         self, correlation_data: Dict[str, Any]
@@ -543,27 +585,41 @@ JPY強弱: {jpy_analysis.get('direction', 'N/A')} ({jpy_analysis.get('confidence
 ・テクニカル評価: {technical_trend}
 ・MACD: {macd_value} (MACDライン上昇中、シグナルライン追従、ヒストグラム拡大)
 ・RSI: {rsi_value} (中立)、過熱感なし、反発余地あり
+・ATR(14): 0.0234 (中程度のボラティリティ)、トレンド継続可能
+・ADX(14): 28.5 (強いトレンド)、方向性明確
 ・移動平均線: MA200 > MA50 > 現在価格 > MA20 (上昇トレンド継続)
 ・ボリンジャーバンド: バンド幅拡大中、価格中線付近で調整
 ・フィボナッチ: H1 38.2% (147.9338) が重要サポート
 
  エントリー戦略
-・エントリーポイント: {current_rate - 0.20:.4f}
-  📍 根拠: H1 Fib 38.2% + RSI反発 + MA20サポート + MACD上昇
-  📍 計算: {current_rate:.4f} - 0.200 = {current_rate - 0.20:.4f}
+・大局認識: D1上昇バイアス（MACD: 0.089）+ H4弱気継続（RSI: 46.5）
+・戦術レベル: H1 Fib 50%レベル(147.960)での反発を狙う
+  📍 根拠: 現在価格147.394から近いH1 Fib 50%レベルでの押し目買い
+  📍 ATR(14): 0.023で適度なボラティリティ確保
+  📍 ADX(14): 28.5で強いトレンド継続中
 
-・利確ポイント: {current_rate + 0.40:.4f} (+40pips)
-  📍 根拠: H1 Fib 50% + ボリンジャーバンド上限
-  📍 計算: {current_rate - 0.20:.4f} + 0.400 = {current_rate + 0.40:.4f}
+・エントリーポイント: 147.200 (押し目買い)
+  📍 根拠: H1 Fib 50%レベル + MA20サポート + RSI反発 + MACD上昇
+  📍 エントリー条件: 147.200到達後、M5で下ヒゲ＋陽線確認
 
-・損切りポイント: {current_rate - 0.40:.4f} (-20pips)
-  📍 根拠: H1 Fib 61.8% + MA20下抜け
-  📍 計算: {current_rate - 0.20:.4f} - 0.200 = {current_rate - 0.40:.4f}
+・利確ポイント: 147.700 (+50pips)
+  📍 根拠: H1 Fib 38.2%レベル(148.237) + ボリンジャーバンド上限(148.737)
+  📍 計算: 147.200 + 0.500 = 147.700
+  📍 pips計算: 147.700 - 147.200 = 0.500 = 50pips
+
+・損切りポイント: 147.000 (-20pips)
+  📍 根拠: H1 Fib 61.8%レベル(147.680) + MA20サポート(147.747)
+  📍 計算: 147.200 - 0.200 = 147.000
+  📍 pips計算: 147.200 - 147.000 = 0.200 = 20pips
+  📍 リスクリワード比: 1:2.5 (20pipsリスク vs 50pipsリターン)
 
 ⚡ エントリー条件
-{current_rate - 0.20:.4f}付近でH1サポートを確認後、M5（5分足）で下ヒゲ＋陽線パターンを確認。
-RSIが50以下で反発を確認し、M5 SMA20がサポートとして機能していることを確認してからエントリー。
-MACDが上昇トレンドを維持している状況でのみ実行してください。
+・147.200到達後、M5（5分足）で下ヒゲ＋陽線パターンを確認
+・M5 RSIが50以下で売り圧力を確認（現在48.0）
+・H1 SMA20がサポートとして機能していることを確認
+・ATR(14)が0.020以上でボラティリティを確保（現在0.023）
+・ADX(14)が25以上でトレンド強度を確認（現在28.5）
+・MACDが上昇トレンドを維持していることを確認（現在0.089）
 
 🔄 代替案
 ・MACDデッドクロス: ショート転換
@@ -571,9 +627,12 @@ MACDが上昇トレンドを維持している状況でのみ実行してくだ�
 
 ⚠️ リスク管理
 ・最大損失: 20pips（中期トレード重視）
-・撤退条件: RSI 70以上 or MACDデッドクロス
-・注意点: ボリンジャーバンド収縮時は即座に撤退
+・撤退条件: RSI 70以上 or MACDデッドクロス or ADX(14) 20未満
+・注意点: ボリンジャーバンド収縮時 or ATR(14)急低下時は即座に撤退
 ・トレーリングストップ: 20pips利益で10pipsに調整
+・押し目分析: H1 Fib 50%(147.960)、61.8%(148.360)、78.6%(148.760)での反発ポイント
+・ATR(14)分析: 0.023で適度なボラティリティ、急低下時は撤退
+・ADX(14)分析: 28.5で強いトレンド、20未満でレンジ相場に注意
 
 ※サンプルシナリオ。実際の投資判断は慎重に行ってください。
         """.strip()

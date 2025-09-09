@@ -522,3 +522,150 @@ class TALibTechnicalIndicatorsAnalyzer:
             return "downward"
         else:
             return "flat"
+
+    def calculate_atr(
+        self, data: pd.DataFrame, timeframe: str = "D1", period: int = 14
+    ) -> Dict[str, Any]:
+        """
+        ATR（Average True Range）計算（TA-Lib使用）
+
+        Args:
+            data: OHLCVデータ
+            timeframe: 時間軸
+            period: ATR期間
+
+        Returns:
+            Dict: ATR値と分析結果
+        """
+        try:
+            if len(data) < period + 1:
+                logger.warning(f"Insufficient data for ATR: {len(data)} < {period + 1}")
+                return {"error": "データ不足"}
+
+            if not all(col in data.columns for col in ["High", "Low", "Close"]):
+                logger.error("High, Low, Close columns not found")
+                return {"error": "High, Low, Close列が見つかりません"}
+
+            high_prices = data["High"].values.astype(np.float64)
+            low_prices = data["Low"].values.astype(np.float64)
+            close_prices = data["Close"].values.astype(np.float64)
+
+            # TA-LibでATR計算
+            atr_values = talib.ATR(
+                high_prices, low_prices, close_prices, timeperiod=period
+            )
+
+            # 最新値を取得
+            current_atr = atr_values[-1] if not np.isnan(atr_values[-1]) else None
+            previous_atr = (
+                atr_values[-2]
+                if len(atr_values) > 1 and not np.isnan(atr_values[-2])
+                else None
+            )
+
+            if current_atr is None:
+                return {"error": "ATR計算失敗"}
+
+            # ATR状態の判定
+            atr_state = self._analyze_atr_state(current_atr, previous_atr)
+
+            result = {
+                "current_value": round(current_atr, 4),
+                "previous_value": round(previous_atr, 4) if previous_atr else None,
+                "state": atr_state,
+                "timeframe": timeframe,
+                "period": period,
+            }
+
+            logger.info(f"ATR calculation successful: {current_atr:.4f}")
+            return result
+
+        except Exception as e:
+            logger.error(f"ATR calculation error: {str(e)}")
+            return {"error": str(e)}
+
+    def calculate_adx(
+        self, data: pd.DataFrame, timeframe: str = "D1", period: int = 14
+    ) -> Dict[str, Any]:
+        """
+        ADX（Average Directional Index）計算（TA-Lib使用）
+
+        Args:
+            data: OHLCVデータ
+            timeframe: 時間軸
+            period: ADX期間
+
+        Returns:
+            Dict: ADX値と分析結果
+        """
+        try:
+            if len(data) < period + 1:
+                logger.warning(f"Insufficient data for ADX: {len(data)} < {period + 1}")
+                return {"error": "データ不足"}
+
+            if not all(col in data.columns for col in ["High", "Low", "Close"]):
+                logger.error("High, Low, Close columns not found")
+                return {"error": "High, Low, Close列が見つかりません"}
+
+            high_prices = data["High"].values.astype(np.float64)
+            low_prices = data["Low"].values.astype(np.float64)
+            close_prices = data["Close"].values.astype(np.float64)
+
+            # TA-LibでADX計算
+            adx_values = talib.ADX(
+                high_prices, low_prices, close_prices, timeperiod=period
+            )
+
+            # 最新値を取得
+            current_adx = adx_values[-1] if not np.isnan(adx_values[-1]) else None
+            previous_adx = (
+                adx_values[-2]
+                if len(adx_values) > 1 and not np.isnan(adx_values[-2])
+                else None
+            )
+
+            if current_adx is None:
+                return {"error": "ADX計算失敗"}
+
+            # ADX状態の判定
+            adx_state = self._analyze_adx_state(current_adx, previous_adx)
+
+            result = {
+                "current_value": round(current_adx, 1),
+                "previous_value": round(previous_adx, 1) if previous_adx else None,
+                "state": adx_state,
+                "timeframe": timeframe,
+                "period": period,
+            }
+
+            logger.info(f"ADX calculation successful: {current_adx:.1f}")
+            return result
+
+        except Exception as e:
+            logger.error(f"ADX calculation error: {str(e)}")
+            return {"error": str(e)}
+
+    def _analyze_atr_state(
+        self, current_atr: float, previous_atr: Optional[float]
+    ) -> str:
+        """ATR状態を分析"""
+        if previous_atr is None:
+            return "neutral"
+
+        if current_atr > previous_atr * 1.1:
+            return "expanding"
+        elif current_atr < previous_atr * 0.9:
+            return "contracting"
+        else:
+            return "stable"
+
+    def _analyze_adx_state(
+        self, current_adx: float, previous_adx: Optional[float]
+    ) -> str:
+        """ADX状態を分析"""
+        if current_adx >= 25:
+            return "strong_trend"
+        elif current_adx >= 20:
+            return "moderate_trend"
+        else:
+            return "weak_trend"
