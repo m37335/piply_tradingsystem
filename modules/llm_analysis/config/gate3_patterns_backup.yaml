@@ -1,0 +1,184 @@
+# GATE 3: トリガーパターン設定
+# 最終的なエントリー実行のGOサインを出すフィルター
+
+patterns:
+  price_action_reversal:
+    name: "プライスアクションによる反転確認"
+    description: "ローソク足の形状から、短期的な力の反転を直接的に確認"
+    allowed_environments: ["trending_market_bullish", "trending_market_bearish", "trend_reversal_downtrend_reversal", "trend_reversal_uptrend_reversal", "ranging_market_neutral"]
+    
+    conditions:
+      - name: "candle_body_size"
+        indicator: "candle_body"
+        operator: ">"
+        reference: "average_body_size"
+        multiplier: 1.2
+        weight: 0.3
+      
+      - name: "rsi_extreme"
+        indicator: "RSI_14"
+        operator: "between"
+        value: [25, 75]
+        timeframe: "5m"
+        weight: 0.4
+      
+      - name: "near_ema"
+        indicator: "close"
+        operator: "near"
+        reference: "EMA_21"
+        timeframe: "5m"
+        tolerance: 0.005
+        weight: 0.3
+    
+    confidence_calculation:
+      method: "weighted_average"
+      min_confidence: 0.6
+    
+    engulfing_pattern:
+      uptrend_engulfing:
+        conditions:
+          - name: "current_bullish"
+            indicator: "candle_bullish"
+            operator: "=="
+            value: true
+            weight: 0.2
+          
+          - name: "previous_bearish"
+            indicator: "previous_candle_bearish"
+            operator: "=="
+            value: true
+            weight: 0.2
+          
+          - name: "engulfs_previous"
+            indicator: "candle_body"
+            operator: ">"
+            reference: "candle_body"
+            multiplier: 1.1
+            weight: 0.4
+        
+        confidence_calculation:
+          method: "weighted_average"
+          min_confidence: 0.6
+      
+      downtrend_engulfing:
+        conditions:
+          - name: "current_bearish"
+            indicator: "candle_bearish"
+            operator: "=="
+            value: true
+            weight: 0.2
+          
+          - name: "previous_bullish"
+            indicator: "previous_candle_bullish"
+            operator: "=="
+            value: true
+            weight: 0.2
+          
+          - name: "engulfs_previous"
+            indicator: "candle_body"
+            operator: ">"
+            reference: "candle_body"
+            multiplier: 1.1
+            weight: 0.4
+        
+        confidence_calculation:
+          method: "weighted_average"
+          min_confidence: 0.6
+
+  momentum_confirmation:
+    name: "モメンタム確認"
+    description: "短期モメンタムの方向性確認"
+    allowed_environments: ["trending_market_bullish", "trending_market_bearish", "trend_reversal_downtrend_reversal", "trend_reversal_uptrend_reversal", "ranging_market_neutral"]
+    
+    uptrend_momentum:
+      conditions:
+        - name: "rsi_oversold_recovery"
+          indicator: "RSI_14"
+          operator: ">"
+          value: 30
+          timeframe: "5m"
+          weight: 0.3
+        
+        - name: "macd_bullish"
+          indicator: "MACD"
+          operator: ">"
+          reference: "MACD_Signal"
+          timeframe: "5m"
+          weight: 0.4
+        
+        - name: "stochastic_bullish"
+          indicator: "Stochastic_K"
+          operator: ">"
+          value: 20
+          timeframe: "5m"
+          weight: 0.3
+      
+      confidence_calculation:
+        method: "weighted_average"
+        min_confidence: 0.6
+    
+    downtrend_momentum:
+      conditions:
+        - name: "rsi_overbought_decline"
+          indicator: "RSI_14"
+          operator: "<"
+          value: 70
+          timeframe: "5m"
+          weight: 0.3
+        
+        - name: "macd_bearish"
+          indicator: "MACD"
+          operator: "<"
+          reference: "MACD_Signal"
+          timeframe: "5m"
+          weight: 0.4
+        
+        - name: "stochastic_bearish"
+          indicator: "Stochastic_K"
+          operator: "<"
+          value: 80
+          timeframe: "5m"
+          weight: 0.3
+      
+      confidence_calculation:
+        method: "weighted_average"
+        min_confidence: 0.6
+
+# 共通設定
+common_settings:
+  timeframes:
+    primary: "5m"
+    secondary: "1m"
+  
+  indicators:
+    required:
+      - "close"
+      - "open"
+      - "high"
+      - "low"
+      - "RSI_14"
+      - "MACD"
+      - "MACD_Signal"
+      - "Stochastic_14"
+      - "candle_lower_shadow"
+      - "candle_upper_shadow"
+      - "candle_body"
+      - "candle_bullish"
+      - "candle_bearish"
+      - "previous_candle_bullish"
+      - "previous_candle_bearish"
+      - "current_candle"
+      - "previous_candle"
+  
+  candle_analysis:
+    shadow_ratio_threshold: 2.0
+    body_ratio_threshold: 0.5
+    engulfing_min_ratio: 1.1
+  
+  confidence_calculation:
+    default_method: "weighted_average"
+    default_min_confidence: 0.6
+  
+  logging:
+    level: "INFO"
+    include_candle_analysis: true

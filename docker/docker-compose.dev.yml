@@ -1,0 +1,187 @@
+version: '3.8'
+
+services:
+  # PostgreSQL + TimescaleDB
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: trading_postgres_dev
+    environment:
+      POSTGRES_DB: trading_system
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Postgres_Secure_2025!
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ../scripts/init_database.py:/docker-entrypoint-initdb.d/init_database.py
+    networks:
+      - trading_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d trading_system"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (キャッシュ用)
+  redis:
+    image: redis:7-alpine
+    container_name: trading_redis_dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_dev:/data
+    networks:
+      - trading_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Prometheus (監視)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: trading_prometheus_dev
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data_dev:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - trading_network
+
+  # Grafana (可視化)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: trading_grafana_dev
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data_dev:/var/lib/grafana
+      - ../monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ../monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - trading_network
+
+  # Jupyter Notebook (開発用)
+  jupyter:
+    image: jupyter/scipy-notebook:latest
+    container_name: trading_jupyter_dev
+    ports:
+      - "8888:8888"
+    environment:
+      JUPYTER_ENABLE_LAB: yes
+      JUPYTER_TOKEN: trading123
+    volumes:
+      - ../notebooks:/home/jovyan/work
+      - ../modules:/home/jovyan/work/modules
+      - ../scripts:/home/jovyan/work/scripts
+    networks:
+      - trading_network
+
+  # データ収集サービス (開発用)
+  data_collection_dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.data_collection
+    container_name: trading_data_collection_dev
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: trading_system
+      DB_USER: postgres
+      DB_PASSWORD: Postgres_Secure_2025!
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: DEBUG
+      ENVIRONMENT: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../modules:/app/modules
+      - ../config:/app/config
+      - ../scripts:/app/scripts
+    networks:
+      - trading_network
+    command: ["python", "-m", "modules.data_collection.main"]
+
+  # スケジューラーサービス (開発用)
+  scheduler_dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.scheduler
+    container_name: trading_scheduler_dev
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: trading_system
+      DB_USER: postgres
+      DB_PASSWORD: Postgres_Secure_2025!
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: DEBUG
+      ENVIRONMENT: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../modules:/app/modules
+      - ../config:/app/config
+      - ../scripts:/app/scripts
+    networks:
+      - trading_network
+    command: ["python", "-m", "modules.scheduler.main"]
+
+  # LLM分析サービス (開発用)
+  llm_analysis_dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.llm_analysis
+    container_name: trading_llm_analysis_dev
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: trading_system
+      DB_USER: postgres
+      DB_PASSWORD: Postgres_Secure_2025!
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: DEBUG
+      ENVIRONMENT: development
+      LLM_API_KEY: ${LLM_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../modules:/app/modules
+      - ../config:/app/config
+      - ../scripts:/app/scripts
+    networks:
+      - trading_network
+    command: ["python", "-m", "modules.llm_analysis.main"]
+
+volumes:
+  postgres_data_dev:
+  redis_data_dev:
+  prometheus_data_dev:
+  grafana_data_dev:
+
+networks:
+  trading_network:
+    driver: bridge

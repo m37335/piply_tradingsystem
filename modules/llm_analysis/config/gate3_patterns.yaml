@@ -1,0 +1,92 @@
+# GATE 3: トリガーパターン設定（簡素化版）
+# 最終的なエントリー実行のGOサインを出すフィルター
+
+patterns:
+  price_action_reversal:
+    name: "プライスアクションによる反転確認"
+    description: "ローソク足の形状から、短期的な力の反転を直接的に確認"
+    allowed_environments: ["trending_market_bullish", "trending_market_bearish", "trend_reversal_downtrend_reversal", "trend_reversal_uptrend_reversal", "ranging_market_neutral"]
+    
+    conditions:
+      - name: "candle_body_size"
+        indicator: "candle_body"
+        operator: ">"
+        reference: "average_body_size"
+        multiplier: 1.2
+        weight: 0.3
+      
+      - name: "rsi_extreme"
+        indicator: "RSI_14"
+        operator: "between"
+        value: [25, 75]
+        timeframe: "5m"
+        weight: 0.4
+      
+      - name: "near_ema"
+        indicator: "close"
+        operator: "near"
+        reference: "EMA_21"
+        timeframe: "5m"
+        tolerance: 0.005
+        weight: 0.3
+    
+    confidence_calculation:
+      method: "weighted_average"
+      min_confidence: 0.6
+
+  momentum_confirmation:
+    name: "モメンタム確認"
+    description: "短期モメンタムの方向性確認"
+    allowed_environments: ["trending_market_bullish", "trending_market_bearish", "trend_reversal_downtrend_reversal", "trend_reversal_uptrend_reversal", "ranging_market_neutral"]
+    
+    conditions:
+      - name: "rsi_momentum"
+        indicator: "RSI_14"
+        operator: "between"
+        value: [30, 70]
+        timeframe: "5m"
+        weight: 0.4
+      
+      - name: "macd_momentum"
+        indicator: "MACD"
+        operator: ">"
+        reference: "MACD_Signal"
+        timeframe: "5m"
+        weight: 0.3
+      
+      - name: "stochastic_momentum"
+        indicator: "Stochastic_K"
+        operator: "between"
+        value: [20, 80]
+        timeframe: "5m"
+        weight: 0.3
+    
+    confidence_calculation:
+      method: "weighted_average"
+      min_confidence: 0.5
+
+# 共通設定
+common_settings:
+  timeframes:
+    primary: "5m"
+    secondary: "1h"
+  
+  indicators:
+    required:
+      - "close"
+      - "candle_body"
+      - "average_body_size"
+      - "RSI_14"
+      - "EMA_21"
+      - "MACD"
+      - "MACD_Signal"
+      - "Stochastic_K"
+  
+  confidence_calculation:
+    default_method: "weighted_average"
+    default_min_confidence: 0.5
+
+  logging:
+    level: "INFO"
+    include_environment: true
+    include_scenario: true

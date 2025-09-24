@@ -1,0 +1,46 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus自身の監視
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # データ収集サービスの監視
+  - job_name: 'data-collection'
+    static_configs:
+      - targets: ['data_collection:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # スケジューラーサービスの監視
+  - job_name: 'scheduler'
+    static_configs:
+      - targets: ['scheduler:8001']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # LLM分析サービスの監視
+  - job_name: 'llm-analysis'
+    static_configs:
+      - targets: ['llm_analysis:8002']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # PostgreSQLの監視
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    scrape_interval: 30s
+
+  # Redisの監視
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s

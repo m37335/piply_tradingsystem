@@ -1,0 +1,159 @@
+# GATE 1: 環境認識パターン設定
+# パターン案に基づく簡素化された設定
+
+patterns:
+  trending_market:
+    name: "確度の高いトレンド相場"
+    description: "疑いのない、継続的な一方向の動きを特定"
+    
+    uptrend:
+      environment: "trending_market_bullish"
+      conditions:
+        - name: "price_above_ema200"
+          indicator: "close"
+          operator: ">"
+          reference: "EMA_200"
+          timeframe: "1d"
+          weight: 0.4
+        
+        - name: "recent_closes_consistent"
+          indicator: "close"
+          operator: "all_above"
+          reference: "EMA_200"
+          timeframe: "1d"
+          periods: 3
+          weight: 0.4
+        
+        - name: "strong_trend_adx"
+          indicator: "ADX"
+          operator: ">"
+          value: 25
+          timeframe: "1d"
+          weight: 0.2
+      
+      confidence_calculation:
+        method: "weighted_average"
+        min_confidence: 0.7
+    
+    downtrend:
+      environment: "trending_market_bearish"
+      conditions:
+        - name: "price_below_ema200"
+          indicator: "close"
+          operator: "<"
+          reference: "EMA_200"
+          timeframe: "1d"
+          weight: 0.4
+        
+        - name: "recent_closes_consistent"
+          indicator: "close"
+          operator: "all_below"
+          reference: "EMA_200"
+          timeframe: "1d"
+          periods: 3
+          weight: 0.4
+        
+        - name: "strong_trend_adx"
+          indicator: "ADX"
+          operator: ">"
+          value: 25
+          timeframe: "1d"
+          weight: 0.2
+      
+      confidence_calculation:
+        method: "weighted_average"
+        min_confidence: 0.7
+
+  trend_reversal:
+    name: "トレンド転換の初動"
+    description: "大きな流れが反転する、高期待値の初期段階を捉える"
+    
+    uptrend_reversal:
+      environment: "trend_reversal_uptrend_reversal"
+      conditions:
+        - name: "recent_break_above"
+          indicator: "close"
+          operator: ">"
+          reference: "EMA_200"
+          timeframe: "1d"
+          weight: 0.5
+        
+        - name: "macd_bullish"
+          indicator: "MACD"
+          operator: ">"
+          reference: "MACD_Signal"
+          timeframe: "1d"
+          weight: 0.5
+      
+      confidence_calculation:
+        method: "weighted_average"
+        min_confidence: 0.6
+    
+    downtrend_reversal:
+      environment: "trend_reversal_downtrend_reversal"
+      conditions:
+        - name: "recent_break_below"
+          indicator: "close"
+          operator: "<"
+          reference: "EMA_200"
+          timeframe: "1d"
+          weight: 0.5
+        
+        - name: "macd_bearish"
+          indicator: "MACD"
+          operator: "<"
+          reference: "MACD_Signal"
+          timeframe: "1d"
+          weight: 0.5
+      
+      confidence_calculation:
+        method: "weighted_average"
+        min_confidence: 0.6
+
+  ranging_market:
+    name: "明確なレンジ相場"
+    description: "トレンドフォロー戦略を確実に除外すべき相場を定義"
+    environment: "ranging_market"
+    
+    conditions:
+      - name: "weak_trend_adx"
+        indicator: "ADX"
+        operator: "<"
+        value: 20
+        timeframe: "1d"
+        weight: 0.6
+      
+      - name: "consistently_weak_trend"
+        indicator: "ADX"
+        operator: "all_below"
+        value: 20
+        timeframe: "1d"
+        periods: 5
+        weight: 0.4
+    
+    confidence_calculation:
+      method: "weighted_average"
+      min_confidence: 0.6
+
+# 共通設定
+common_settings:
+  timeframes:
+    primary: "1d"
+    secondary: "4h"
+  
+  indicators:
+    required:
+      - "close"
+      - "EMA_200"
+      - "ADX"
+      - "MACD"
+      - "MACD_Signal"
+  
+  confidence_calculation:
+    default_method: "weighted_average"
+    default_min_confidence: 0.6
+  
+  logging:
+    level: "INFO"
+    include_conditions: true
+    include_confidence: true

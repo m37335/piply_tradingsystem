@@ -1,0 +1,190 @@
+version: '3.8'
+
+services:
+  # PostgreSQL + TimescaleDB
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: trading_postgres_prod
+    environment:
+      POSTGRES_DB: ${DB_NAME:-trading_system}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-Postgres_Secure_2025!}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ./scripts/init_database.py:/docker-entrypoint-initdb.d/init_database.py
+    networks:
+      - trading_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-trading_system}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis (キャッシュ用)
+  redis:
+    image: redis:7-alpine
+    container_name: trading_redis_prod
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data_prod:/data
+    networks:
+      - trading_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Prometheus (監視)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: trading_prometheus_prod
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data_prod:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - trading_network
+    restart: unless-stopped
+
+  # Grafana (可視化)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: trading_grafana_prod
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - grafana_data_prod:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - trading_network
+    restart: unless-stopped
+
+  # データ収集サービス
+  data_collection:
+    build:
+      context: .
+      dockerfile: Dockerfile.data_collection
+    container_name: trading_data_collection_prod
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-trading_system}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-Postgres_Secure_2025!}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      ENVIRONMENT: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./modules:/app/modules
+      - ./config:/app/config
+    networks:
+      - trading_network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # スケジューラーサービス
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile.scheduler
+    container_name: trading_scheduler_prod
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-trading_system}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-Postgres_Secure_2025!}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      ENVIRONMENT: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./modules:/app/modules
+      - ./config:/app/config
+    networks:
+      - trading_network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # LLM分析サービス
+  llm_analysis:
+    build:
+      context: .
+      dockerfile: Dockerfile.llm_analysis
+    container_name: trading_llm_analysis_prod
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-trading_system}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-Postgres_Secure_2025!}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      ENVIRONMENT: production
+      LLM_API_KEY: ${LLM_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./modules:/app/modules
+      - ./config:/app/config
+    networks:
+      - trading_network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+volumes:
+  postgres_data_prod:
+  redis_data_prod:
+  prometheus_data_prod:
+  grafana_data_prod:
+
+networks:
+  trading_network:
+    driver: bridge

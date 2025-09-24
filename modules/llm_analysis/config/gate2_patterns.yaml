@@ -1,0 +1,218 @@
+# GATE 2: シナリオ選定パターン設定
+# GATE 1の判定結果に基づき、有効なシナリオのみを監視する戦略の心臓部
+
+patterns:
+  pullback_setup:
+    name: "押し目/戻りセットアップ"
+    description: "優位性の高い押し目/戻りを特定"
+    
+    # 環境条件による分岐
+    environment_conditions:
+      uptrend:
+        uptrend_pullback:
+          conditions:
+            - name: "in_pullback_zone"
+              indicator: "close"
+              operator: "between"
+              reference: ["EMA_21", "EMA_55"]
+              timeframe: "1h"
+              weight: 0.4
+            
+            - name: "not_overheated"
+              indicator: "Stochastic_K"
+              operator: "<"
+              value: 80
+              timeframe: "1h"
+              weight: 0.3
+            
+            - name: "rsi_not_extreme"
+              indicator: "RSI_14"
+              operator: "between"
+              value: [30, 70]
+              timeframe: "1h"
+              weight: 0.3
+          
+          confidence_calculation:
+            method: "weighted_average"
+            min_confidence: 0.6
+          
+          additional_data:
+            pullback_zone: "EMA_21_55"
+            max_pullback_depth: 0.618  # フィボナッチレベル
+      
+      downtrend:
+        downtrend_pullback:
+          conditions:
+            - name: "in_retracement_zone"
+              indicator: "close"
+              operator: "between"
+              reference: ["EMA_55", "EMA_21"]
+              timeframe: "1h"
+              weight: 0.4
+            
+            - name: "not_oversold"
+              indicator: "Stochastic_K"
+              operator: ">"
+              value: 20
+              timeframe: "1h"
+              weight: 0.3
+            
+            - name: "rsi_not_extreme"
+              indicator: "RSI_14"
+              operator: "between"
+              value: [30, 70]
+              timeframe: "1h"
+              weight: 0.3
+          
+          confidence_calculation:
+            method: "weighted_average"
+            min_confidence: 0.6
+          
+          additional_data:
+            retracement_zone: "EMA_21_55"
+            max_retracement_depth: 0.618
+
+  breakout_setup:
+    name: "ブレイクアウト準備完了"
+    description: "ボリンジャーバンドの圧縮によるブレイクアウト準備"
+    
+    conditions:
+      - name: "bollinger_compression"
+        indicator: "bollinger_width"
+        operator: "<"
+        value: 0.015
+        timeframe: "1h"
+        weight: 0.5
+      
+      # Volume関連の条件を削除（Yahoo Finance APIでVolumeデータが利用できないため）
+      
+      - name: "price_near_bands"
+        indicator: "close"
+        operator: "near"
+        reference: "BB_Middle"
+        timeframe: "1h"
+        tolerance: 0.02
+        weight: 0.2
+    
+    confidence_calculation:
+      method: "weighted_average"
+      min_confidence: 0.5  # 緩和
+    
+    additional_data:
+      compression_level_calculation:
+        method: "ratio_to_historical_min"
+        timeframe: "1h"
+        lookback_periods: 100
+      
+      breakout_direction:
+        method: "environment_based"
+        uptrend: "uptrend_breakout"
+        downtrend: "downtrend_breakout"
+
+  range_boundary:
+    name: "レンジ上限/下限への到達"
+    description: "明確なサポート/レジスタンスラインへの到達"
+    
+    environment_conditions:
+      ranging_market:
+        conditions:
+          - name: "near_resistance"
+            indicator: "close"
+            operator: "near"
+            reference: "BB_Upper"
+            timeframe: "1h"
+            tolerance: 0.005
+            weight: 0.3
+          
+          - name: "near_support"
+            indicator: "close"
+            operator: "near"
+            reference: "BB_Lower"
+            timeframe: "1h"
+            tolerance: 0.005
+            weight: 0.3
+          
+          - name: "reversal_indicators"
+            indicator: "RSI_14"
+            operator: "between"
+            value: [25, 75]
+            timeframe: "1h"
+            weight: 0.4
+        
+        confidence_calculation:
+          method: "weighted_average"
+          min_confidence: 0.5  # 緩和
+
+  first_pullback:
+    name: "最初の押し目/戻り"
+    description: "トレンド転換後の初回リテスト"
+    
+    environment_conditions:
+      trend_reversal:
+        conditions:
+          - name: "retest_ema"
+            indicator: "close"
+            operator: "near"
+            reference: "EMA_55"
+            timeframe: "1h"
+            tolerance: 0.05
+            weight: 0.5
+          
+          # Volume関連の条件を削除（Yahoo Finance APIでVolumeデータが利用できないため）
+          
+          - name: "momentum_alignment"
+            indicator: "MACD"
+            operator: ">"
+            reference: "MACD_Signal"
+            timeframe: "1h"
+            weight: 0.5
+        
+        confidence_calculation:
+          method: "weighted_average"
+          min_confidence: 0.6
+
+# 共通設定
+common_settings:
+  timeframes:
+    primary: "1h"
+    secondary: "4h"
+  
+  indicators:
+    required:
+      - "close"
+      - "EMA_21"
+      - "EMA_55"
+      - "RSI_14"
+      - "Stochastic_K"
+      - "BB_Upper"
+      - "BB_Lower"
+      - "BB_Middle"
+      # - "Volume_Ratio"  # Volumeデータが利用できないため削除
+      - "MACD"
+      - "MACD_Signal"
+  
+  confidence_calculation:
+    default_method: "weighted_average"
+    default_min_confidence: 0.6
+
+# 環境マッピング（ルートレベル）
+environment_mapping:
+  trending_market:
+    - "pullback_setup"
+    - "breakout_setup"
+  trend_reversal:
+    - "first_pullback"
+  trend_reversal_downtrend_reversal:
+    - "first_pullback"
+  trend_reversal_uptrend_reversal:
+    - "first_pullback"
+  ranging_market:
+    - "range_boundary"
+  ranging_market_neutral:  # 追加：GATE 1の実際の環境名
+    - "range_boundary"
+    - "breakout_setup"     # レンジ相場でもブレイクアウトは有効
+  
+  logging:
+    level: "INFO"
+    include_environment: true
+    include_scenario: true

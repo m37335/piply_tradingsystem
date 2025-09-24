@@ -1,0 +1,31 @@
+FROM python:3.11-slim
+
+# システムパッケージの更新とインストール
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# 作業ディレクトリの設定
+WORKDIR /app
+
+# Python依存関係のインストール
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# アプリケーションコードのコピー
+COPY modules/ ./modules/
+COPY config/ ./config/
+COPY scripts/ ./scripts/
+
+# 環境変数の設定
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+# ヘルスチェック
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import asyncio; from modules.llm_analysis.main import health_check; asyncio.run(health_check())"
+
+# デフォルトコマンド
+CMD ["python", "-m", "modules.llm_analysis.main"]

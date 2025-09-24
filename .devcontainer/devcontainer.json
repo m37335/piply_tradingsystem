@@ -1,24 +1,98 @@
 {
-    "name": "Exchange Analytics Development",
-    "image": "python:3.11-slim",
-    "workspaceFolder": "/app",
-    "mounts": [
-        "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"
-    ],
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "ms-python.python"
-            ],
-            "settings": {
-                "python.defaultInterpreterPath": "/opt/venv/bin/python3",
-                "python.linting.enabled": true
-            }
-        }
+  "name": "Exchange Analytics Development",
+  "image": "python:3.11-slim",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  // ポート転送設定
+  "forwardPorts": [
+    5432, // PostgreSQL
+    6379, // Redis
+    8888 // Jupyter
+  ],
+  // マウント設定
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+  ],
+  // VS Code拡張機能
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.flake8",
+        "ms-python.black-formatter",
+        "ms-python.mypy-type-checker",
+        "ms-python.pylint",
+        "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-keymap",
+        "ms-toolsai.jupyter-renderers",
+        "ms-python.debugpy",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "ms-vscode-remote.remote-containers",
+        "ms-azuretools.vscode-docker",
+        "humao.rest-client",
+        "ms-vscode.vscode-sqlite3"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.linting.enabled": true,
+        "python.linting.flake8Enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.linting.mypyEnabled": true,
+        "python.formatting.provider": "black",
+        "python.formatting.blackArgs": [
+          "--line-length=88"
+        ],
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": true
+        },
+        "files.exclude": {
+          "**/__pycache__": true,
+          "**/*.pyc": true,
+          "**/.pytest_cache": true,
+          "**/.mypy_cache": true
+        },
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "python.testing.pytestArgs": [
+          "tests"
+        ]
+      }
+    }
+  },
+  "portsAttributes": {
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "notify"
     },
-    "forwardPorts": [
-        8000
-    ],
-    "postCreateCommand": "pip install fastapi uvicorn",
-    "remoteUser": "root"
+    "6379": {
+      "label": "Redis",
+      "onAutoForward": "silent"
+    },
+    "8888": {
+      "label": "Jupyter Notebook",
+      "onAutoForward": "openBrowser"
+    }
+  },
+  // コンテナ起動後のコマンド
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  // 環境変数
+  "containerEnv": {
+    "PYTHONPATH": "/workspace",
+    "PYTHONUNBUFFERED": "1",
+    "ENVIRONMENT": "development",
+    "LOG_LEVEL": "DEBUG"
+  },
+  // ユーザー設定
+  "remoteUser": "root",
+  // 機能設定
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  }
 }

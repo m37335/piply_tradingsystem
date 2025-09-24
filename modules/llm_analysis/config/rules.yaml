@@ -1,0 +1,99 @@
+# ルールベース売買システム設定
+
+# アクティブルール（シンプルな設定）
+active_rules:
+  - name: "pullback_buy"
+    enabled: true
+    description: "押し目買い"
+    conditions:
+      - "RSI_14 <= 40"
+      - "price > EMA_200"
+      - "MACD > MACD_Signal"
+      - "active_session = Tokyo OR London"
+      - "daily_trades < 5"
+      - "daily_risk < 3%"
+  
+  - name: "breakout_buy"
+    enabled: false  # 段階的導入
+    description: "ブレイクアウト買い"
+    conditions:
+      - "price > EMA_21"
+      - "RSI_14 > 50"
+      - "MACD > 0"
+      - "Volume_Ratio > 1.5"
+      - "active_session = London OR NewYork"
+      - "daily_trades < 5"
+      - "daily_risk < 3%"
+  
+  - name: "reversal_sell"
+    enabled: true  # 下降トレンド検知のため有効化
+    description: "逆張り売り"
+    conditions:
+      - "RSI_14 >= 70"
+      - "price < EMA_200"
+      - "MACD < MACD_Signal"
+      - "active_session = Tokyo OR London"
+      - "daily_trades < 5"
+      - "daily_risk < 3%"
+  
+  - name: "trend_follow_sell"
+    enabled: true  # 下降トレンドフォロー売り
+    description: "下降トレンドフォロー売り"
+    conditions:
+      - "price < EMA_200"
+      - "EMA_21 < EMA_55"
+      - "MACD < 0"
+      - "RSI_14 < 50"
+      - "active_session = Tokyo OR London OR NewYork"
+      - "daily_trades < 5"
+      - "daily_risk < 3%"
+  
+  - name: "strong_downtrend_sell"
+    enabled: true  # 強い下降トレンド売り
+    description: "強い下降トレンド売り（RSI 30-40）"
+    conditions:
+      - "RSI_14 <= 40"
+      - "RSI_14 >= 25"
+      - "price < EMA_200"
+      - "MACD < 0"
+      - "active_session = Tokyo OR London OR NewYork"
+      - "daily_trades < 5"
+      - "daily_risk < 3%"
+
+# エグジットルール（共通）
+exit_rules:
+  profit_targets:
+    tp1:
+      condition: "price >= entry_price + (ATR * 1.5)"
+      action: "close_50_percent"
+    tp2:
+      condition: "price >= entry_price + (ATR * 2.5)"
+      action: "close_30_percent"
+    tp3:
+      condition: "price >= entry_price + (ATR * 4.0)"
+      action: "close_remaining"
+  
+  stop_loss:
+    sl:
+      condition: "price <= entry_price - (ATR * 1.0)"
+      action: "close_all"
+  
+  time_based:
+    max_hold:
+      condition: "hold_time >= 240 minutes"
+      action: "close_all"
+    min_hold:
+      condition: "hold_time >= 30 minutes"
+      action: "allow_exit"
+
+# パラメータ設定（簡単に調整可能）
+parameters:
+  rsi_oversold: 40
+  rsi_overbought: 70
+  atr_stop_loss: 1.0
+  atr_take_profit_1: 1.5
+  atr_take_profit_2: 2.5
+  atr_take_profit_3: 4.0
+  ema_short: 21
+  ema_medium: 55
+  ema_long: 200
